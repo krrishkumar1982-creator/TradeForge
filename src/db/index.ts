@@ -11,27 +11,13 @@ declare global {
 
 export const createPool = (): pg.Pool => {
   if (!global._postgresPool) {
-    const connectionString =
-      process.env.SUPABASE_DATABASE_URL ||
-      process.env.DATABASE_URL ||
-      process.env.SUPABASE_DB_URL ||
-      process.env.POSTGRES_URL;
+    const hasCloudSql = !!process.env.SQL_HOST;
 
-    if (connectionString) {
-      const isLocalhost = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
-      global._postgresPool = new Pool({
-        connectionString,
-        ssl: isLocalhost ? false : { rejectUnauthorized: false },
-        max: process.env.DATABASE_POOL_MAX ? parseInt(process.env.DATABASE_POOL_MAX, 10) : 10,
-        idleTimeoutMillis: process.env.DATABASE_IDLE_TIMEOUT_MS ? parseInt(process.env.DATABASE_IDLE_TIMEOUT_MS, 10) : 30000,
-        connectionTimeoutMillis: process.env.DATABASE_CONNECTION_TIMEOUT_MS ? parseInt(process.env.DATABASE_CONNECTION_TIMEOUT_MS, 10) : 5000,
-        keepAlive: true,
-        keepAliveInitialDelayMillis: 10000,
-      });
-    } else {
-      const host = process.env.SQL_HOST || process.env.PGHOST || process.env.SUPABASE_HOST || 'localhost';
-      const isRemoteHost = host.includes('supabase') || host.includes('pooler') || host.includes('aws') || host.includes('gcp');
-      const isSsl = process.env.DB_SSL === 'true' || process.env.SQL_SSL === 'true' || isRemoteHost;
+    if (hasCloudSql) {
+      const host = process.env.SQL_HOST!;
+      const isSocket = host.startsWith('/');
+      const isRemoteHost = !isSocket && (host.includes('supabase') || host.includes('pooler') || host.includes('aws') || host.includes('gcp'));
+      const isSsl = !isSocket && (process.env.DB_SSL === 'true' || process.env.SQL_SSL === 'true' || isRemoteHost);
 
       global._postgresPool = new Pool({
         host,
@@ -46,6 +32,47 @@ export const createPool = (): pg.Pool => {
         keepAlive: true,
         keepAliveInitialDelayMillis: 10000,
       });
+    } else {
+      const rawConnectionString =
+        process.env.DATABASE_URL ||
+        process.env.SUPABASE_DATABASE_URL ||
+        process.env.SUPABASE_DB_URL ||
+        process.env.POSTGRES_URL;
+
+      const connectionString = (rawConnectionString && !rawConnectionString.includes('projectref.supabase.co'))
+        ? rawConnectionString
+        : undefined;
+
+      if (connectionString) {
+        const isLocalhost = connectionString.includes('localhost') || connectionString.includes('127.0.0.1');
+        global._postgresPool = new Pool({
+          connectionString,
+          ssl: isLocalhost ? false : { rejectUnauthorized: false },
+          max: process.env.DATABASE_POOL_MAX ? parseInt(process.env.DATABASE_POOL_MAX, 10) : 10,
+          idleTimeoutMillis: process.env.DATABASE_IDLE_TIMEOUT_MS ? parseInt(process.env.DATABASE_IDLE_TIMEOUT_MS, 10) : 30000,
+          connectionTimeoutMillis: process.env.DATABASE_CONNECTION_TIMEOUT_MS ? parseInt(process.env.DATABASE_CONNECTION_TIMEOUT_MS, 10) : 5000,
+          keepAlive: true,
+          keepAliveInitialDelayMillis: 10000,
+        });
+      } else {
+        const host = process.env.PGHOST || process.env.SUPABASE_HOST || 'localhost';
+        const isRemoteHost = host.includes('supabase') || host.includes('pooler') || host.includes('aws') || host.includes('gcp');
+        const isSsl = process.env.DB_SSL === 'true' || process.env.SQL_SSL === 'true' || isRemoteHost;
+
+        global._postgresPool = new Pool({
+          host,
+          port: process.env.PGPORT ? parseInt(process.env.PGPORT, 10) : 5432,
+          user: process.env.PGUSER || process.env.SUPABASE_USER || 'postgres',
+          password: process.env.PGPASSWORD || process.env.SUPABASE_PASSWORD || '',
+          database: process.env.PGDATABASE || process.env.SUPABASE_DB_NAME || 'postgres',
+          ssl: isSsl ? { rejectUnauthorized: false } : undefined,
+          max: process.env.DATABASE_POOL_MAX ? parseInt(process.env.DATABASE_POOL_MAX, 10) : 10,
+          idleTimeoutMillis: process.env.DATABASE_IDLE_TIMEOUT_MS ? parseInt(process.env.DATABASE_IDLE_TIMEOUT_MS, 10) : 30000,
+          connectionTimeoutMillis: process.env.DATABASE_CONNECTION_TIMEOUT_MS ? parseInt(process.env.DATABASE_CONNECTION_TIMEOUT_MS, 10) : 5000,
+          keepAlive: true,
+          keepAliveInitialDelayMillis: 10000,
+        });
+      }
     }
 
     global._postgresPool.on('error', (err: any) => {
@@ -500,263 +527,86 @@ export async function ensureAllTables() {
           created_at TIMESTAMP DEFAULT NOW()
         );
 
-        CREATE TABLE IF NOT EXISTS self_habits (
+        CREATE TABLE IF NOT EXISTS prop_firm_accounts (
           id TEXT PRIMARY KEY,
           user_id TEXT NOT NULL,
           name TEXT NOT NULL,
-          category TEXT NOT NULL,
-          target TEXT NOT NULL,
-          frequency TEXT NOT NULL DEFAULT 'daily',
-          reminder_time TEXT,
-          difficulty TEXT NOT NULL DEFAULT 'medium',
-          weight INTEGER NOT NULL DEFAULT 1,
-          active BOOLEAN NOT NULL DEFAULT TRUE,
-          icon TEXT,
-          color TEXT,
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_habit_completions (
-          id TEXT PRIMARY KEY,
-          habit_id TEXT NOT NULL,
-          user_id TEXT NOT NULL,
-          date TEXT NOT NULL,
-          completed BOOLEAN NOT NULL DEFAULT FALSE,
-          value DOUBLE PRECISION,
+          firm_name TEXT NOT NULL,
+          trading_brand TEXT,
+          legal_entity TEXT,
+          registration_number TEXT,
+          jurisdiction TEXT,
+          terms_effective_date TEXT,
+          rules_version TEXT,
+          account_number TEXT,
+          account_size DOUBLE PRECISION,
+          starting_balance DOUBLE PRECISION NOT NULL,
+          current_balance DOUBLE PRECISION NOT NULL,
+          equity DOUBLE PRECISION NOT NULL,
+          high_water_mark DOUBLE PRECISION,
+          currency TEXT NOT NULL DEFAULT 'USD',
+          program_model TEXT NOT NULL DEFAULT 'TWO_STEP',
+          phases JSONB NOT NULL DEFAULT '[]',
+          active_phase_index INTEGER DEFAULT 0,
+          phase TEXT NOT NULL DEFAULT 'PHASE_1',
+          phase_name TEXT,
+          status TEXT NOT NULL DEFAULT 'ACTIVE',
+          risk_state TEXT NOT NULL DEFAULT 'SAFE',
+          enforcement_mode TEXT DEFAULT 'MONITOR',
+          drawdown_model TEXT NOT NULL DEFAULT 'STATIC',
+          daily_drawdown_model TEXT NOT NULL DEFAULT 'START_OF_DAY_BALANCE',
+          daily_loss_method TEXT DEFAULT 'REALIZED_ONLY',
+          max_risk_per_symbol_percent DOUBLE PRECISION,
+          min_trade_duration_sec INTEGER,
+          avg_trade_duration_sec INTEGER,
+          min_trading_days INTEGER DEFAULT 0,
+          max_trading_days INTEGER DEFAULT 0,
+          start_date TEXT,
+          deadline TEXT,
+          qualifying_day_profit_percent DOUBLE PRECISION,
+          profit_target_percent DOUBLE PRECISION,
+          daily_loss_percent DOUBLE PRECISION,
+          total_loss_percent DOUBLE PRECISION,
+          profit_target_amount DOUBLE PRECISION,
+          daily_loss_amount DOUBLE PRECISION,
+          total_loss_amount DOUBLE PRECISION,
+          consistency_max_day_percent DOUBLE PRECISION,
+          max_profit_concentration_percent DOUBLE PRECISION,
+          news_trading_allowed TEXT DEFAULT 'ALLOWED',
+          weekend_holding_allowed BOOLEAN DEFAULT TRUE,
+          overnight_holding_allowed BOOLEAN DEFAULT TRUE,
+          ea_allowed TEXT DEFAULT 'ALLOWED',
+          copy_trading_allowed TEXT DEFAULT 'ALLOWED',
+          hedging_allowed TEXT DEFAULT 'ALLOWED',
+          max_lot_size DOUBLE PRECISION,
+          min_lot_size DOUBLE PRECISION,
+          max_positions INTEGER,
+          max_leverage INTEGER DEFAULT 100,
+          ip_restrictions JSONB DEFAULT '{}',
+          prohibited_strategies JSONB DEFAULT '[]',
+          reward_buffer_percent DOUBLE PRECISION,
+          reward_split_percent DOUBLE PRECISION DEFAULT 80,
+          profit_split_trader_percent DOUBLE PRECISION DEFAULT 80,
+          profit_split_firm_percent DOUBLE PRECISION DEFAULT 20,
+          min_reward_request DOUBLE PRECISION,
+          payout_frequency TEXT DEFAULT 'BIWEEKLY',
+          activation_fee DOUBLE PRECISION,
+          inactivity_max_days INTEGER DEFAULT 30,
+          news_window_minutes INTEGER DEFAULT 5,
+          session_timezone TEXT DEFAULT 'America/New_York',
+          scaling_rules JSONB DEFAULT '{}',
+          rules JSONB NOT NULL DEFAULT '[]',
+          violations JSONB NOT NULL DEFAULT '[]',
+          timeline JSONB DEFAULT '[]',
+          payout_info JSONB DEFAULT '{}',
+          trading_account_link TEXT,
           notes TEXT,
-          completed_at TEXT,
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_tasks (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          title TEXT NOT NULL,
-          description TEXT DEFAULT '',
-          category TEXT NOT NULL DEFAULT 'General',
-          priority TEXT NOT NULL DEFAULT 'Medium',
-          due_date TEXT NOT NULL,
-          due_time TEXT,
-          estimated_duration_mins INTEGER DEFAULT 30,
-          status TEXT NOT NULL DEFAULT 'Pending',
-          score_contribution INTEGER DEFAULT 10,
-          completed_at TEXT,
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_checkins (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          date TEXT NOT NULL,
-          mood INTEGER NOT NULL DEFAULT 7,
-          energy INTEGER NOT NULL DEFAULT 7,
-          focus INTEGER NOT NULL DEFAULT 7,
-          stress INTEGER NOT NULL DEFAULT 3,
-          motivation INTEGER NOT NULL DEFAULT 7,
-          productivity INTEGER NOT NULL DEFAULT 7,
-          notes TEXT DEFAULT '',
-          gratitudes JSONB NOT NULL DEFAULT '[]',
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_morning_checkins (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          date TEXT NOT NULL,
-          sleep_quality INTEGER NOT NULL DEFAULT 8,
-          energy_level INTEGER NOT NULL DEFAULT 8,
-          main_goal TEXT NOT NULL DEFAULT '',
-          top_priorities JSONB NOT NULL DEFAULT '[]',
-          workout_planned BOOLEAN DEFAULT TRUE,
-          trading_planned BOOLEAN DEFAULT TRUE,
-          personal_goal TEXT DEFAULT '',
-          avoid_today TEXT DEFAULT '',
-          generated_mission TEXT DEFAULT '',
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_nightly_reviews (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          date TEXT NOT NULL,
-          went_well TEXT DEFAULT '',
-          went_wrong TEXT DEFAULT '',
-          learned TEXT DEFAULT '',
-          improve_tomorrow TEXT DEFAULT '',
-          followed_plan BOOLEAN DEFAULT TRUE,
-          wasted_time BOOLEAN DEFAULT FALSE,
-          maintained_discipline BOOLEAN DEFAULT TRUE,
-          reflection_score INTEGER DEFAULT 85,
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_routines (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          name TEXT NOT NULL,
-          category TEXT NOT NULL DEFAULT 'Morning',
-          active BOOLEAN NOT NULL DEFAULT TRUE,
-          items JSONB NOT NULL DEFAULT '[]',
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_routine_completions (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          routine_id TEXT NOT NULL,
-          item_id TEXT NOT NULL,
-          date TEXT NOT NULL,
-          completed BOOLEAN NOT NULL DEFAULT FALSE,
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_sleep_logs (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          date TEXT NOT NULL,
-          bedtime TEXT NOT NULL DEFAULT '22:30',
-          wake_time TEXT NOT NULL DEFAULT '06:30',
-          duration_hours DOUBLE PRECISION NOT NULL DEFAULT 8.0,
-          quality INTEGER NOT NULL DEFAULT 8,
-          target_hours DOUBLE PRECISION NOT NULL DEFAULT 8.0,
-          notes TEXT DEFAULT '',
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_exercise_logs (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          date TEXT NOT NULL,
-          type TEXT NOT NULL DEFAULT 'Strength',
-          duration_mins INTEGER NOT NULL DEFAULT 45,
-          steps INTEGER DEFAULT 8000,
-          completed BOOLEAN NOT NULL DEFAULT TRUE,
-          intensity TEXT DEFAULT 'Moderate',
-          notes TEXT DEFAULT '',
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_learning_logs (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          date TEXT NOT NULL,
-          title TEXT NOT NULL,
-          category TEXT NOT NULL DEFAULT 'Trading',
-          duration_mins INTEGER NOT NULL DEFAULT 30,
-          pages_read INTEGER DEFAULT 15,
-          notes TEXT DEFAULT '',
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_deep_work_sessions (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          date TEXT NOT NULL,
-          start_time TEXT NOT NULL,
-          end_time TEXT,
-          duration_mins INTEGER NOT NULL DEFAULT 60,
-          category TEXT NOT NULL DEFAULT 'Deep Work',
-          task_name TEXT NOT NULL DEFAULT 'Focus Session',
-          distraction_count INTEGER NOT NULL DEFAULT 0,
-          focus_rating INTEGER NOT NULL DEFAULT 8,
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_distraction_logs (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          date TEXT NOT NULL,
-          social_media_mins INTEGER DEFAULT 0,
-          youtube_mins INTEGER DEFAULT 0,
-          gaming_mins INTEGER DEFAULT 0,
-          entertainment_mins INTEGER DEFAULT 0,
-          random_browsing_mins INTEGER DEFAULT 0,
-          notes TEXT DEFAULT '',
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_discipline_streaks (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          tracker_name TEXT NOT NULL DEFAULT 'Digital & Purity Discipline',
-          current_streak_days INTEGER NOT NULL DEFAULT 0,
-          best_streak_days INTEGER NOT NULL DEFAULT 0,
-          total_successful_days INTEGER NOT NULL DEFAULT 0,
-          start_date TEXT NOT NULL,
-          last_checkin_date TEXT NOT NULL,
-          history_logs JSONB NOT NULL DEFAULT '[]',
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_goals (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          title TEXT NOT NULL,
-          description TEXT DEFAULT '',
-          category TEXT NOT NULL DEFAULT 'Discipline',
-          timeframe TEXT NOT NULL DEFAULT 'SHORT_TERM',
-          target_value DOUBLE PRECISION NOT NULL DEFAULT 100,
-          current_value DOUBLE PRECISION NOT NULL DEFAULT 0,
-          unit TEXT NOT NULL DEFAULT '%',
-          deadline TEXT NOT NULL,
-          status TEXT NOT NULL DEFAULT 'IN_PROGRESS',
-          milestones JSONB NOT NULL DEFAULT '[]',
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_rules (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          text TEXT NOT NULL,
-          category TEXT NOT NULL DEFAULT 'TRADING',
-          active BOOLEAN NOT NULL DEFAULT TRUE,
-          order_idx INTEGER NOT NULL DEFAULT 0,
-          verified_dates JSONB NOT NULL DEFAULT '[]',
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_growth_scores (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          date TEXT NOT NULL,
-          score INTEGER NOT NULL DEFAULT 0,
-          discipline INTEGER NOT NULL DEFAULT 0,
-          productivity INTEGER NOT NULL DEFAULT 0,
-          physical INTEGER NOT NULL DEFAULT 0,
-          mental INTEGER NOT NULL DEFAULT 0,
-          recovery INTEGER NOT NULL DEFAULT 0,
-          learning INTEGER NOT NULL DEFAULT 0,
-          trading INTEGER NOT NULL DEFAULT 0,
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_achievements (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL,
-          achievement_id TEXT NOT NULL,
-          title TEXT NOT NULL,
-          description TEXT NOT NULL,
-          icon TEXT NOT NULL,
-          category TEXT NOT NULL,
-          xp_reward INTEGER NOT NULL DEFAULT 50,
-          unlocked BOOLEAN NOT NULL DEFAULT FALSE,
-          unlocked_at TEXT,
-          progress INTEGER NOT NULL DEFAULT 0,
-          max_progress INTEGER NOT NULL DEFAULT 1,
-          created_at TIMESTAMP DEFAULT NOW()
-        );
-
-        CREATE TABLE IF NOT EXISTS self_user_xp (
-          id TEXT PRIMARY KEY,
-          user_id TEXT NOT NULL UNIQUE,
-          level INTEGER NOT NULL DEFAULT 1,
-          current_xp INTEGER NOT NULL DEFAULT 0,
-          next_level_xp INTEGER NOT NULL DEFAULT 500,
-          title TEXT NOT NULL DEFAULT 'Initiate Trader',
+          created_at TIMESTAMP DEFAULT NOW(),
           updated_at TIMESTAMP DEFAULT NOW()
         );
 
-        -- Add any missing columns to trades table for broker auto-sync
+        -- Add any missing columns to trades table for broker auto-sync and prop firm linking
+        ALTER TABLE trades ADD COLUMN IF NOT EXISTS prop_firm_account_id TEXT;
         ALTER TABLE trades ADD COLUMN IF NOT EXISTS connection_id TEXT;
         ALTER TABLE trades ADD COLUMN IF NOT EXISTS external_trade_id TEXT;
         ALTER TABLE trades ADD COLUMN IF NOT EXISTS platform TEXT;
@@ -796,7 +646,124 @@ export async function ensureAllTables() {
         ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS max_position_size DOUBLE PRECISION;
         ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS max_open_positions INTEGER;
         ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS circuit_breaker_state TEXT DEFAULT 'DISARMED';
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS risk_mode TEXT DEFAULT 'LOWER_OF_BOTH';
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS weekly_loss_limit DOUBLE PRECISION;
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS trailing_drawdown_limit DOUBLE PRECISION;
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS hard_lock_enabled BOOLEAN DEFAULT FALSE;
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS warning_threshold_percent DOUBLE PRECISION DEFAULT 75;
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS critical_threshold_percent DOUBLE PRECISION DEFAULT 90;
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS timezone TEXT DEFAULT 'America/New_York';
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS daily_reset_time TEXT DEFAULT '17:00';
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS include_floating_pnl BOOLEAN DEFAULT FALSE;
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS include_fees BOOLEAN DEFAULT TRUE;
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS include_commissions BOOLEAN DEFAULT TRUE;
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS drawdown_methodology TEXT DEFAULT 'EQUITY_BASED';
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS weekly_target_action TEXT DEFAULT 'CONTINUE';
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS require_manual_unlock BOOLEAN DEFAULT TRUE;
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS lock_reason TEXT;
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS locked_at TEXT;
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS unlocked_at TEXT;
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS unlocked_by TEXT;
+        ALTER TABLE risk_goals ADD COLUMN IF NOT EXISTS unlock_reason TEXT;
         ALTER TABLE risk_goals DROP CONSTRAINT IF EXISTS risk_goals_user_id_key;
+
+        CREATE TABLE IF NOT EXISTS risk_events (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          account_id TEXT,
+          account_name TEXT,
+          event_type TEXT NOT NULL,
+          rule TEXT NOT NULL,
+          current_value TEXT,
+          limit_value TEXT,
+          severity TEXT NOT NULL,
+          action_taken TEXT NOT NULL,
+          notes TEXT,
+          unlocked_by TEXT,
+          unlock_reason TEXT,
+          metadata JSONB,
+          created_at TIMESTAMP DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS user_settings (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          account_id TEXT,
+          scope TEXT NOT NULL DEFAULT 'GLOBAL',
+          general JSONB NOT NULL DEFAULT '{}',
+          notifications JSONB NOT NULL DEFAULT '{}',
+          ai_settings JSONB NOT NULL DEFAULT '{}',
+          trade_defaults JSONB NOT NULL DEFAULT '{}',
+          commission_rules JSONB NOT NULL DEFAULT '[]',
+          profile JSONB NOT NULL DEFAULT '{}',
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS custom_tags (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          category TEXT NOT NULL DEFAULT 'Custom',
+          color TEXT NOT NULL DEFAULT '#6366F1',
+          description TEXT DEFAULT '',
+          is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+          created_at TIMESTAMP DEFAULT NOW(),
+          updated_at TIMESTAMP DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS import_history (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          source TEXT NOT NULL DEFAULT 'CSV',
+          file_name TEXT NOT NULL,
+          trades_processed INTEGER NOT NULL DEFAULT 0,
+          trades_added INTEGER NOT NULL DEFAULT 0,
+          duplicates_count INTEGER NOT NULL DEFAULT 0,
+          errors_count INTEGER NOT NULL DEFAULT 0,
+          status TEXT NOT NULL DEFAULT 'COMPLETED',
+          details JSONB DEFAULT '{}',
+          created_at TIMESTAMP DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS activity_logs (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          action TEXT NOT NULL,
+          category TEXT NOT NULL DEFAULT 'SYSTEM',
+          object TEXT NOT NULL,
+          status TEXT NOT NULL DEFAULT 'SUCCESS',
+          source TEXT DEFAULT 'Web Client',
+          details JSONB DEFAULT '{}',
+          created_at TIMESTAMP DEFAULT NOW()
+        );
+
+        CREATE TABLE IF NOT EXISTS user_backups (
+          id TEXT PRIMARY KEY,
+          user_id TEXT NOT NULL,
+          name TEXT NOT NULL,
+          size_bytes INTEGER NOT NULL DEFAULT 0,
+          trade_count INTEGER NOT NULL DEFAULT 0,
+          notes_count INTEGER NOT NULL DEFAULT 0,
+          backup_data JSONB NOT NULL DEFAULT '{}',
+          created_at TIMESTAMP DEFAULT NOW()
+        );
+
+        -- Journal soft-delete and trash management columns
+        ALTER TABLE journal_notes ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
+        ALTER TABLE journal_notes ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE;
+        ALTER TABLE journal_notes ADD COLUMN IF NOT EXISTS deleted_by TEXT;
+        ALTER TABLE journal_notes ADD COLUMN IF NOT EXISTS original_folder_id TEXT;
+        ALTER TABLE journal_notes ALTER COLUMN folder_id DROP NOT NULL;
+
+        ALTER TABLE journal_folders ADD COLUMN IF NOT EXISTS is_deleted BOOLEAN DEFAULT FALSE;
+        ALTER TABLE journal_folders ADD COLUMN IF NOT EXISTS deleted_at TIMESTAMP WITH TIME ZONE;
+        ALTER TABLE journal_folders ADD COLUMN IF NOT EXISTS deleted_by TEXT;
+
+        CREATE INDEX IF NOT EXISTS idx_journal_notes_deleted ON journal_notes(user_id, is_deleted);
+        CREATE INDEX IF NOT EXISTS idx_journal_notes_deleted_at ON journal_notes(deleted_at);
+        CREATE INDEX IF NOT EXISTS idx_journal_folders_deleted ON journal_folders(user_id, is_deleted);
+        CREATE INDEX IF NOT EXISTS idx_journal_folders_deleted_at ON journal_folders(deleted_at);
       `);
       global._dbInitialized = true;
     } finally {

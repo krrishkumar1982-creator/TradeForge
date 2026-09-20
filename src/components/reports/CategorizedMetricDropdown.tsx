@@ -122,13 +122,13 @@ export const CategorizedMetricDropdown: React.FC<CategorizedMetricDropdownProps>
       className={`absolute z-50 top-full left-0 mt-2 w-80 sm:w-96 rounded-2xl border shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 ${
         isLight
           ? 'bg-white border-zinc-200 text-zinc-900 shadow-zinc-300/50'
-          : 'bg-slate-900 border-slate-700/90 text-slate-100 shadow-black/80'
+          : 'bg-[#12161D] border-[#273141] text-slate-100 shadow-black/80'
       }`}
       style={{ maxHeight: '480px' }}
     >
       {/* Header */}
       <div className={`p-3 border-b flex items-center justify-between gap-2 ${
-        isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-slate-950/80 border-slate-800'
+        isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'
       }`}>
         <div className="flex items-center gap-2">
           <BarChart2 className={`w-4 h-4 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />
@@ -139,7 +139,7 @@ export const CategorizedMetricDropdown: React.FC<CategorizedMetricDropdownProps>
           className={`p-1 rounded-lg transition ${
             isLight
               ? 'text-zinc-400 hover:text-zinc-700 hover:bg-zinc-200'
-              : 'text-slate-400 hover:text-slate-100 hover:bg-slate-800'
+              : 'text-slate-400 hover:text-slate-100 hover:bg-[#1A1F27]'
           }`}
         >
           <X className="w-3.5 h-3.5" />
@@ -147,11 +147,11 @@ export const CategorizedMetricDropdown: React.FC<CategorizedMetricDropdownProps>
       </div>
 
       {/* Search Bar */}
-      <div className={`p-2.5 border-b ${isLight ? 'border-zinc-100' : 'border-slate-800/80'}`}>
+      <div className={`p-2.5 border-b ${isLight ? 'border-zinc-100' : 'border-[#1C232E]'}`}>
         <div className={`relative flex items-center rounded-xl border px-2.5 py-1.5 transition ${
           isLight
             ? 'bg-zinc-100/80 border-zinc-300 focus-within:border-blue-500 focus-within:bg-white'
-            : 'bg-slate-950 border-slate-800 focus-within:border-blue-500'
+            : 'bg-[#0A0D14] border-[#1C232E] focus-within:border-blue-500'
         }`}>
           <Search className={`w-3.5 h-3.5 shrink-0 ${isLight ? 'text-zinc-400' : 'text-slate-500'}`} />
           <input
@@ -191,7 +191,7 @@ export const CategorizedMetricDropdown: React.FC<CategorizedMetricDropdownProps>
               <div
                 key={cat.id}
                 className={`rounded-xl overflow-hidden border ${
-                  isLight ? 'border-zinc-100/80 bg-zinc-50/50' : 'border-slate-800/60 bg-slate-950/40'
+                  isLight ? 'border-zinc-100/80 bg-zinc-50/50' : 'border-[#1C232E] bg-[#0A0D14]/40'
                 }`}
               >
                 {/* Category Header */}
@@ -200,7 +200,7 @@ export const CategorizedMetricDropdown: React.FC<CategorizedMetricDropdownProps>
                   className={`w-full flex items-center justify-between px-3 py-2 text-xs font-bold transition text-left ${
                     isLight
                       ? 'bg-zinc-100/70 hover:bg-zinc-200/70 text-zinc-800'
-                      : 'bg-slate-950 hover:bg-slate-800/60 text-slate-200'
+                      : 'bg-[#0A0D14] hover:bg-[#1A1F27]/60 text-slate-200'
                   }`}
                 >
                   <div className="flex items-center gap-2">
@@ -241,7 +241,7 @@ export const CategorizedMetricDropdown: React.FC<CategorizedMetricDropdownProps>
                                 : 'bg-blue-600/20 text-blue-300 font-semibold border border-blue-500/30'
                               : isLight
                               ? 'text-zinc-700 hover:bg-zinc-100 hover:text-zinc-900 border border-transparent'
-                              : 'text-slate-300 hover:bg-slate-800/80 hover:text-slate-100 border border-transparent'
+                              : 'text-slate-300 hover:bg-[#1A1F27]/80 hover:text-slate-100 border border-transparent'
                           }`}
                         >
                           <div className="space-y-0.5 pr-2">
@@ -284,7 +284,7 @@ export const CategorizedMetricDropdown: React.FC<CategorizedMetricDropdownProps>
       <div className={`p-2.5 border-t text-[10px] flex items-center justify-between ${
         isLight
           ? 'bg-zinc-50 border-zinc-200 text-zinc-500'
-          : 'bg-slate-950 border-slate-800 text-slate-400'
+          : 'bg-[#0A0D14] border-[#1C232E] text-slate-400'
       }`}>
         <span>Currently displaying:</span>
         <strong className={`font-semibold ${isLight ? 'text-blue-700' : 'text-blue-400'}`}>

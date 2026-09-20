@@ -110,10 +110,10 @@ export const DynamicChartCard: React.FC<DynamicChartCardProps> = ({
     <div className={`rounded-2xl border p-5 shadow-xl transition-all relative ${
       isLight
         ? 'bg-white border-zinc-200 text-zinc-900 shadow-zinc-200/50'
-        : 'bg-slate-900/90 border-slate-800 text-slate-100 shadow-black/60'
+        : 'bg-[#12161D] border-[#1C232E] text-slate-100 shadow-black/60'
     }`}>
       {/* Top Header Controls Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-zinc-200 dark:border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-zinc-200 dark:border-[#1C232E]">
         {/* Metric Selector Area */}
         <div className="flex flex-wrap items-center gap-2 relative">
           {metricIds.map((mId, idx) => {
@@ -128,7 +128,7 @@ export const DynamicChartCard: React.FC<DynamicChartCardProps> = ({
                   className={`flex items-center gap-2 px-3 py-1.5 rounded-xl border text-xs font-bold transition ${
                     isLight
                       ? 'bg-zinc-50 border-zinc-300 hover:bg-zinc-100 text-zinc-900 shadow-xs'
-                      : 'bg-slate-950 border-slate-800 hover:bg-slate-800 text-slate-100'
+                      : 'bg-[#0A0D14] border-[#1C232E] hover:bg-[#1A1F27] text-slate-100'
                   }`}
                 >
                   <span
@@ -146,7 +146,7 @@ export const DynamicChartCard: React.FC<DynamicChartCardProps> = ({
                     className={`p-1 rounded-lg transition ${
                       isLight
                         ? 'text-zinc-400 hover:text-rose-600 hover:bg-zinc-100'
-                        : 'text-slate-500 hover:text-rose-400 hover:bg-slate-800'
+                        : 'text-slate-500 hover:text-rose-400 hover:bg-[#1A1F27]'
                     }`}
                     title="Remove metric"
                   >
@@ -176,7 +176,7 @@ export const DynamicChartCard: React.FC<DynamicChartCardProps> = ({
                 className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl border text-xs font-semibold transition ${
                   isLight
                     ? 'border-dashed border-zinc-300 bg-zinc-50 text-blue-700 hover:bg-blue-50/80 hover:border-blue-300'
-                    : 'border-dashed border-slate-700 bg-slate-950 text-blue-400 hover:bg-blue-950/40 hover:border-blue-500/50'
+                    : 'border-dashed border-[#273141] bg-[#0A0D14] text-blue-400 hover:bg-blue-950/40 hover:border-blue-500/50'
                 }`}
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -201,18 +201,18 @@ export const DynamicChartCard: React.FC<DynamicChartCardProps> = ({
           {/* Time Grouping Selector (Only show if not using dimension grouping) */}
           {!dimensionGrouping && (
             <div className={`flex items-center p-0.5 rounded-xl border ${
-              isLight ? 'bg-zinc-100 border-zinc-200' : 'bg-slate-950 border-slate-800'
+              isLight ? 'bg-zinc-100 border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'
             }`}>
               {(['DAY', 'WEEK', 'MONTH', 'YEAR'] as TimeGrouping[]).map(g => (
                 <button
                   key={g}
                   onClick={() => setTimeGrouping(g)}
-                  className={`px-2 py-1 text-[11px] font-semibold rounded-lg transition ${
+                  className={`px-2 py-1 text-[11px] font-semibold rounded-lg transition cursor-pointer ${
                     timeGrouping === g
-                      ? 'bg-blue-600 text-white shadow-xs'
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
                       : isLight
                       ? 'text-zinc-600 hover:text-zinc-900'
-                      : 'text-slate-400 hover:text-slate-200'
+                      : 'text-slate-400 hover:text-white'
                   }`}
                 >
                   {g === 'DAY' ? 'Day' : g === 'WEEK' ? 'Week' : g === 'MONTH' ? 'Month' : 'Year'}
@@ -228,7 +228,7 @@ export const DynamicChartCard: React.FC<DynamicChartCardProps> = ({
               className={`p-1.5 rounded-xl border transition ${
                 isLight
                   ? 'border-zinc-200 bg-zinc-50 hover:bg-zinc-100 text-zinc-600'
-                  : 'border-slate-800 bg-slate-950 hover:bg-slate-800 text-slate-300'
+                  : 'border-[#1C232E] bg-[#0A0D14] hover:bg-[#1A1F27] text-slate-300'
               }`}
               title="Chart options"
             >
@@ -240,7 +240,7 @@ export const DynamicChartCard: React.FC<DynamicChartCardProps> = ({
                 className={`absolute right-0 top-full mt-2 w-48 rounded-xl border shadow-xl p-1.5 z-40 text-xs ${
                   isLight
                     ? 'bg-white border-zinc-200 text-zinc-800'
-                    : 'bg-slate-900 border-slate-800 text-slate-200'
+                    : 'bg-[#12161D] border-[#1C232E] text-slate-200'
                 }`}
               >
                 <div className="px-2 py-1 text-[10px] font-bold uppercase tracking-wider text-zinc-400 dark:text-slate-500">
@@ -260,7 +260,7 @@ export const DynamicChartCard: React.FC<DynamicChartCardProps> = ({
                           : 'bg-blue-600/20 text-blue-300 font-bold'
                         : isLight
                         ? 'hover:bg-zinc-100'
-                        : 'hover:bg-slate-800'
+                        : 'hover:bg-[#1A1F27]'
                     }`}
                   >
                     <span>{type === 'auto' ? 'Default' : type}</span>
@@ -269,7 +269,7 @@ export const DynamicChartCard: React.FC<DynamicChartCardProps> = ({
                 ))}
 
                 {canRemoveCard && onRemoveCard && (
-                  <div className="pt-1 mt-1 border-t border-zinc-200 dark:border-slate-800">
+                  <div className="pt-1 mt-1 border-t border-zinc-200 dark:border-[#1C232E]">
                     <button
                       onClick={() => {
                         setIsOptionsMenuOpen(false);
@@ -503,9 +503,9 @@ export const DynamicChartCard: React.FC<DynamicChartCardProps> = ({
           <div className={`absolute top-2 right-4 p-3 rounded-xl border shadow-xl z-30 text-xs backdrop-blur-md transition-all ${
             isLight
               ? 'bg-white/95 border-zinc-300 text-zinc-900 shadow-zinc-300/60'
-              : 'bg-slate-950/90 border-slate-700 text-slate-100 shadow-black'
+              : 'bg-[#0A0D14]/90 border-[#273141] text-slate-100 shadow-black'
           }`}>
-            <div className="font-bold border-b pb-1 mb-1.5 border-zinc-200 dark:border-slate-800 text-[11px] text-zinc-500 dark:text-slate-400">
+            <div className="font-bold border-b pb-1 mb-1.5 border-zinc-200 dark:border-[#1C232E] text-[11px] text-zinc-500 dark:text-slate-400">
               {activePoints[hoverIndex].label}
             </div>
             <div className="space-y-1">

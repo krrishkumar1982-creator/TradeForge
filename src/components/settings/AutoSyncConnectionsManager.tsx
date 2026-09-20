@@ -761,12 +761,12 @@ export const AutoSyncConnectionsManager: React.FC<AutoSyncConnectionsManagerProp
                     <div className="flex items-center gap-3 self-end lg:self-center flex-wrap">
                       <div className="text-right pr-2 hidden sm:block">
                         <div className={`text-xs font-semibold ${isLight ? 'text-[#111827]' : 'text-[#F4F4F5]'}`}>
-                          {conn.lastSyncTime
-                            ? new Date(conn.lastSyncTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                          {(conn.lastSyncAt || (conn as any).lastSyncTime)
+                            ? new Date(conn.lastSyncAt || (conn as any).lastSyncTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                             : 'Never synced'}
                         </div>
                         <div className="text-[10px] text-[#A1A1AA]">
-                          {conn.syncedTradesCount ?? 0} trades logged
+                          {conn.lastSyncTradesCount ?? (conn as any).syncedTradesCount ?? 0} trades logged
                         </div>
                       </div>
 
@@ -823,10 +823,10 @@ export const AutoSyncConnectionsManager: React.FC<AutoSyncConnectionsManagerProp
                   </div>
 
                   {/* Last Error Banner if applicable */}
-                  {conn.lastErrorMessage && (
+                  {(conn.lastSyncError || (conn as any).lastErrorMessage) && (
                     <div className="mt-3 p-2.5 rounded-lg bg-[#FF3D6E]/10 border border-[#FF3D6E]/30 text-[#FF3D6E] text-xs flex items-center gap-2">
                       <AlertCircle className="w-4 h-4 shrink-0" />
-                      <span>{conn.lastErrorMessage}</span>
+                      <span>{conn.lastSyncError || (conn as any).lastErrorMessage}</span>
                     </div>
                   )}
                 </div>
@@ -1344,7 +1344,7 @@ export const AutoSyncConnectionsManager: React.FC<AutoSyncConnectionsManagerProp
                         >
                           {log.status}
                         </span>
-                        <span className="font-semibold">{log.syncTrigger}</span>
+                        <span className="font-semibold">{(log as any).syncTrigger || 'AUTO'}</span>
                         <span className="text-[#A1A1AA]">• {log.durationMs}ms</span>
                       </div>
                       <span className="text-[10px] text-[#A1A1AA] font-mono">
@@ -1353,9 +1353,9 @@ export const AutoSyncConnectionsManager: React.FC<AutoSyncConnectionsManagerProp
                     </div>
 
                     <div className="text-[11px] text-[#A1A1AA] flex items-center gap-3">
-                      <span>Trades fetched: <strong>{log.tradesFetched}</strong></span>
-                      <span>New: <strong className="text-[#00D6A3]">{log.tradesAdded}</strong></span>
-                      <span>Updated: <strong>{log.tradesUpdated}</strong></span>
+                      <span>Trades fetched: <strong>{(log as any).tradesFetched ?? log.tradesImported ?? 0}</strong></span>
+                      <span>New: <strong className="text-[#00D6A3]">{(log as any).tradesAdded ?? log.tradesImported ?? 0}</strong></span>
+                      <span>Updated: <strong>{log.tradesUpdated ?? 0}</strong></span>
                     </div>
 
                     {log.errorMessage && (

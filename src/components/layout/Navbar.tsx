@@ -1,77 +1,117 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
-  Search,
+  Menu,
   Bell,
+  Search,
   Plus,
-  Calendar,
-  Filter,
+  Moon,
+  Sun,
+  ChevronDown,
+  UserCheck,
+  Check,
+  Shield,
   DollarSign,
   Percent,
+  Calendar,
   EyeOff,
   Hash,
-  ChevronDown,
-  Check,
-  Sun,
-  Moon,
   Sparkles,
-  UserCheck,
-  User,
   Settings,
-  Shield,
   LogOut,
+  Clock,
+  Radio,
 } from 'lucide-react';
 import { useTrading } from '../../context/TradingContext';
 import { CurrencyDisplayMode } from '../../types';
 import { DateRangeDropdown, DateRangeState } from './DateRangeDropdown';
+import { safeFormatDate } from '../../utils/dateUtils';
 
 interface NavbarProps {
+  onToggleMobileSidebar: () => void;
   onOpenNotifications: () => void;
-  onOpenFilters?: () => void;
-  onOpenDateRange?: () => void;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({
+  onToggleMobileSidebar,
   onOpenNotifications,
-  onOpenFilters,
 }) => {
   const {
+    notifications,
     currencyMode,
     setCurrencyMode,
-    accounts,
-    selectedAccountId,
-    setSelectedAccountId,
-    setIsAddTradeOpen,
-    setIsCommandPaletteOpen,
-    notifications,
-    activeStudentImpersonation,
-    setActiveStudentImpersonation,
     theme,
     setTheme,
+    selectedAccountId,
+    setSelectedAccountId,
+    accounts,
+    propFirmAccounts,
+    setSelectedPropFirmAccountId,
     dateRange,
     setDateRange,
-    authUser,
+    activeStudentImpersonation,
+    setActiveStudentImpersonation,
     userProfile,
-    setActiveView,
-    setIsAuthModalOpen,
+    authUser,
     logout,
+    setActiveView,
+    setIsCommandPaletteOpen,
+    setIsAddTradeOpen,
   } = useTrading();
+
+  const unreadCount = (notifications || []).filter((n) => !n.read).length;
 
   const isLight = theme === 'light';
 
-  const [currentTime, setCurrentTime] = useState('');
+  // Dropdown visibility states
   const [isCurrencyDropdownOpen, setIsCurrencyDropdownOpen] = useState(false);
   const [isAccountDropdownOpen, setIsAccountDropdownOpen] = useState(false);
   const [isDateRangeOpen, setIsDateRangeOpen] = useState(false);
-  const [isFilterDropdownOpen, setIsFilterDropdownOpen] = useState(false);
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
+  const [currentTime, setCurrentTime] = useState<string>('');
   const [imageError, setImageError] = useState(false);
 
   const currencyRef = useRef<HTMLDivElement>(null);
   const accountRef = useRef<HTMLDivElement>(null);
-  const filterRef = useRef<HTMLDivElement>(null);
   const profileMenuRef = useRef<HTMLDivElement>(null);
 
-  // Derive profile info and avatar URL from profile state
+  // Live Clock (Local & UTC)
+  useEffect(() => {
+    const updateTime = () => {
+      const now = new Date();
+      setCurrentTime(
+        now.toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+        })
+      );
+    };
+    updateTime();
+    const timer = setInterval(updateTime, 1000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Close dropdowns on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (currencyRef.current && !currencyRef.current.contains(e.target as Node)) {
+        setIsCurrencyDropdownOpen(false);
+      }
+      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
+        setIsAccountDropdownOpen(false);
+      }
+      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  const currentAccount = accounts.find(a => a.id === selectedAccountId);
+  const currentPropFirm = propFirmAccounts.find(p => p.id === selectedAccountId);
+
   const avatarUrl =
     userProfile?.avatarUrl ||
     userProfile?.avatar ||
@@ -96,146 +136,127 @@ export const Navbar: React.FC<NavbarProps> = ({
       .toUpperCase()
       .slice(0, 2) || 'TR';
 
-  // Reset image error state whenever avatar URL changes
   useEffect(() => {
     setImageError(false);
   }, [avatarUrl]);
 
-  // Close dropdowns on outside click
-  useEffect(() => {
-    const handleClickOutside = (e: MouseEvent) => {
-      if (currencyRef.current && !currencyRef.current.contains(e.target as Node)) {
-        setIsCurrencyDropdownOpen(false);
-      }
-      if (accountRef.current && !accountRef.current.contains(e.target as Node)) {
-        setIsAccountDropdownOpen(false);
-      }
-      if (filterRef.current && !filterRef.current.contains(e.target as Node)) {
-        setIsFilterDropdownOpen(false);
-      }
-      if (profileMenuRef.current && !profileMenuRef.current.contains(e.target as Node)) {
-        setIsProfileMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    const updateTime = () => {
-      const now = new Date();
-      const options: Intl.DateTimeFormatOptions = {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-        hour12: false,
-        timeZone: 'UTC',
-      };
-      setCurrentTime(`${now.toLocaleDateString('en-US', options)} UTC`);
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 1000);
-    return () => clearInterval(interval);
-  }, []);
-
-  const unreadCount = notifications.filter(n => !n.read).length;
-  const currentAccount = accounts.find(a => a.id === selectedAccountId);
-
   return (
-    <header className={`sticky top-0 z-40 flex h-16 w-full items-center justify-between border-b px-4 transition-colors lg:px-6 select-none ${
-      isLight 
-        ? 'border-[#E5E7EB] bg-white text-[#111827]' 
-        : 'border-[#26262B] bg-[#09090B] text-[#F4F4F5]'
-    }`}>
-      {/* Zone 1: Impersonation Alert & Live Market Clock */}
-      <div className="flex items-center gap-3 shrink-0">
-        {/* Impersonation Banner if Mentor Reviewing Student */}
+    <header
+      className={`h-14 border-b px-3 sm:px-4 flex items-center justify-between sticky top-0 z-30 select-none transition-colors duration-150 ${
+        isLight
+          ? 'bg-white/95 backdrop-blur-md border-[#E2E8F0] text-slate-800'
+          : 'bg-[#090A0E]/90 backdrop-blur-md border-[rgba(255,255,255,0.07)] text-slate-100'
+      }`}
+    >
+      {/* =========================================================================
+          ZONE 1 (LEFT): Market / Application State & Clock
+          ========================================================================= */}
+      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Mobile Hamburger Toggle */}
+        <button
+          type="button"
+          onClick={onToggleMobileSidebar}
+          className={`lg:hidden p-1.5 rounded-lg border transition cursor-pointer ${
+            isLight
+              ? 'border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700'
+              : 'border-[rgba(255,255,255,0.08)] bg-[#101116] hover:bg-[#15171D] text-slate-300'
+          }`}
+          aria-label="Open Navigation Menu"
+        >
+          <Menu className="w-4 h-4" />
+        </button>
+
+        {/* Impersonation Banner if Active */}
         {activeStudentImpersonation && (
-          <div className="flex items-center gap-2 bg-[rgba(245,184,46,0.12)] border border-[rgba(245,184,46,0.30)] text-[#F5B82E] px-3 py-1 rounded-full text-xs font-semibold animate-pulse shrink-0">
+          <div className="flex items-center gap-1.5 bg-amber-500/10 border border-amber-500/25 text-amber-400 px-2 py-0.5 rounded-full text-xs font-semibold shrink-0">
             <UserCheck className="w-3.5 h-3.5" />
-            <span>Viewing as: <strong>{activeStudentImpersonation.name}</strong></span>
+            <span className="hidden md:inline">Viewing: <strong>{activeStudentImpersonation.name}</strong></span>
             <button
               onClick={() => setActiveStudentImpersonation(null)}
-              className="ml-1 text-[11px] bg-[rgba(245,184,46,0.20)] hover:bg-[rgba(245,184,46,0.30)] text-[#F5B82E] px-2 py-0.5 rounded transition"
+              className="ml-1 text-[10px] bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 px-1.5 py-0.2 rounded transition cursor-pointer"
             >
               Exit
             </button>
           </div>
         )}
 
-        {/* Live Market Status & Clock */}
-        <div className={`flex items-center gap-2 text-xs px-2.5 sm:px-3 py-1.5 rounded-lg border shrink-0 whitespace-nowrap ${
-          isLight ? 'bg-[#F8FAFC] border-[#E5E7EB] text-[#4B5563]' : 'bg-[#121215] border-[#26262B] text-[#A1A1AA]'
-        }`}>
-          <span className="relative flex h-2 w-2 shrink-0">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00D6A3] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2 w-2 bg-[#00D6A3]"></span>
-          </span>
-          <span className="text-[10px] font-bold tracking-wider uppercase text-[#00D6A3] hidden xs:inline">
-            MARKET LIVE
-          </span>
-          <span className={`hidden xs:inline ${isLight ? 'text-[#D1D5DB]' : 'text-[#26262B]'}`}>|</span>
-          <span className={`font-mono text-[11px] ${isLight ? 'text-[#111827] font-medium' : 'text-[#F4F4F5]'}`}>
-            {currentTime || 'Syncing...'}
-          </span>
+        {/* Live Market State & Clock */}
+        <div
+          className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs shrink-0 ${
+            isLight
+              ? 'bg-slate-100/80 border-slate-300/80 text-slate-700 font-medium'
+              : 'bg-[#101116] border-[rgba(255,255,255,0.06)] text-slate-300'
+          }`}
+        >
+          <div className="flex items-center gap-1.5">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+            </span>
+            <span className="text-[10px] font-bold tracking-wider uppercase text-emerald-600 dark:text-emerald-400 hidden sm:inline">
+              LIVE
+            </span>
+          </div>
+          <span className={`${isLight ? 'text-slate-300' : 'text-slate-600'} hidden sm:inline`}>|</span>
+          <div className={`flex items-center gap-1.5 font-mono text-[11px] tabular-nums font-semibold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+            <Clock className={`w-3.5 h-3.5 ${isLight ? 'text-slate-600' : 'text-slate-400'} hidden md:inline`} />
+            <span>{currentTime || '00:00:00'}</span>
+          </div>
         </div>
       </div>
 
-      {/* Zone 2: Navigation Controls & Selectors */}
-      <div className="flex items-center gap-2 sm:gap-2.5">
-        {/* Global Search / Command Palette Trigger */}
+      {/* =========================================================================
+          ZONE 2 (CENTER): Quick Search / Command Center & Global Filters
+          ========================================================================= */}
+      <div className="flex items-center gap-1.5 sm:gap-2">
+        {/* Command Center Quick Search Trigger */}
         <button
           onClick={() => setIsCommandPaletteOpen(true)}
-          className={`hidden lg:flex items-center gap-2.5 rounded-lg border px-3 py-1.5 text-xs transition ${
+          className={`flex items-center gap-2 rounded-lg border px-2.5 py-1 text-xs transition cursor-pointer ${
             isLight
-              ? 'border-[#E5E7EB] bg-[#F8FAFC] hover:bg-[#F1F5F9] text-[#4B5563] hover:text-[#111827]'
-              : 'border-[#26262B] bg-[#121215] text-[#A1A1AA] hover:border-[#36363D] hover:text-[#F4F4F5]'
+              ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'
+              : 'border-[rgba(255,255,255,0.07)] bg-[#101116] hover:bg-[#15171D] hover:border-[rgba(255,255,255,0.12)] text-slate-400 hover:text-slate-200'
           }`}
+          title="Open Command Center (⌘K)"
         >
-          <Search className={`h-3.5 w-3.5 ${isLight ? 'text-[#6B7280]' : 'text-[#71717A]'}`} />
-          <span className="font-medium">Quick Search...</span>
-          <kbd className={`rounded px-1.5 py-0.5 text-[10px] font-mono font-semibold border ${
-            isLight
-              ? 'bg-white text-[#4B5563] border-[#E5E7EB]'
-              : 'bg-[#18181C] text-[#A1A1AA] border-[#26262B]'
+          <Search className={`h-3.5 w-3.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`} />
+          <span className={`hidden md:inline font-normal text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Command Search...</span>
+          <kbd className={`hidden md:inline-block rounded px-1.5 py-0.2 text-[10px] font-mono font-medium ${
+            isLight ? 'bg-slate-200/70 border border-slate-300 text-slate-700' : 'bg-[#181A21] border border-[rgba(255,255,255,0.08)] text-slate-400'
           }`}>
             ⌘K
           </kbd>
         </button>
 
-        {/* 1. Currency Display Mode Dropdown */}
+        {/* Currency Display Mode Filter */}
         <div className="relative" ref={currencyRef}>
           <button
             onClick={() => {
               setIsCurrencyDropdownOpen(!isCurrencyDropdownOpen);
               setIsAccountDropdownOpen(false);
               setIsDateRangeOpen(false);
-              setIsFilterDropdownOpen(false);
             }}
-            className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
+            className={`flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-medium transition cursor-pointer ${
               isLight
-                ? 'border-[#E5E7EB] bg-white hover:bg-[#F8FAFC] text-[#4B5563]'
-                : 'border-[#26262B] bg-[#121215] text-[#A1A1AA] hover:border-[#36363D] hover:text-[#F4F4F5]'
+                ? 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                : 'border-[rgba(255,255,255,0.07)] bg-[#101116] hover:bg-[#15171D] hover:border-[rgba(255,255,255,0.12)] text-slate-300 hover:text-white'
             }`}
             title="Display Units Mode"
           >
-            {currencyMode === 'USD' && <DollarSign className="w-3.5 h-3.5 text-[#00D6A3]" />}
-            {currencyMode === 'PERCENT' && <Percent className="w-3.5 h-3.5 text-[#2563FF]" />}
-            {currencyMode === 'PRIVACY' && <EyeOff className="w-3.5 h-3.5 text-[#F5B82E]" />}
-            {currencyMode === 'R_MULTIPLE' && <span className="font-bold text-xs text-[#2563FF]">R</span>}
-            {currencyMode === 'TICKS' && <Hash className="w-3.5 h-3.5 text-[#00D6A3]" />}
-            <ChevronDown className="w-3 h-3 text-[#71717A]" />
+            {currencyMode === 'USD' && <DollarSign className="w-3.5 h-3.5 text-emerald-400" />}
+            {currencyMode === 'PERCENT' && <Percent className="w-3.5 h-3.5 text-blue-400" />}
+            {currencyMode === 'PRIVACY' && <EyeOff className="w-3.5 h-3.5 text-amber-400" />}
+            {currencyMode === 'R_MULTIPLE' && <span className="font-bold text-xs text-indigo-400">R</span>}
+            {currencyMode === 'TICKS' && <Hash className="w-3.5 h-3.5 text-emerald-400" />}
+            <ChevronDown className="w-3 h-3 text-slate-500" />
           </button>
 
           {isCurrencyDropdownOpen && (
-            <div className={`absolute right-0 mt-2 w-52 rounded-xl border p-1.5 shadow-2xl z-50 animate-in fade-in zoom-in-95 ${
-              isLight ? 'bg-white border-[#E5E7EB] text-[#111827]' : 'bg-[#121215] border-[#26262B] text-[#F4F4F5]'
+            <div className={`absolute left-0 sm:right-0 sm:left-auto mt-1.5 w-48 rounded-xl border p-1 shadow-[0_12px_36px_rgba(0,0,0,0.5)] z-50 animate-in fade-in duration-100 ${
+              isLight ? 'border-slate-200 bg-white' : 'border-[rgba(255,255,255,0.10)] bg-[#181A21]'
             }`}>
-              <div className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider border-b ${
-                isLight ? 'text-[#6B7280] border-[#E5E7EB]' : 'text-[#71717A] border-[#26262B]'
+              <div className={`px-2 py-1 text-[10px] font-semibold uppercase tracking-wider border-b ${
+                isLight ? 'text-slate-500 border-slate-100' : 'text-slate-500 border-[rgba(255,255,255,0.06)]'
               }`}>
                 Display Metrics In
               </div>
@@ -244,7 +265,7 @@ export const Navbar: React.FC<NavbarProps> = ({
                 { id: 'PERCENT', label: 'Percentage (%)', desc: 'Account growth', icon: Percent },
                 { id: 'R_MULTIPLE', label: 'R-Multiple (R)', desc: 'Risk unit', icon: Sparkles },
                 { id: 'TICKS', label: 'Ticks / Points', desc: 'Price steps', icon: Hash },
-                { id: 'PRIVACY', label: 'Privacy Mode (••••)', desc: 'Hide amounts', icon: EyeOff },
+                { id: 'PRIVACY', label: 'Privacy Mode', desc: 'Hide amounts', icon: EyeOff },
               ].map(opt => (
                 <button
                   key={opt.id}
@@ -252,104 +273,44 @@ export const Navbar: React.FC<NavbarProps> = ({
                     setCurrencyMode(opt.id as CurrencyDisplayMode);
                     setIsCurrencyDropdownOpen(false);
                   }}
-                  className={`flex w-full items-center justify-between px-2.5 py-2 rounded-lg text-xs text-left transition ${
-                    isLight
-                      ? 'hover:bg-[#F8FAFC] text-[#111827]'
-                      : 'hover:bg-[rgba(37,99,255,0.08)] hover:text-[#F4F4F5] text-[#A1A1AA]'
+                  className={`flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer ${
+                    currencyMode === opt.id
+                      ? isLight ? 'bg-blue-50 text-blue-700 font-medium' : 'bg-blue-600/15 text-blue-400 font-medium'
+                      : isLight ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-[#1E222D] text-slate-300 hover:text-white'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <opt.icon className={`w-3.5 h-3.5 ${currencyMode === opt.id ? 'text-[#2563FF]' : 'text-[#71717A]'}`} />
-                    <span className="font-medium">{opt.label}</span>
+                    <opt.icon className={`w-3.5 h-3.5 ${currencyMode === opt.id ? (isLight ? 'text-blue-600' : 'text-blue-400') : 'text-slate-400'}`} />
+                    <span>{opt.label}</span>
                   </div>
-                  {currencyMode === opt.id && <Check className="w-3.5 h-3.5 text-[#2563FF]" />}
+                  {currencyMode === opt.id && <Check className={`w-3.5 h-3.5 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />}
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* 2. Quick Filters Dropdown */}
-        <div className="relative" ref={filterRef}>
-          <button
-            onClick={() => {
-              setIsFilterDropdownOpen(!isFilterDropdownOpen);
-              setIsCurrencyDropdownOpen(false);
-              setIsAccountDropdownOpen(false);
-              setIsDateRangeOpen(false);
-            }}
-            className={`hidden sm:flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
-              isLight
-                ? 'border-[#E5E7EB] bg-white hover:bg-[#F8FAFC] text-[#4B5563]'
-                : 'border-[#26262B] bg-[#121215] text-[#A1A1AA] hover:border-[#36363D] hover:text-[#F4F4F5]'
-            }`}
-          >
-            <Filter className={`w-3.5 h-3.5 ${isLight ? 'text-[#2563FF]' : 'text-[#4C7DFF]'}`} />
-            <span>Filters</span>
-            <ChevronDown className="w-3 h-3 text-[#71717A]" />
-          </button>
-
-          {isFilterDropdownOpen && (
-            <div className={`absolute right-0 mt-2 w-52 rounded-xl border p-1.5 shadow-2xl z-50 animate-in fade-in zoom-in-95 text-xs ${
-              isLight ? 'bg-white border-[#E5E7EB] text-[#111827]' : 'bg-[#121215] border-[#26262B] text-[#F4F4F5]'
-            }`}>
-              <div className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider border-b ${
-                isLight ? 'text-[#6B7280] border-[#E5E7EB]' : 'text-[#71717A] border-[#26262B]'
-              }`}>
-                Filter by Status
-              </div>
-              <div className="py-1 space-y-1">
-                <button
-                  onClick={() => setIsFilterDropdownOpen(false)}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg transition ${
-                    isLight ? 'hover:bg-[#F8FAFC] text-[#111827]' : 'hover:bg-[#18181C] text-[#A1A1AA]'
-                  }`}
-                >
-                  All Trades
-                </button>
-                <button
-                  onClick={() => setIsFilterDropdownOpen(false)}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition ${
-                    isLight ? 'hover:bg-[#ECFDF5] text-[#059669] font-medium' : 'hover:bg-[#18181C] text-[#00D6A3]'
-                  }`}
-                >
-                  Winning Trades
-                </button>
-                <button
-                  onClick={() => setIsFilterDropdownOpen(false)}
-                  className={`w-full text-left px-2.5 py-1.5 rounded-lg flex items-center justify-between transition ${
-                    isLight ? 'hover:bg-[#FEF2F2] text-[#DC2626] font-medium' : 'hover:bg-[#18181C] text-[#FF3D6E]'
-                  }`}
-                >
-                  Losing Trades
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* 3. Date Range Selector Dropdown */}
+        {/* Global Date Range Filter */}
         <div className="relative">
           <button
             onClick={() => {
               setIsDateRangeOpen(!isDateRangeOpen);
               setIsCurrencyDropdownOpen(false);
               setIsAccountDropdownOpen(false);
-              setIsFilterDropdownOpen(false);
             }}
-            className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs font-medium transition cursor-pointer ${
               isLight
-                ? 'border-[#E5E7EB] bg-white hover:bg-[#F8FAFC] text-[#4B5563]'
-                : 'border-[#26262B] bg-[#121215] text-[#A1A1AA] hover:border-[#36363D] hover:text-[#F4F4F5]'
+                ? 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+                : 'border-[rgba(255,255,255,0.07)] bg-[#101116] hover:bg-[#15171D] hover:border-[rgba(255,255,255,0.12)] text-slate-300 hover:text-white'
             }`}
           >
-            <Calendar className={`w-3.5 h-3.5 ${isLight ? 'text-[#2563FF]' : 'text-[#4C7DFF]'}`} />
-            <span className="max-w-[130px] truncate">
+            <Calendar className="w-3.5 h-3.5 text-blue-400" />
+            <span className={`hidden sm:inline max-w-[120px] truncate ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
               {dateRange.startDate && dateRange.endDate
-                ? `${dateRange.startDate} - ${dateRange.endDate}`
-                : dateRange.presetLabel || 'Date range'}
+                ? `${safeFormatDate(dateRange.startDate, '—', { month: 'short', day: 'numeric' })} - ${safeFormatDate(dateRange.endDate, '—', { month: 'short', day: 'numeric' })}`
+                : dateRange.presetLabel || 'Dates'}
             </span>
-            <ChevronDown className="w-3 h-3 text-[#71717A]" />
+            <ChevronDown className="w-3 h-3 text-slate-500" />
           </button>
 
           <DateRangeDropdown
@@ -361,35 +322,45 @@ export const Navbar: React.FC<NavbarProps> = ({
             }}
           />
         </div>
+      </div>
 
-        {/* 4. Account Selector Dropdown */}
+      {/* =========================================================================
+          ZONE 3 (RIGHT): Account Switcher, Notifications, Theme & Add Trade CTA
+          ========================================================================= */}
+      <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+        {/* Account Selector Dropdown */}
         <div className="relative" ref={accountRef}>
           <button
             onClick={() => {
               setIsAccountDropdownOpen(!isAccountDropdownOpen);
               setIsCurrencyDropdownOpen(false);
               setIsDateRangeOpen(false);
-              setIsFilterDropdownOpen(false);
             }}
-            className={`flex items-center gap-2 rounded-lg border px-3 py-1.5 text-xs font-semibold transition ${
+            className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition cursor-pointer ${
               isLight
-                ? 'border-[#E5E7EB] bg-white hover:bg-[#F8FAFC] text-[#111827]'
-                : 'border-[#26262B] bg-[#121215] text-[#F4F4F5] hover:border-[#36363D]'
+                ? 'border-slate-200 bg-white hover:bg-slate-50 text-slate-900'
+                : 'border-[rgba(255,255,255,0.07)] bg-[#101116] hover:bg-[#15171D] hover:border-[rgba(255,255,255,0.12)] text-slate-200'
             }`}
           >
-            <div className="w-2 h-2 rounded-full bg-[#00D6A3]"></div>
-            <span className="max-w-[110px] truncate">
-              {selectedAccountId === 'all' ? 'All Accounts' : currentAccount?.name || 'Account'}
+            <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${currentPropFirm ? 'bg-blue-400' : 'bg-emerald-400'}`} />
+            <span className="hidden md:inline max-w-[110px] truncate">
+              {selectedAccountId === 'all' ? (
+                'All Accounts'
+              ) : currentPropFirm ? (
+                currentPropFirm.name
+              ) : (
+                currentAccount?.name || 'Account'
+              )}
             </span>
-            <ChevronDown className="w-3 h-3 text-[#71717A]" />
+            <ChevronDown className="w-3 h-3 text-slate-500 shrink-0" />
           </button>
 
           {isAccountDropdownOpen && (
-            <div className={`absolute right-0 mt-2 w-60 rounded-xl border p-1.5 shadow-2xl z-50 animate-in fade-in zoom-in-95 ${
-              isLight ? 'bg-white border-[#E5E7EB] text-[#111827]' : 'bg-[#121215] border-[#26262B] text-[#F4F4F5]'
+            <div className={`absolute right-0 mt-1.5 w-64 max-h-[75vh] overflow-y-auto custom-scrollbar rounded-xl border p-1 shadow-[0_12px_36px_rgba(0,0,0,0.5)] z-50 animate-in fade-in duration-100 ${
+              isLight ? 'border-slate-200 bg-white' : 'border-[rgba(255,255,255,0.10)] bg-[#181A21]'
             }`}>
-              <div className={`px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider border-b ${
-                isLight ? 'text-[#6B7280] border-[#E5E7EB]' : 'text-[#71717A] border-[#26262B]'
+              <div className={`px-2 py-1 text-[10px] font-semibold uppercase tracking-wider border-b ${
+                isLight ? 'text-slate-500 border-slate-100' : 'text-slate-500 border-[rgba(255,255,255,0.06)]'
               }`}>
                 Active Trading Portfolio
               </div>
@@ -398,13 +369,23 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setSelectedAccountId('all');
                   setIsAccountDropdownOpen(false);
                 }}
-                className={`flex w-full items-center justify-between px-2.5 py-2 rounded-lg text-xs text-left transition ${
-                  isLight ? 'hover:bg-[#F8FAFC] text-[#111827]' : 'hover:bg-[rgba(37,99,255,0.08)] hover:text-[#F4F4F5] text-[#A1A1AA]'
+                className={`flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer ${
+                  selectedAccountId === 'all'
+                    ? isLight ? 'bg-blue-50 text-blue-700 font-medium' : 'bg-blue-600/15 text-blue-400 font-medium'
+                    : isLight ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-[#1E222D] text-slate-300 hover:text-white'
                 }`}
               >
-                <span className="font-semibold">All Accounts Combined</span>
-                {selectedAccountId === 'all' && <Check className="w-3.5 h-3.5 text-[#2563FF]" />}
+                <span className="font-medium">All Accounts Combined</span>
+                {selectedAccountId === 'all' && <Check className={`w-3.5 h-3.5 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />}
               </button>
+
+              {/* Broker Accounts */}
+              <div className={`px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wider flex items-center justify-between ${
+                isLight ? 'text-slate-500' : 'text-slate-500'
+              }`}>
+                <span>Broker Accounts</span>
+                <span className="font-mono text-[9px]">{accounts.length}</span>
+              </div>
               {accounts.map(acc => (
                 <button
                   key={acc.id}
@@ -412,216 +393,187 @@ export const Navbar: React.FC<NavbarProps> = ({
                     setSelectedAccountId(acc.id);
                     setIsAccountDropdownOpen(false);
                   }}
-                  className={`flex w-full items-center justify-between px-2.5 py-2 rounded-lg text-xs text-left transition ${
-                    isLight ? 'hover:bg-[#F8FAFC] text-[#111827]' : 'hover:bg-[rgba(37,99,255,0.08)] hover:text-[#F4F4F5] text-[#A1A1AA]'
+                  className={`flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer ${
+                    selectedAccountId === acc.id
+                      ? isLight ? 'bg-blue-50 text-blue-700 font-medium' : 'bg-blue-600/15 text-blue-400 font-medium'
+                      : isLight ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-[#1E222D] text-slate-300 hover:text-white'
                   }`}
                 >
-                  <div>
-                    <div className={`font-semibold ${isLight ? 'text-[#111827]' : 'text-[#F4F4F5]'}`}>{acc.name}</div>
-                    <div className={`text-[10px] flex items-center gap-1.5 ${isLight ? 'text-[#6B7280]' : 'text-[#A1A1AA]'}`}>
-                      <span className={`px-1 rounded ${isLight ? 'bg-[#F1F5F9] border border-[#E5E7EB]' : 'bg-[#18181C]'}`}>{acc.broker}</span>
-                      <span className="font-mono">${(acc?.currentBalance ?? 0).toLocaleString()}</span>
+                  <div className="text-left">
+                    <div className={`font-medium ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>{acc.name}</div>
+                    <div className={`text-[10px] flex items-center gap-1.5 ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
+                      <span>{acc.broker}</span>
+                      <span className="font-mono tabular-nums">${(acc?.currentBalance ?? 0).toLocaleString()}</span>
                     </div>
                   </div>
-                  {selectedAccountId === acc.id && <Check className="w-3.5 h-3.5 text-[#2563FF]" />}
+                  {selectedAccountId === acc.id && <Check className={`w-3.5 h-3.5 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />}
                 </button>
               ))}
+
+              {/* Prop Firm Accounts */}
+              {propFirmAccounts.length > 0 && (
+                <>
+                  <div className={`px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wider flex items-center justify-between border-t mt-1 ${
+                    isLight ? 'border-slate-100 text-blue-600' : 'border-[rgba(255,255,255,0.06)] text-blue-400'
+                  }`}>
+                    <span>Prop Firm Accounts</span>
+                    <span className="font-mono text-[9px]">{propFirmAccounts.length}</span>
+                  </div>
+                  {propFirmAccounts.map(pf => (
+                    <button
+                      key={pf.id}
+                      onClick={() => {
+                        setSelectedAccountId(pf.id);
+                        setSelectedPropFirmAccountId(pf.id);
+                        setIsAccountDropdownOpen(false);
+                      }}
+                      className={`flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer ${
+                        selectedAccountId === pf.id
+                          ? isLight ? 'bg-blue-50 text-blue-700 font-medium' : 'bg-blue-600/15 text-blue-400 font-medium'
+                          : isLight ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-[#1E222D] text-slate-300 hover:text-white'
+                      }`}
+                    >
+                      <div className="text-left">
+                        <div className={`font-medium ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>{pf.name}</div>
+                        <div className={`text-[10px] flex items-center gap-1.5 ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
+                          <span>{pf.firmName}</span>
+                          <span className="font-mono tabular-nums">${pf.startingBalance.toLocaleString()}</span>
+                        </div>
+                      </div>
+                      {selectedAccountId === pf.id && <Check className={`w-3.5 h-3.5 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />}
+                    </button>
+                  ))}
+                </>
+              )}
             </div>
           )}
         </div>
 
-        {/* Theme Toggle Button (Dark / Light) */}
+        {/* Theme Toggle Button */}
         <button
           onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-          className={`rounded-lg border p-2 transition ${
+          className={`rounded-lg border p-1.5 transition cursor-pointer ${
             isLight
-              ? 'border-[#E5E7EB] bg-white hover:bg-[#F8FAFC] text-[#4B5563]'
-              : 'border-[#26262B] bg-[#121215] text-[#A1A1AA] hover:text-[#F4F4F5] hover:border-[#36363D]'
+              ? 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+              : 'border-[rgba(255,255,255,0.07)] bg-[#101116] hover:bg-[#15171D] hover:border-[rgba(255,255,255,0.12)] text-slate-400 hover:text-slate-200'
           }`}
           title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
         >
           {theme === 'dark' ? (
-            <Moon className="w-4 h-4 text-[#4C7DFF]" />
+            <Moon className="w-3.5 h-3.5 text-blue-400" />
           ) : (
-            <Sun className="w-4 h-4 text-[#F5B82E]" />
+            <Sun className="w-3.5 h-3.5 text-amber-500" />
           )}
         </button>
 
-        {/* Notification Bell */}
+        {/* Notification Center */}
         <button
           onClick={onOpenNotifications}
-          className={`relative rounded-lg border p-2 transition ${
+          className={`relative rounded-lg border p-1.5 transition cursor-pointer ${
             isLight
-              ? 'border-[#E5E7EB] bg-white hover:bg-[#F8FAFC] text-[#4B5563]'
-              : 'border-[#26262B] bg-[#121215] text-[#A1A1AA] hover:text-[#F4F4F5] hover:border-[#36363D]'
+              ? 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+              : 'border-[rgba(255,255,255,0.07)] bg-[#101116] hover:bg-[#15171D] hover:border-[rgba(255,255,255,0.12)] text-slate-400 hover:text-slate-200'
           }`}
           title="Notifications & Risk Alerts"
         >
-          <Bell className={`w-4 h-4 ${isLight ? 'text-[#4B5563]' : 'text-[#A1A1AA]'}`} />
+          <Bell className="w-3.5 h-3.5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[#2563FF] text-[9px] font-bold text-white shadow-sm ring-2 ring-[#09090B]">
+            <span className="absolute -top-1 -right-1 flex h-3.5 w-3.5 items-center justify-center rounded-full bg-blue-600 text-[8px] font-bold text-white shadow-xs">
               {unreadCount}
             </span>
           )}
         </button>
 
-        {/* User Profile Avatar Display with Fallback to Initials */}
+        {/* User Profile Avatar */}
         <div className="relative" ref={profileMenuRef}>
           <button
             onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-            className={`group flex items-center gap-2 rounded-full p-1 sm:px-2 sm:py-1 border transition-all duration-150 active:scale-[0.98] ${
+            className={`flex items-center gap-1.5 rounded-lg p-1 border transition cursor-pointer ${
               isLight
-                ? 'border-[#E5E7EB] bg-white hover:border-[#D1D5DB] hover:bg-[#F9FAFB]'
-                : 'border-[#26262B] bg-[#121215] hover:border-[#36363D] hover:bg-[#18181C]'
+                ? 'hover:bg-slate-100 border-transparent hover:border-slate-200'
+                : 'hover:bg-[#15171D] border-transparent hover:border-[rgba(255,255,255,0.07)]'
             }`}
-            title={`${accountName} (${userProfile?.accountCode || 'Profile'})`}
-            aria-label="User Profile Menu"
+            title={accountName}
           >
-            <div className="relative flex items-center justify-center">
-              {avatarUrl && !imageError ? (
-                <img
-                  src={avatarUrl}
-                  alt={accountName}
-                  referrerPolicy="no-referrer"
-                  onError={() => setImageError(true)}
-                  className="w-7 h-7 rounded-full object-cover ring-1 ring-[#2563FF]/30 shadow-sm"
-                />
-              ) : (
-                <div
-                  className={`w-7 h-7 rounded-full font-semibold text-xs flex items-center justify-center select-none shadow-sm ${
-                    isLight
-                      ? 'bg-[rgba(37,99,255,0.12)] text-[#1D4ED8] border border-[rgba(37,99,255,0.25)]'
-                      : 'bg-[rgba(37,99,255,0.15)] text-[#4C7DFF] border border-[rgba(37,99,255,0.30)]'
-                  }`}
-                >
-                  {userInitials}
-                </div>
-              )}
-              <span className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-[#00D6A3] ring-2 ring-[#09090B]" />
-            </div>
-
-            <span className={`hidden md:inline text-xs font-semibold max-w-[110px] truncate ${
-              isLight ? 'text-[#111827]' : 'text-[#F4F4F5]'
-            }`}>
-              {accountName}
-            </span>
-            <ChevronDown className={`hidden sm:block w-3.5 h-3.5 text-[#A1A1AA] transition-transform duration-200 ${isProfileMenuOpen ? 'rotate-180' : ''}`} />
+            {avatarUrl && !imageError ? (
+              <img
+                src={avatarUrl}
+                alt={accountName}
+                referrerPolicy="no-referrer"
+                onError={() => setImageError(true)}
+                className="w-6 h-6 rounded-md object-cover ring-1 ring-blue-500/30"
+              />
+            ) : (
+              <div className={`w-6 h-6 rounded-md font-semibold text-[11px] flex items-center justify-center ${
+                isLight ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-[#181A21] text-blue-400 border border-[rgba(255,255,255,0.08)]'
+              }`}>
+                {userInitials}
+              </div>
+            )}
+            <ChevronDown className="w-3 h-3 text-slate-500" />
           </button>
 
-          {/* Profile Dropdown Menu */}
           {isProfileMenuOpen && (
-            <div
-              className={`absolute right-0 mt-2 w-64 rounded-xl border p-2 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-100 ${
-                isLight
-                  ? 'bg-white border-[#E5E7EB] text-[#111827] shadow-[0_10px_30px_rgba(0,0,0,0.08)]'
-                  : 'bg-[#121215] border-[#26262B] text-[#F4F4F5] shadow-[0_10px_30px_rgba(0,0,0,0.5)]'
-              }`}
-            >
-              {/* User Header */}
-              <div className={`p-3 rounded-lg border mb-2 flex items-center gap-3 ${
-                isLight ? 'bg-[#F9FAFB] border-[#E5E7EB]' : 'bg-[#18181C] border-[#26262B]'
+            <div className={`absolute right-0 mt-1.5 w-56 rounded-xl border p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.5)] z-50 animate-in fade-in duration-100 ${
+              isLight ? 'border-slate-200 bg-white' : 'border-[rgba(255,255,255,0.10)] bg-[#181A21]'
+            }`}>
+              <div className={`p-2 rounded-lg mb-1 border ${
+                isLight ? 'bg-slate-50 border-slate-200/60' : 'bg-[#12141A] border-[rgba(255,255,255,0.06)]'
               }`}>
-                <div className="relative shrink-0">
-                  {avatarUrl && !imageError ? (
-                    <img
-                      src={avatarUrl}
-                      alt={accountName}
-                      referrerPolicy="no-referrer"
-                      onError={() => setImageError(true)}
-                      className="w-10 h-10 rounded-full object-cover ring-2 ring-[#2563FF]/40"
-                    />
-                  ) : (
-                    <div
-                      className={`w-10 h-10 rounded-full font-bold text-sm flex items-center justify-center select-none ${
-                        isLight
-                          ? 'bg-[rgba(37,99,255,0.12)] text-[#1D4ED8] border border-[rgba(37,99,255,0.25)]'
-                          : 'bg-[rgba(37,99,255,0.15)] text-[#4C7DFF] border border-[rgba(37,99,255,0.30)]'
-                      }`}
-                    >
-                      {userInitials}
-                    </div>
-                  )}
-                  <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-[#00D6A3] ring-2 ring-[#121215]" />
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <span className="font-semibold text-xs truncate max-w-[130px]" title={accountName}>
-                      {accountName}
-                    </span>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded bg-[rgba(37,99,255,0.15)] text-[#4C7DFF] font-medium border border-[rgba(37,99,255,0.25)] shrink-0">
-                      {userProfile?.experienceLevel || 'PRO'}
-                    </span>
-                  </div>
-                  <span className="text-[11px] text-[#A1A1AA] truncate font-mono">
-                    {authUser?.email || userProfile?.email || 'Authenticated'}
-                  </span>
-                  {userProfile?.accountCode && (
-                    <span className="text-[10px] text-[#2563FF] font-mono mt-0.5 font-medium">
-                      ID: {userProfile.accountCode}
-                    </span>
-                  )}
+                <div className={`text-xs font-semibold truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>{accountName}</div>
+                <div className={`text-[10px] truncate font-mono mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                  {authUser?.email || 'Institutional Desk'}
                 </div>
               </div>
 
-              {/* Menu Actions */}
-              <div className="space-y-1">
-                <button
-                  onClick={() => {
-                    setActiveView('settings');
-                    setIsProfileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg transition text-left ${
-                    isLight
-                      ? 'hover:bg-[#F3F4F6] text-[#374151]'
-                      : 'hover:bg-[#1C1C21] text-[#D4D4D8]'
-                  }`}
-                >
-                  <Settings className="w-3.5 h-3.5 text-[#A1A1AA]" />
-                  <span>Account Settings & Profile</span>
-                </button>
+              <button
+                onClick={() => {
+                  setActiveView('settings');
+                  setIsProfileMenuOpen(false);
+                }}
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs rounded-lg transition cursor-pointer text-left ${
+                  isLight ? 'text-slate-700 hover:bg-slate-100' : 'text-slate-300 hover:text-white hover:bg-[#1E222D]'
+                }`}
+              >
+                <Settings className="w-3.5 h-3.5 text-slate-400" />
+                <span>Account Settings</span>
+              </button>
 
-                <button
-                  onClick={() => {
-                    setActiveView('mentor-mode');
-                    setIsProfileMenuOpen(false);
-                  }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg transition text-left ${
-                    isLight
-                      ? 'hover:bg-[#F3F4F6] text-[#374151]'
-                      : 'hover:bg-[#1C1C21] text-[#D4D4D8]'
-                  }`}
-                >
-                  <Shield className="w-3.5 h-3.5 text-[#A1A1AA]" />
-                  <span>Mentor Hub & Code</span>
-                </button>
+              <button
+                onClick={() => {
+                  setActiveView('mentor-mode');
+                  setIsProfileMenuOpen(false);
+                }}
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs rounded-lg transition cursor-pointer text-left ${
+                  isLight ? 'text-slate-700 hover:bg-slate-100' : 'text-slate-300 hover:text-white hover:bg-[#1E222D]'
+                }`}
+              >
+                <Shield className="w-3.5 h-3.5 text-slate-400" />
+                <span>Mentor Hub</span>
+              </button>
 
-                <div className={`my-1 border-t ${isLight ? 'border-[#E5E7EB]' : 'border-[#26262B]'}`} />
+              <div className={`my-1 border-t ${isLight ? 'border-slate-100' : 'border-[rgba(255,255,255,0.06)]'}`} />
 
-                <button
-                  onClick={() => {
-                    setIsProfileMenuOpen(false);
-                    logout();
-                  }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-2 text-xs rounded-lg transition text-left font-medium ${
-                    isLight
-                      ? 'text-[#DC2626] hover:bg-[#FEE2E2]'
-                      : 'text-[#FF3D6E] hover:bg-[rgba(255,61,110,0.12)]'
-                  }`}
-                >
-                  <LogOut className="w-3.5 h-3.5" />
-                  <span>Sign Out</span>
-                </button>
-              </div>
+              <button
+                onClick={() => {
+                  setIsProfileMenuOpen(false);
+                  logout();
+                }}
+                className="w-full flex items-center gap-2 px-2.5 py-1.5 text-xs text-rose-500 hover:bg-rose-500/10 rounded-lg transition cursor-pointer text-left font-medium"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out</span>
+              </button>
             </div>
           )}
         </div>
 
-        {/* Quick Add Trade CTA Button */}
+        {/* Primary CTA: Add Trade / New Execution */}
         <button
           onClick={() => setIsAddTradeOpen(true)}
-          className="flex items-center gap-2 rounded-lg bg-[#2563FF] hover:bg-[#2F6BFF] text-white px-3.5 py-1.5 text-xs font-semibold transition active:scale-[0.98] whitespace-nowrap"
+          className="flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 text-xs font-semibold shadow-xs border border-blue-400/30 transition active:scale-[0.98] cursor-pointer shrink-0"
         >
-          <Plus className="w-4 h-4" />
+          <Plus className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Add Trade</span>
         </button>
       </div>

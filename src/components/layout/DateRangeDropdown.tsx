@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { useTrading } from '../../context/TradingContext';
 
 export interface DateRangeState {
@@ -207,13 +207,15 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
     }
 
     return (
-      <div className="w-[240px] select-none">
+      <div className="w-[230px] select-none">
         {/* Month Header with controls */}
-        <div className="flex items-center justify-between px-2 py-1.5 mb-2">
+        <div className="flex items-center justify-between px-2 py-1 mb-2">
           {isFirstMonth ? (
             <button
               onClick={handlePrevMonth}
-              className={`p-1 rounded transition ${isLight ? 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900' : 'hover:bg-[#18181C] text-[#A1A1AA] hover:text-[#F4F4F5]'}`}
+              className={`p-1 rounded transition cursor-pointer ${
+                isLight ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-[#1E222D]'
+              }`}
             >
               <ChevronLeft className="w-4 h-4" />
             </button>
@@ -221,25 +223,25 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
             <div className="w-4" />
           )}
 
-          <div className={`flex items-center gap-1.5 text-xs font-semibold ${isLight ? 'text-zinc-900' : 'text-[#F4F4F5]'}`}>
+          <div className={`flex items-center gap-1.5 text-xs font-semibold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
             <span>{monthName}</span>
-            <span className={isLight ? 'text-zinc-500' : 'text-[#A1A1AA]'}>{year}</span>
+            <span className={`${isLight ? 'text-slate-500' : 'text-slate-400'} font-mono`}>{year}</span>
           </div>
 
-          {!isFirstMonth ? (
-            <button
-              onClick={handleNextMonth}
-              className={`p-1 rounded transition ${isLight ? 'hover:bg-zinc-100 text-zinc-500 hover:text-zinc-900' : 'hover:bg-[#18181C] text-[#A1A1AA] hover:text-[#F4F4F5]'}`}
-            >
-              <ChevronRight className="w-4 h-4" />
-            </button>
-          ) : (
-            <div className="w-4" />
-          )}
+          <button
+            onClick={handleNextMonth}
+            className={`p-1 rounded transition cursor-pointer ${
+              isLight ? 'text-slate-500 hover:text-slate-900 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-[#1E222D]'
+            } ${isFirstMonth ? 'sm:invisible' : ''}`}
+          >
+            <ChevronRight className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Days of week header */}
-        <div className={`grid grid-cols-7 text-center text-[10px] font-medium mb-1 ${isLight ? 'text-zinc-400' : 'text-[#71717A]'}`}>
+        <div className={`grid grid-cols-7 text-center text-[10px] font-semibold mb-1 uppercase ${
+          isLight ? 'text-slate-400' : 'text-slate-500'
+        }`}>
           <span>Su</span>
           <span>Mo</span>
           <span>Tu</span>
@@ -250,7 +252,7 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
         </div>
 
         {/* Day numbers grid */}
-        <div className="grid grid-cols-7 gap-y-1 text-center text-xs">
+        <div className="grid grid-cols-7 gap-y-0.5 text-center text-xs">
           {days.map((d, index) => {
             const isSelectedStart = tempStart === d.dateStr;
             const isSelectedEnd = tempEnd === d.dateStr;
@@ -261,14 +263,14 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
               <button
                 key={index}
                 onClick={() => handleDateClick(d.dateStr)}
-                className={`h-7 w-7 mx-auto rounded-full flex items-center justify-center text-[11px] transition-colors ${
+                className={`h-7 w-7 mx-auto rounded-lg flex items-center justify-center text-[11px] font-mono tabular-nums transition-colors cursor-pointer ${
                   !d.isCurrentMonth
-                    ? isLight ? 'text-zinc-300' : 'text-[#52525B]'
+                    ? isLight ? 'text-slate-300' : 'text-slate-600'
                     : isSelectedStart || isSelectedEnd
-                    ? 'bg-[#2563FF] text-white font-bold shadow-sm'
+                    ? 'bg-blue-600 text-white font-bold shadow-xs'
                     : isInRange
-                    ? isLight ? 'bg-blue-100 text-blue-800 rounded-none' : 'bg-[#2563FF]/20 text-[#4C7DFF] rounded-none'
-                    : isLight ? 'text-zinc-700 hover:bg-zinc-100' : 'text-[#D4D4D8] hover:bg-[#18181C]'
+                    ? isLight ? 'bg-blue-50 text-blue-700 rounded-none' : 'bg-blue-500/15 text-blue-300 rounded-none'
+                    : isLight ? 'text-slate-700 hover:bg-slate-100' : 'text-slate-300 hover:bg-[#1E222D]'
                 }`}
               >
                 {d.dayNumber}
@@ -283,47 +285,58 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`absolute top-full right-0 mt-2 z-50 rounded-xl border p-4 animate-in fade-in zoom-in-95 ${
+      className={`absolute top-full right-0 mt-2 z-50 rounded-2xl border p-3 sm:p-4 animate-in fade-in duration-100 w-[calc(100vw-32px)] max-w-[620px] sm:w-auto ${
         isLight
-          ? 'bg-white border-[#E5E7EB] text-[#111827] shadow-xl'
-          : 'border-[#26262B] bg-[#121215] text-[#F4F4F5] shadow-2xl'
+          ? 'border-slate-200 bg-white text-slate-900 shadow-[0_12px_36px_rgba(0,0,0,0.12)]'
+          : 'border-[rgba(255,255,255,0.10)] bg-[#181A21] text-slate-100 shadow-[0_12px_36px_rgba(0,0,0,0.7)]'
       }`}
-      style={{ width: '640px' }}
     >
       {/* Top Header: Start Date -> End Date */}
-      <div className={`flex items-center justify-between pb-3 mb-3 border-b text-xs ${isLight ? 'border-[#E5E7EB]' : 'border-[#26262B]'}`}>
-        <div className="flex items-center gap-4 flex-1">
-          <div className={`flex-1 px-3 py-1.5 rounded-lg border font-mono text-center ${
-            isLight ? 'bg-[#F8FAFC] border-[#E5E7EB] text-[#111827]' : 'bg-[#0E0E11] border-[#26262B] text-[#F4F4F5]'
+      <div className={`flex items-center justify-between pb-3 mb-3 border-b text-xs ${
+        isLight ? 'border-slate-100' : 'border-[rgba(255,255,255,0.07)]'
+      }`}>
+        <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
+          <div className={`flex-1 px-2.5 sm:px-3 py-1.5 rounded-lg border font-mono tabular-nums text-center truncate text-[11px] sm:text-xs ${
+            isLight ? 'border-slate-200 bg-slate-50 text-slate-800' : 'border-[rgba(255,255,255,0.08)] bg-[#0C0D12] text-slate-200'
           }`}>
             {tempStart ? tempStart : 'Start Date'}
           </div>
-          <span className={`font-bold ${isLight ? 'text-[#9CA3AF]' : 'text-[#71717A]'}`}>→</span>
-          <div className={`flex-1 px-3 py-1.5 rounded-lg border font-mono text-center ${
-            isLight ? 'bg-[#F8FAFC] border-[#E5E7EB] text-[#111827]' : 'bg-[#0E0E11] border-[#26262B] text-[#F4F4F5]'
+          <span className={`font-bold shrink-0 ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>→</span>
+          <div className={`flex-1 px-2.5 sm:px-3 py-1.5 rounded-lg border font-mono tabular-nums text-center truncate text-[11px] sm:text-xs ${
+            isLight ? 'border-slate-200 bg-slate-50 text-slate-800' : 'border-[rgba(255,255,255,0.08)] bg-[#0C0D12] text-slate-200'
           }`}>
             {tempEnd ? tempEnd : 'End Date'}
           </div>
         </div>
         <button
           onClick={onClose}
-          className={`ml-3 p-1 rounded-lg transition ${isLight ? 'text-[#6B7280] hover:text-[#111827] hover:bg-[#F8FAFC]' : 'text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-[#18181C]'}`}
+          className={`ml-3 p-1 rounded-lg transition cursor-pointer shrink-0 ${
+            isLight ? 'text-slate-400 hover:text-slate-700 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-[#1E222D]'
+          }`}
         >
           <X className="w-4 h-4" />
         </button>
       </div>
 
       {/* Main Dual Calendar + Presets Column */}
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
         {/* Left Side: Dual Month Calendars */}
-        <div className={`flex gap-4 border-r pr-4 ${isLight ? 'border-[#E5E7EB]' : 'border-[#26262B]'}`}>
+        <div className={`flex flex-col sm:flex-row gap-3 sm:gap-4 sm:border-r sm:pr-4 justify-center items-center ${
+          isLight ? 'sm:border-slate-100' : 'sm:border-[rgba(255,255,255,0.07)]'
+        }`}>
           {renderCalendar(currentMonthDate, true)}
-          {renderCalendar(nextMonthDate, false)}
+          <div className="hidden md:block">
+            {renderCalendar(nextMonthDate, false)}
+          </div>
         </div>
 
         {/* Right Side: Quick Presets */}
-        <div className="w-[140px] flex flex-col justify-start space-y-1">
-          <div className={`text-[10px] font-bold uppercase tracking-wider pb-1 ${isLight ? 'text-[#9CA3AF]' : 'text-[#71717A]'}`}>
+        <div className={`w-full sm:w-[130px] flex flex-row sm:flex-col flex-wrap sm:flex-nowrap gap-1 overflow-x-auto custom-scrollbar pt-2 sm:pt-0 border-t sm:border-t-0 ${
+          isLight ? 'border-slate-100' : 'border-[rgba(255,255,255,0.07)]'
+        }`}>
+          <div className={`w-full text-[10px] font-semibold uppercase tracking-wider pb-1 hidden sm:block ${
+            isLight ? 'text-slate-400' : 'text-slate-500'
+          }`}>
             Quick Select
           </div>
           {PRESETS.map(preset => {
@@ -332,14 +345,14 @@ export const DateRangeDropdown: React.FC<DateRangeDropdownProps> = ({
               <button
                 key={preset}
                 onClick={() => computePresetRange(preset)}
-                className={`w-full text-left px-2.5 py-1.5 rounded-lg text-xs font-medium transition ${
+                className={`px-2.5 py-1 sm:py-1.5 rounded-lg text-[11px] sm:text-xs font-medium transition cursor-pointer shrink-0 whitespace-nowrap text-left ${
                   isSelected
                     ? isLight
-                      ? 'bg-[rgba(37,99,255,0.08)] text-[#1D4ED8] font-semibold border border-[rgba(37,99,255,0.20)]'
-                      : 'bg-[rgba(37,99,255,0.12)] text-[#4C7DFF] font-semibold border border-[rgba(37,99,255,0.25)]'
+                      ? 'bg-blue-50 text-blue-700 font-semibold border border-blue-200'
+                      : 'bg-blue-600/15 text-blue-400 font-semibold border border-blue-500/30'
                     : isLight
-                      ? 'text-[#4B5563] hover:text-[#111827] hover:bg-[#F8FAFC] border border-transparent'
-                      : 'text-[#A1A1AA] hover:text-[#F4F4F5] hover:bg-[#18181C] border border-transparent'
+                    ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 border border-transparent'
+                    : 'text-slate-400 hover:text-white hover:bg-[#1E222D] border border-transparent'
                 }`}
               >
                 {preset}

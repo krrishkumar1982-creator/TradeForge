@@ -1,4 +1,4 @@
-import { uploadToSupabaseStorage, STORAGE_BUCKETS, isSupabaseConfigured } from '../lib/supabase.ts';
+import { uploadToSupabaseStorage, deleteFromSupabaseStorage, STORAGE_BUCKETS, isSupabaseConfigured } from '../lib/supabase.ts';
 
 /**
  * Service providing high-level helper functions for Supabase Storage operations across the app.
@@ -64,5 +64,23 @@ export const SupabaseStorageService = {
     path?: string
   ): Promise<string> => {
     return await uploadToSupabaseStorage(file, bucket, path);
+  },
+
+  /**
+   * Delete a journal attachment or screenshot from Supabase Storage.
+   */
+  deleteJournalAttachment: async (fileUrl: string): Promise<boolean> => {
+    if (!fileUrl) return false;
+    return await deleteFromSupabaseStorage(fileUrl, STORAGE_BUCKETS.JOURNAL_ASSETS);
+  },
+
+  /**
+   * Delete multiple attachments or screenshots from Supabase Storage.
+   */
+  deleteMultipleJournalAttachments: async (fileUrls: string[]): Promise<void> => {
+    if (!fileUrls || !fileUrls.length) return;
+    await Promise.allSettled(
+      fileUrls.map((url) => deleteFromSupabaseStorage(url, STORAGE_BUCKETS.JOURNAL_ASSETS))
+    );
   },
 };

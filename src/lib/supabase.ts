@@ -1,29 +1,30 @@
-import { createClient, SupabaseClient, User, Session, AuthChangeEvent } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient, User, Session, AuthChangeEvent } from '@supabase/supabase-js';
 
-// Retrieve environment variables for Supabase (Vite client environment)
+// Retrieve and sanitize environment variables for Supabase (Vite client environment)
 const getEnv = (key: string): string => {
+  let val = '';
   try {
     if (typeof import.meta !== 'undefined' && (import.meta as any).env) {
-      return (import.meta as any).env[key] || '';
+      val = (import.meta as any).env[key] || '';
     }
   } catch {}
-  try {
-    if (typeof process !== 'undefined' && process.env) {
-      return process.env[key] || '';
-    }
-  } catch {}
-  return '';
+  if (!val) {
+    try {
+      if (typeof process !== 'undefined' && process.env) {
+        val = process.env[key] || '';
+      }
+    } catch {}
+  }
+  return typeof val === 'string' ? val.trim().replace(/^["']|["']$/g, '') : '';
 };
 
-export const supabaseUrl =
-  getEnv('VITE_SUPABASE_URL') ||
-  getEnv('SUPABASE_URL') ||
-  '';
+const rawUrl = getEnv('VITE_SUPABASE_URL') || getEnv('SUPABASE_URL') || '';
+const rawKey = getEnv('VITE_SUPABASE_ANON_KEY') || getEnv('SUPABASE_ANON_KEY') || '';
 
-export const supabaseAnonKey =
-  getEnv('VITE_SUPABASE_ANON_KEY') ||
-  getEnv('SUPABASE_ANON_KEY') ||
-  '';
+// Cleaned URL: remove trailing slash if present
+export const supabaseUrl = rawUrl.replace(/\/+$/, '');
+export const supabaseAnonKey = rawKey;
 
 /**
  * Checks whether valid Supabase client credentials are provided in the environment.
@@ -33,283 +34,103 @@ export const isSupabaseConfigured = (): boolean => {
     supabaseUrl &&
     supabaseAnonKey &&
     supabaseUrl.startsWith('http') &&
-    !supabaseUrl.includes('placeholder') &&
-    !supabaseAnonKey.includes('placeholder')
+    !supabaseUrl.includes('placeholder.supabase.co') &&
+    !supabaseAnonKey.includes('placeholder-anon-key')
   );
 };
 
-// Generate a valid mock JWT payload for fallback local sessions if remote keys are not set
-function createLocalJwt(userId: string, email: string, fullName: string): string {
-  const header = btoa(JSON.stringify({ alg: 'HS256', typ: 'JWT' }));
-  const exp = Math.floor(Date.now() / 1000) + 30 * 24 * 60 * 60; // 30 days
-  const payload = btoa(
-    JSON.stringify({
-      aud: 'authenticated',
-      exp,
-      sub: userId,
-      email,
-      role: 'authenticated',
-      user_metadata: {
-        full_name: fullName,
-        name: fullName,
-      },
-      app_metadata: {
-        provider: 'email',
-        providers: ['email'],
-      },
-    })
-  );
-  const signature = btoa('local_signature_hash');
-  return `${header}.${payload}.${signature}`;
-}
-
-const LOCAL_STORAGE_USERS_KEY = 'duskflow_local_auth_users_v1';
-const LOCAL_STORAGE_SESSION_KEY = 'duskflow_local_auth_session_v1';
-
-// Internal memory / storage state for fallback auth
-const authListeners: Set<(event: AuthChangeEvent, session: Session | null) => void> = new Set();
-
-function getLocalUsers(): Record<string, { id: string; email: string; passwordHash: string; fullName: string }> {
-  try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_USERS_KEY);
-    return raw ? JSON.parse(raw) : {};
-  } catch {
-    return {};
-  }
-}
-
-function saveLocalUsers(users: Record<string, { id: string; email: string; passwordHash: string; fullName: string }>) {
-  try {
-    localStorage.setItem(LOCAL_STORAGE_USERS_KEY, JSON.stringify(users));
-  } catch {}
-}
-
-function getLocalSession(): Session | null {
-  try {
-    const raw = localStorage.getItem(LOCAL_STORAGE_SESSION_KEY);
-    if (!raw) return null;
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-function saveLocalSession(session: Session | null) {
-  try {
-    if (session) {
-      localStorage.setItem(LOCAL_STORAGE_SESSION_KEY, JSON.stringify(session));
-    } else {
-      localStorage.removeItem(LOCAL_STORAGE_SESSION_KEY);
-    }
-  } catch {}
-}
-
-function buildSession(user: { id: string; email: string; fullName: string }): Session {
-  const token = createLocalJwt(user.id, user.email, user.fullName);
-  const supabaseUser: User = {
-    id: user.id,
-    app_metadata: { provider: 'email', providers: ['email'] },
-    user_metadata: { full_name: user.fullName, name: user.fullName },
-    aud: 'authenticated',
-    confirmation_sent_at: new Date().toISOString(),
-    confirmed_at: new Date().toISOString(),
-    created_at: new Date().toISOString(),
-    email: user.email,
-    phone: '',
-    role: 'authenticated',
-    updated_at: new Date().toISOString(),
-  };
-
-  return {
-    access_token: token,
-    token_type: 'bearer',
-    expires_in: 3600 * 24 * 30,
-    refresh_token: `rf_${user.id}_${Date.now()}`,
-    user: supabaseUser,
-  };
-}
-
 /**
- * Standard client instance when remote Supabase credentials exist.
+ * Validates actual network connectivity to the Supabase endpoint.
  */
-const realClient: SupabaseClient = isSupabaseConfigured()
-  ? createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: true,
+export async function checkSupabaseConnectivity(): Promise<{
+  ok: boolean;
+  isPaused: boolean;
+  message: string;
+}> {
+  if (!isSupabaseConfigured()) {
+    return {
+      ok: false,
+      isPaused: false,
+      message: 'Supabase credentials are not configured in environment variables.',
+    };
+  }
+
+  try {
+    // Ping Supabase Auth settings endpoint which is lightweight and public
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 4000);
+
+    const res = await fetch(`${supabaseUrl}/auth/v1/settings`, {
+      method: 'GET',
+      headers: {
+        apikey: supabaseAnonKey,
       },
-    })
-  : createClient('https://placeholder.supabase.co', 'placeholder-anon-key', {
-      auth: {
-        persistSession: false,
-      },
+      signal: controller.signal,
     });
+    clearTimeout(timeoutId);
 
-/**
- * Enhanced Supabase client that seamlessly supports real Supabase Auth
- * while providing a compliant local fallback when credentials are placeholder.
- */
-export const supabase = new Proxy(realClient, {
-  get(target, prop) {
-    if (prop === 'auth') {
-      const realAuth = target.auth;
-      if (isSupabaseConfigured()) {
-        return realAuth;
-      }
-
-      // Fallback auth handler when remote Supabase credentials are not yet supplied
+    if (res.ok || res.status === 200 || res.status === 401) {
       return {
-        ...realAuth,
-        async signUp({ email, password, options }: { email: string; password: string; options?: { data?: { full_name?: string; name?: string } } }) {
-          const cleanEmail = email.trim().toLowerCase();
-          const fullName = options?.data?.full_name || options?.data?.name || 'Trader';
-          const localUsers = getLocalUsers();
-
-          if (localUsers[cleanEmail]) {
-            return {
-              data: { user: null, session: null },
-              error: { message: 'User already registered with this email', status: 400 },
-            };
-          }
-
-          // Create permanent UUID for new user
-          const userId = `usr_${Math.random().toString(36).substring(2, 10)}_${Date.now().toString(36)}`;
-          localUsers[cleanEmail] = {
-            id: userId,
-            email: cleanEmail,
-            passwordHash: password, // local fallback
-            fullName,
-          };
-          saveLocalUsers(localUsers);
-
-          const session = buildSession({ id: userId, email: cleanEmail, fullName });
-          saveLocalSession(session);
-
-          authListeners.forEach((fn) => {
-            try {
-              fn('SIGNED_IN', session);
-            } catch (e) {
-              console.error(e);
-            }
-          });
-
-          return {
-            data: { user: session.user, session },
-            error: null,
-          };
-        },
-
-        async signInWithPassword({ email, password }: { email: string; password: string }) {
-          const cleanEmail = email.trim().toLowerCase();
-          const localUsers = getLocalUsers();
-          const existing = localUsers[cleanEmail];
-
-          if (!existing) {
-            // For convenience on new unseeded preview accounts or demo logins
-            const userId = `usr_${cleanEmail.replace(/[^a-z0-9]/g, '_').substring(0, 16)}_${Math.random().toString(36).substring(2, 6)}`;
-            const fullName = cleanEmail.split('@')[0].replace(/[._-]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()) || 'Trader';
-            localUsers[cleanEmail] = {
-              id: userId,
-              email: cleanEmail,
-              passwordHash: password,
-              fullName,
-            };
-            saveLocalUsers(localUsers);
-            const session = buildSession(localUsers[cleanEmail]);
-            saveLocalSession(session);
-
-            authListeners.forEach((fn) => {
-              try {
-                fn('SIGNED_IN', session);
-              } catch (e) {
-                console.error(e);
-              }
-            });
-
-            return {
-              data: { user: session.user, session },
-              error: null,
-            };
-          }
-
-          if (existing.passwordHash !== password) {
-            return {
-              data: { user: null, session: null },
-              error: { message: 'Invalid email or password', status: 400 },
-            };
-          }
-
-          const session = buildSession(existing);
-          saveLocalSession(session);
-
-          authListeners.forEach((fn) => {
-            try {
-              fn('SIGNED_IN', session);
-            } catch (e) {
-              console.error(e);
-            }
-          });
-
-          return {
-            data: { user: session.user, session },
-            error: null,
-          };
-        },
-
-        async signOut() {
-          saveLocalSession(null);
-          authListeners.forEach((fn) => {
-            try {
-              fn('SIGNED_OUT', null);
-            } catch (e) {
-              console.error(e);
-            }
-          });
-          return { error: null };
-        },
-
-        async getSession() {
-          const session = getLocalSession();
-          return { data: { session }, error: null };
-        },
-
-        async getUser() {
-          const session = getLocalSession();
-          return { data: { user: session?.user || null }, error: null };
-        },
-
-        onAuthStateChange(callback: (event: AuthChangeEvent, session: Session | null) => void) {
-          authListeners.add(callback);
-          const current = getLocalSession();
-          // Initial trigger
-          setTimeout(() => {
-            callback(current ? 'INITIAL_SESSION' : 'SIGNED_OUT', current);
-          }, 0);
-
-          return {
-            data: {
-              subscription: {
-                unsubscribe() {
-                  authListeners.delete(callback);
-                },
-              },
-            },
-          };
-        },
-
-        async resetPasswordForEmail(email: string) {
-          console.log(`[Supabase Auth] Password reset requested for: ${email}`);
-          return { data: {}, error: null };
-        },
+        ok: true,
+        isPaused: false,
+        message: 'Connected to Supabase project.',
       };
     }
-    return (target as any)[prop];
+
+    if (res.status === 503 || res.status === 521 || res.status === 522) {
+      return {
+        ok: false,
+        isPaused: true,
+        message: 'Supabase project may be paused. Please unpause it in the Supabase Dashboard.',
+      };
+    }
+
+    return {
+      ok: false,
+      isPaused: false,
+      message: `Supabase returned status ${res.status}: ${res.statusText}`,
+    };
+  } catch (err: any) {
+    const errStr = err?.message || String(err);
+    const isDnsOrNetwork =
+      errStr.includes('fetch failed') ||
+      errStr.includes('ENOTFOUND') ||
+      errStr.includes('Failed to fetch') ||
+      errStr.includes('NetworkError') ||
+      errStr.includes('aborted');
+
+    return {
+      ok: false,
+      isPaused: isDnsOrNetwork,
+      message: isDnsOrNetwork
+        ? 'Cannot resolve Supabase project host. If you are on the Supabase free tier, your project may be paused. Unpause it in your Supabase Dashboard.'
+        : `Network error connecting to Supabase: ${errStr}`,
+    };
+  }
+}
+
+/**
+ * Single canonical Supabase client for authentication, database queries, and storage.
+ */
+const clientUrl = isSupabaseConfigured() ? supabaseUrl : 'https://placeholder.supabase.co';
+const clientKey = isSupabaseConfigured() ? supabaseAnonKey : 'placeholder-anon-key';
+
+export const supabase: SupabaseClient = createClient(clientUrl, clientKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+    storage: typeof window !== 'undefined' ? window.localStorage : undefined,
+  },
+  global: {
+    headers: {
+      'x-application-name': 'tradeforge',
+    },
   },
 });
 
 /**
- * Default storage buckets for DuskFlow / Pipzy trading journal assets.
+ * Default storage buckets for TradeForge trading journal assets.
  */
 export const STORAGE_BUCKETS = {
   TRADE_ATTACHMENTS: 'trade-attachments',
@@ -378,7 +199,7 @@ export async function uploadToSupabaseStorage(
       });
 
     if (uploadError) {
-      console.warn('[Supabase Storage] Upload error:', uploadError.message);
+      console.warn('[Supabase Storage] Upload warning:', uploadError.message);
       if (typeof file === 'string') return file;
       return new Promise((resolve) => {
         const reader = new FileReader();
@@ -390,7 +211,7 @@ export async function uploadToSupabaseStorage(
     const { data } = supabase.storage.from(bucket).getPublicUrl(filePath);
     return data?.publicUrl || filePath;
   } catch (err: any) {
-    console.error('[Supabase Storage] Unexpected error during upload:', err);
+    console.warn('[Supabase Storage] Notice during upload:', err);
     if (typeof file === 'string') return file;
     return new Promise((resolve) => {
       const reader = new FileReader();
@@ -399,3 +220,36 @@ export async function uploadToSupabaseStorage(
     });
   }
 }
+
+/**
+ * Delete a file or asset from Supabase Storage by its public URL or relative path.
+ */
+export async function deleteFromSupabaseStorage(
+  filePathOrUrl: string,
+  bucket: string = STORAGE_BUCKETS.JOURNAL_ASSETS
+): Promise<boolean> {
+  if (!isSupabaseConfigured() || !filePathOrUrl) return false;
+  try {
+    let cleanPath = filePathOrUrl;
+    if (filePathOrUrl.includes('/storage/v1/object/public/')) {
+      const parts = filePathOrUrl.split(`/storage/v1/object/public/${bucket}/`);
+      if (parts.length > 1) {
+        cleanPath = parts[1];
+      }
+    } else if (filePathOrUrl.startsWith('http://') || filePathOrUrl.startsWith('https://')) {
+      // Not a standard bucket path or external URL
+      return false;
+    }
+    const cleanRelativePath = cleanPath.startsWith('/') ? cleanPath.substring(1) : cleanPath;
+    const { error } = await supabase.storage.from(bucket).remove([cleanRelativePath]);
+    if (error) {
+      console.warn(`[Supabase Storage] Notice during delete of ${cleanRelativePath}:`, error.message);
+      return false;
+    }
+    return true;
+  } catch (err: any) {
+    console.warn('[Supabase Storage] Notice during delete:', err?.message || err);
+    return false;
+  }
+}
+

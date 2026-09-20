@@ -1,13 +1,14 @@
-export type MarketType = 'Forex' | 'Futures' | 'Crypto' | 'Stocks' | 'Indices' | 'Commodities';
+export type MarketType = 'Forex' | 'Futures' | 'Crypto' | 'Stocks' | 'Indices' | 'Commodities' | 'CFDs';
 export type TradeDirection = 'BUY' | 'SELL';
 export type TradeStatus = 'OPEN' | 'CLOSED' | 'CANCELLED';
-export type SessionType = 'London' | 'New York' | 'Asian' | 'Pre-Market' | 'After-Hours' | 'Overlap';
+export type SessionType = 'London' | 'New York' | 'Asian' | 'Pre-Market' | 'After-Hours' | 'Overlap' | 'Sydney' | 'Custom';
 export type CurrencyDisplayMode = 'USD' | 'PERCENT' | 'R_MULTIPLE' | 'TICKS' | 'PRIVACY';
 export type TradeSource = 'manual' | 'mt5' | 'ctrader' | 'dxtrade' | 'matchtrader' | 'api' | 'csv';
 
 export interface Trade {
   id: string;
   accountId: string;
+  propFirmAccountId?: string;
   connectionId?: string;
   externalTradeId?: string;
   platform?: string;
@@ -55,6 +56,10 @@ export interface Trade {
   afterScreenshotUrl?: string;
   durationMinutes: number;
   emotionalState?: 'Disciplined' | 'Confident' | 'Neutral' | 'FOMO' | 'Revenge' | 'Hesitant' | 'Greedy';
+  executionMethod?: 'MANUAL' | 'EA' | 'BOT' | 'API';
+  isCopyTrade?: boolean;
+  isNewsTrade?: boolean;
+  leverage?: number;
 }
 
 export type ConnectionPlatform = 'MT5' | 'CTRADER' | 'DXTRADE' | 'MATCH_TRADER' | 'BROKER_API' | 'CSV';
@@ -110,6 +115,7 @@ export interface TradingAccount {
   type: 'LIVE' | 'DEMO' | 'PROP_FIRM';
   currency: string;
   initialBalance: number;
+  startingBalance?: number;
   currentBalance: number;
   isDefault: boolean;
   isArchived?: boolean;
@@ -220,6 +226,8 @@ export interface JournalNote {
   riskReward?: string;
   isDeleted?: boolean;
   deletedAt?: string;
+  deletedBy?: string;
+  originalFolderId?: string;
   attachments?: JournalAttachment[];
   preMarketPlan?: {
     bias?: 'BULLISH' | 'BEARISH' | 'NEUTRAL';
@@ -250,6 +258,42 @@ export interface JournalFolder {
   name: string;
   icon?: string;
   count?: number;
+  isDeleted?: boolean;
+  deletedAt?: string;
+  deletedBy?: string;
+}
+
+export type RiskMode = 'FIXED_DOLLAR' | 'PERCENTAGE' | 'LOWER_OF_BOTH';
+export type CircuitBreakerStatus = 'DISARMED' | 'ARMED' | 'CAUTION' | 'CRITICAL' | 'TRIGGERED' | 'LOCKED';
+export type DrawdownMethodology = 'EQUITY_BASED' | 'END_OF_DAY' | 'STATIC' | 'PROP_RULE';
+export type WeeklyTargetAction = 'CONTINUE' | 'REDUCE_RISK_WARN' | 'LOCK_TRADING';
+
+export interface RiskEvent {
+  id: string;
+  timestamp: string;
+  userId?: string;
+  accountId?: string;
+  accountName?: string;
+  eventType: 'BREACH' | 'WARNING' | 'CIRCUIT_BREAKER_TRIGGERED' | 'CIRCUIT_BREAKER_ARMED' | 'CIRCUIT_BREAKER_RESET' | 'HARD_LOCK' | 'MANUAL_UNLOCK' | 'ORDER_BLOCKED';
+  rule: string;
+  currentValue: string;
+  limitValue: string;
+  severity: 'INFO' | 'CAUTION' | 'CRITICAL' | 'BLOCKED';
+  actionTaken: string;
+  notes?: string;
+  unlockedBy?: string;
+  unlockReason?: string;
+  metadata?: Record<string, any>;
+}
+
+export interface RiskMetricState {
+  name: string;
+  current: number;
+  limit: number;
+  unit: '$' | '%' | 'trades' | 'contracts' | 'R' | 'count';
+  percentUsed: number;
+  status: 'NORMAL' | 'CAUTION' | 'CRITICAL' | 'BREACHED';
+  message: string;
 }
 
 export interface RiskGoalSettings {
@@ -262,10 +306,13 @@ export interface RiskGoalSettings {
   maxDailyLoss?: number;
   dailyMaxLoss?: number;
   maxWeeklyLoss?: number;
+  weeklyLossLimit?: number;
   maxDrawdown?: number;
   maxDrawdownLimit?: number;
+  trailingDrawdownLimit?: number;
   maxRiskPerTradePercent?: number;
   maxRiskPerTradeAmount?: number;
+  riskMode?: RiskMode;
   maxTradesPerDay?: number;
   maxConsecutiveLosses?: number;
   maxContractsPerTrade?: number;
@@ -275,7 +322,23 @@ export interface RiskGoalSettings {
   maxOpenPositions?: number;
   enforceCircuitBreaker?: boolean;
   circuitBreakerTriggered?: boolean;
-  circuitBreakerState?: 'DISARMED' | 'ARMED' | 'WARNING' | 'TRIGGERED';
+  circuitBreakerState?: CircuitBreakerStatus;
+  hardLockEnabled?: boolean;
+  warningThresholdPercent?: number;
+  criticalThresholdPercent?: number;
+  timezone?: string;
+  dailyResetTime?: string;
+  includeFloatingPnl?: boolean;
+  includeFees?: boolean;
+  includeCommissions?: boolean;
+  drawdownMethodology?: DrawdownMethodology;
+  weeklyTargetAction?: WeeklyTargetAction;
+  requireManualUnlock?: boolean;
+  lockReason?: string;
+  lockedAt?: string;
+  unlockedAt?: string;
+  unlockedBy?: string;
+  unlockReason?: string;
 }
 
 export interface EconomicEvent {
@@ -410,6 +473,14 @@ export interface UserProfile {
   isPublic?: boolean;
   avatar?: string;
   avatarUrl?: string;
+  country?: string;
+  timezone?: string;
+  preferredCurrency?: string;
+  professionalTitle?: string;
+  bio?: string;
+  tradingStyle?: string;
+  phone?: string;
+  updatedAt?: string;
 }
 
 export interface MentorDirective {
@@ -438,8 +509,8 @@ export interface AppNotification {
 export type PropFirmRiskState = 'SAFE' | 'WARNING' | 'CRITICAL' | 'BREACHED';
 export type PropFirmPhase = 'PHASE_1' | 'PHASE_2' | 'EVALUATION' | 'FUNDED' | 'SIMULATED_FUNDED' | 'CUSTOM';
 export type ProgramModelType = 'TWO_STEP' | 'ONE_STEP' | 'INSTANT_FUNDING' | 'FAST_TRACK' | 'CUSTOM';
-export type DrawdownModelType = 'STATIC' | 'EOD_TRAILING' | 'INTRADAY_HWM_TRAILING';
-export type DailyDrawdownModelType = 'START_OF_DAY_BALANCE' | 'START_OF_DAY_EQUITY' | 'BALANCE_BASED' | 'EQUITY_BASED' | 'REALIZED_ONLY' | 'REALIZED_PLUS_FLOATING';
+export type DrawdownModelType = 'STATIC' | 'EOD_TRAILING' | 'INTRADAY_HWM_TRAILING' | 'BALANCE_TRAILING' | 'EQUITY_TRAILING' | 'CUSTOM';
+export type DailyDrawdownModelType = 'START_OF_DAY_BALANCE' | 'START_OF_DAY_EQUITY' | 'HIGHEST_EQUITY_OF_DAY' | 'BALANCE_BASED' | 'EQUITY_BASED' | 'REALIZED_ONLY' | 'REALIZED_PLUS_FLOATING' | 'CUSTOM';
 export type PropFirmEnforcementMode = 'MONITOR' | 'STRICT';
 
 export type PropFirmRuleType =
@@ -449,17 +520,27 @@ export type PropFirmRuleType =
   | 'MIN_TRADING_DAYS'
   | 'QUALIFYING_DAY'
   | 'MAX_TRADING_DAYS'
+  | 'INACTIVITY'
   | 'CONSISTENCY'
+  | 'PROFIT_CONCENTRATION'
+  | 'NEWS_RESTRICTION'
+  | 'WEEKEND_RESTRICTION'
+  | 'OVERNIGHT_RESTRICTION'
+  | 'EA_RESTRICTION'
+  | 'COPY_TRADING'
+  | 'HEDGING'
+  | 'MAX_POSITION_SIZE'
+  | 'LEVERAGE'
+  | 'IP_VPN_RESTRICTION'
+  | 'PROHIBITED_STRATEGY'
+  | 'PROHIBITED_BEHAVIOR'
+  | 'PAYOUT_CONDITIONS'
+  | 'SCALING_RULE'
+  | 'REWARD_BUFFER'
   | 'SYMBOL_EXPOSURE_RISK'
   | 'MIN_TRADE_DURATION'
   | 'AVG_TRADE_DURATION'
-  | 'NEWS_RESTRICTION'
-  | 'WEEKEND_RESTRICTION'
-  | 'MAX_POSITION_SIZE'
   | 'MAX_OPEN_RISK'
-  | 'INACTIVITY'
-  | 'PROHIBITED_BEHAVIOR'
-  | 'REWARD_BUFFER'
   | 'CUSTOM';
 
 export interface PropFirmRule {
@@ -469,14 +550,39 @@ export interface PropFirmRule {
   description: string;
   enabled: boolean;
   threshold: number;
-  unit: 'USD' | 'PERCENT' | 'DAYS' | 'LOTS' | 'CONTRACTS' | 'MINUTES' | 'SECONDS';
+  unit: 'USD' | 'PERCENT' | 'DAYS' | 'LOTS' | 'CONTRACTS' | 'MINUTES' | 'SECONDS' | 'CUSTOM';
   calculationMethodology: string;
   warningThreshold?: number;
   criticalThreshold?: number;
-  currentValue?: number;
+  currentValue?: number | string;
   status?: 'SAFE' | 'WARNING' | 'CRITICAL' | 'BREACHED' | 'INCOMPLETE' | 'COMPLETED';
   details?: string;
   config?: Record<string, any>;
+}
+
+export interface PropFirmPhaseConfig {
+  id: string;
+  name: string; // e.g. "Phase 1", "Phase 2", "Funded"
+  phaseOrder: number;
+  phaseType: PropFirmPhase; // 'PHASE_1' | 'PHASE_2' | 'FUNDED' | 'CUSTOM'
+  status: 'INACTIVE' | 'ACTIVE' | 'COMPLETED' | 'BREACHED';
+  startingBalance: number;
+  profitTargetPercent: number;
+  profitTargetAmount?: number;
+  dailyLossPercent: number;
+  dailyLossAmount?: number;
+  totalLossPercent: number;
+  totalLossAmount?: number;
+  drawdownModel?: DrawdownModelType;
+  dailyDrawdownModel?: DailyDrawdownModelType;
+  minTradingDays?: number;
+  maxTradingDays?: number; // 0 or undefined for unlimited
+  qualifyingDayProfitPercent?: number;
+  consistencyMaxDayPercent?: number;
+  maxProfitConcentrationPercent?: number;
+  rules?: PropFirmRule[];
+  startedAt?: string;
+  completedAt?: string;
 }
 
 export interface PropFirmViolation {
@@ -540,11 +646,14 @@ export interface PropFirmAccount {
   termsEffectiveDate?: string;
   rulesVersion?: string;
   accountNumber?: string;
+  accountSize?: number;
   startingBalance: number;
   currentBalance: number;
   equity: number;
   highWaterMark?: number;
   programModel?: ProgramModelType;
+  phases?: PropFirmPhaseConfig[];
+  activePhaseIndex?: number;
   phase: PropFirmPhase;
   phaseName?: string;
   status: 'ACTIVE' | 'WARNING' | 'PASSED' | 'BREACHED' | 'SUSPENDED' | 'COMPLETED' | 'ARCHIVED' | 'FAILED' | 'PAUSED';
@@ -552,25 +661,53 @@ export interface PropFirmAccount {
   enforcementMode?: PropFirmEnforcementMode; // MONITOR vs STRICT
   drawdownModel: DrawdownModelType;
   dailyDrawdownModel: DailyDrawdownModelType;
-  dailyLossMethod?: 'REALIZED_ONLY' | 'REALIZED_PLUS_FLOATING' | 'START_OF_DAY_EQUITY' | 'START_OF_DAY_BALANCE' | 'CUSTOM';
+  dailyLossMethod?: 'REALIZED_ONLY' | 'REALIZED_PLUS_FLOATING' | 'START_OF_DAY_EQUITY' | 'START_OF_DAY_BALANCE' | 'HIGHEST_EQUITY_OF_DAY' | 'CUSTOM';
   maxRiskPerSymbolPercent?: number; // e.g. 2% or 1%
   minTradeDurationSec?: number; // e.g. 60 seconds
   avgTradeDurationSec?: number;
   minTradingDays?: number;
+  maxTradingDays?: number; // 0 or undefined = unlimited
+  startDate?: string;
+  deadline?: string;
   qualifyingDayProfitPercent?: number; // e.g. 0.5%
   profitTargetPercent?: number; // e.g. 8%, 5%, 10%, 6%
   dailyLossPercent?: number;
   totalLossPercent?: number;
   profitTargetAmount?: number;
-  consistencyMaxDayPercent?: number; // e.g. 20%
+  dailyLossAmount?: number;
+  totalLossAmount?: number;
+  consistencyMaxDayPercent?: number; // e.g. 20% or 40%
+  maxProfitConcentrationPercent?: number; // max % of total profit from single trade/day/symbol
+  newsTradingAllowed?: 'ALLOWED' | 'RESTRICTED' | 'PROHIBITED';
+  weekendHoldingAllowed?: boolean;
+  overnightHoldingAllowed?: boolean;
+  eaAllowed?: 'ALLOWED' | 'RESTRICTED' | 'PROHIBITED';
+  copyTradingAllowed?: 'ALLOWED' | 'RESTRICTED' | 'PROHIBITED';
+  hedgingAllowed?: 'ALLOWED' | 'RESTRICTED' | 'PROHIBITED';
+  maxLotSize?: number;
+  minLotSize?: number;
+  maxPositions?: number;
+  maxLeverage?: number;
+  ipRestrictions?: { vpnAllowed: boolean; vpsAllowed: boolean; singleIpOnly: boolean };
+  prohibitedStrategies?: string[];
   rewardBufferPercent?: number; // e.g. 3%
   rewardSplitPercent?: number; // e.g. 80%
+  profitSplitTraderPercent?: number; // e.g. 80%
+  profitSplitFirmPercent?: number; // e.g. 20%
   minRewardRequest?: number; // e.g. $100
-  activationFee?: number; // Metadata fee: $50, $80, $170, $350, $600
+  payoutFrequency?: 'DAILY' | 'WEEKLY' | 'BIWEEKLY' | 'MONTHLY' | 'ON_REQUEST';
+  activationFee?: number; // Challenge price / activation fee
   inactivityMaxDays?: number; // default 30 days
   newsWindowMinutes?: number; // 5 mins before + 5 mins after
   sessionTimezone: string; // e.g. 'America/New_York', 'UTC'
   currency: string;
+  scalingRules?: {
+    enabled: boolean;
+    thresholdAmount: number;
+    scalingPercentage: number;
+    maxAccountSize: number;
+    currentScaleLevel?: number;
+  };
   rules: PropFirmRule[];
   violations: PropFirmViolation[];
   timeline?: PropFirmTimelineEvent[];
@@ -594,269 +731,154 @@ export interface PreTradeValidationResult {
   checks: PreTradeValidationCheck[];
 }
 
-// ==========================================
-// SELF IMPROVEMENT SYSTEM TYPES
-// ==========================================
-
-export type HabitCategory = 'Morning' | 'Productivity' | 'Fitness' | 'Mind' | 'Discipline' | 'Trading' | 'Custom';
-export type HabitFrequency = 'daily' | 'weekdays' | 'weekends' | 'weekly';
-export type HabitDifficulty = 'easy' | 'medium' | 'hard';
-
-export interface SelfHabit {
+export interface CustomTag {
   id: string;
-  userId: string;
   name: string;
-  category: HabitCategory;
-  target: string;
-  frequency: HabitFrequency;
-  reminderTime?: string;
-  difficulty: HabitDifficulty;
-  weight: number; // 1 to 5
-  active: boolean;
-  icon?: string;
-  color?: string;
-  createdAt: string;
-}
-
-export interface HabitCompletion {
-  id: string;
-  habitId: string;
-  userId: string;
-  date: string; // YYYY-MM-DD
-  completed: boolean;
-  value?: number;
-  notes?: string;
-  completedAt?: string;
-}
-
-export interface DailyTask {
-  id: string;
-  userId: string;
-  title: string;
+  category: 'Behavior' | 'Mistake' | 'Setup' | 'Market' | 'Execution' | 'Psychology' | 'Custom';
+  color: string;
   description?: string;
-  category: string;
-  priority: 'Critical' | 'High' | 'Medium' | 'Low';
-  dueDate: string; // YYYY-MM-DD
-  dueTime?: string;
-  estimatedDurationMins?: number;
-  status: 'Pending' | 'In Progress' | 'Completed' | 'Skipped';
-  scoreContribution: number;
-  completedAt?: string;
+  isArchived?: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export interface ImportHistoryItem {
+  id: string;
+  source: 'CSV' | 'BROKER_SYNC' | 'MANUAL';
+  fileName: string;
+  tradesProcessed: number;
+  tradesAdded: number;
+  duplicatesCount: number;
+  errorsCount: number;
+  status: 'COMPLETED' | 'FAILED' | 'PARTIAL';
+  details?: Record<string, any>;
   createdAt: string;
 }
 
-export interface DailyCheckin {
+export interface ActivityLogItem {
   id: string;
-  userId: string;
-  date: string; // YYYY-MM-DD
-  mood: number; // 1-10
-  energy: number; // 1-10
-  focus: number; // 1-10
-  stress: number; // 1-10
-  motivation: number; // 1-10
-  productivity: number; // 1-10
-  notes?: string;
-  gratitudes?: string[]; // 1-3 entries
+  action: string;
+  category: 'TRADE' | 'ACCOUNT' | 'SETTINGS' | 'BROKER' | 'TAG' | 'JOURNAL' | 'PLAYBOOK' | 'PROP_FIRM' | 'SECURITY' | 'DATA' | 'SYSTEM';
+  object: string;
+  status: 'SUCCESS' | 'INFO' | 'WARNING' | 'ERROR';
+  source?: string;
+  details?: Record<string, any>;
   createdAt: string;
 }
 
-export interface MorningCheckin {
+export interface CommissionRule {
+  id: string;
+  account: string; // 'ALL' or specific accountId
+  instrument: 'Futures' | 'Forex' | 'Crypto' | 'Stocks' | 'CFD';
+  symbol: string; // 'ALL' or specific symbol (e.g. 'ES', 'NQ')
+  mode: 'Per Contract' | 'Per Lot' | 'Per Share' | 'Percentage' | 'Flat';
+  apply: 'Round-Trip' | 'Both Sides' | 'Per Fill';
+  commission: number;
+  exchangeFee: number;
+  clearingFee: number;
+  platformFee: number;
+  otherFee: number;
+}
+
+export interface TradeEntryDefaults {
+  defaultAccountId: string;
+  defaultMarket: 'Futures' | 'Forex' | 'Crypto' | 'Stocks';
+  defaultDirection: 'BUY' | 'SELL';
+  defaultOrderType: 'MARKET' | 'LIMIT' | 'STOP';
+  defaultQuantity: number;
+  defaultRiskValue: number;
+  defaultRiskUnit: 'PERCENT' | 'CURRENCY' | 'R_MULTIPLE';
+  defaultStopLossBehavior: 'MANUAL' | 'POINTS' | 'PERCENT' | 'ATR';
+  defaultTakeProfitBehavior: 'MANUAL' | 'R_TARGET' | 'PERCENT';
+  defaultRTarget: number;
+  maxPlannedRisk: number;
+  defaultSetup: string;
+  defaultPlaybookId: string;
+  defaultSession: 'New York' | 'London' | 'Asian';
+  defaultStatus: 'CLOSED' | 'OPEN';
+  requireSetup: boolean;
+  requireStopLoss: boolean;
+  requireTakeProfit: boolean;
+  requireNotes: boolean;
+  requireScreenshot: boolean;
+  requireMistakeOnLoss: boolean;
+  allowPartialExits: boolean;
+  allowMultipleEntries: boolean;
+  allowMultipleExits: boolean;
+  trackCommissions: boolean;
+  trackSwapFees: boolean;
+  trackSlippage: boolean;
+  defaultTableColumns: string[];
+  defaultTradeSort: 'date_desc' | 'date_asc' | 'pnl_desc' | 'pnl_asc';
+}
+
+export interface GlobalPreferences {
+  theme: 'dark' | 'light' | 'system';
+  accentColor: string;
+  density: 'compact' | 'comfortable' | 'spacious';
+  chartAnimations: boolean;
+  reducedMotion: boolean;
+  currency: string;
+  currencyMode: 'USD' | 'PERCENT' | 'R_MULTIPLE' | 'TICKS' | 'PRIVACY';
+  numberFormat: 'en-US' | 'de-DE' | 'fr-FR' | 'en-GB';
+  decimalPrecision: number;
+  percentagePrecision: number;
+  roundingBehavior: 'round' | 'floor' | 'ceil';
+  timezone: string;
+  dateFormat: 'YYYY-MM-DD' | 'MM/DD/YYYY' | 'DD/MM/YYYY';
+  timeFormat: '12h' | '24h';
+  firstDayOfWeek: 'Sunday' | 'Monday';
+  calendarTimezone: string;
+  sessionTimezone: string;
+  defaultAccountId?: string;
+}
+
+export interface NotificationPreferences {
+  tradeAlerts: boolean;
+  riskAlerts: boolean;
+  propFirmWarnings: boolean;
+  syncNotifications: boolean;
+  dailyJournalReminder: boolean;
+  weeklyPerformanceReview: boolean;
+  soundEnabled: boolean;
+}
+
+export interface AiSettings {
+  aiCoachEnabled: boolean;
+  responseStyle: 'concise' | 'institutional' | 'educational' | 'direct';
+  analysisScope: 'all' | 'filtered' | 'active_account';
+  autoReviewTrades: boolean;
+}
+
+export interface UserSettings {
   id: string;
   userId: string;
-  date: string; // YYYY-MM-DD
-  sleepQuality: number; // 1-10
-  energyLevel: number; // 1-10
-  mainGoal: string;
-  topPriorities: string[];
-  workoutPlanned: boolean;
-  tradingPlanned: boolean;
-  personalGoal: string;
-  avoidToday: string;
-  generatedMission: string;
-  createdAt: string;
-}
-
-export interface NightlyReview {
-  id: string;
-  userId: string;
-  date: string; // YYYY-MM-DD
-  wentWell: string;
-  wentWrong: string;
-  learned: string;
-  improveTomorrow: string;
-  followedPlan: boolean;
-  wastedTime: boolean;
-  maintainedDiscipline: boolean;
-  reflectionScore: number; // 0-100
-  createdAt: string;
-}
-
-export interface RoutineItem {
-  id: string;
-  routineId: string;
-  title: string;
-  time?: string;
-  order: number;
-}
-
-export interface DailyRoutine {
-  id: string;
-  userId: string;
-  name: string;
-  category: 'Morning' | 'Trading' | 'Night' | 'Custom';
-  active: boolean;
-  items: RoutineItem[];
-  createdAt: string;
-}
-
-export interface RoutineCompletion {
-  id: string;
-  userId: string;
-  routineId: string;
-  itemId: string;
-  date: string;
-  completed: boolean;
-}
-
-export interface SleepLog {
-  id: string;
-  userId: string;
-  date: string; // YYYY-MM-DD
-  bedtime: string; // e.g. "22:45"
-  wakeTime: string; // e.g. "06:30"
-  durationHours: number; // e.g. 7.75
-  quality: number; // 1-10
-  targetHours: number; // default 8
-  notes?: string;
-}
-
-export interface ExerciseLog {
-  id: string;
-  userId: string;
-  date: string; // YYYY-MM-DD
-  type: 'Strength' | 'Cardio' | 'HIIT' | 'Running' | 'Mobility' | 'Sports' | 'Walking';
-  durationMins: number;
-  steps?: number;
-  completed: boolean;
-  intensity?: 'Light' | 'Moderate' | 'Intense';
-  notes?: string;
-}
-
-export interface LearningLog {
-  id: string;
-  userId: string;
-  date: string; // YYYY-MM-DD
-  title: string;
-  category: 'Trading' | 'Psychology' | 'Business' | 'Tech' | 'Philosophy' | 'Health';
-  durationMins: number;
-  pagesRead?: number;
-  notes?: string;
-}
-
-export interface DeepWorkSession {
-  id: string;
-  userId: string;
-  date: string; // YYYY-MM-DD
-  startTime: string;
-  endTime?: string;
-  durationMins: number;
-  category: string;
-  taskName: string;
-  distractionCount: number;
-  focusRating: number; // 1-10
-}
-
-export interface DistractionLog {
-  id: string;
-  userId: string;
-  date: string; // YYYY-MM-DD
-  socialMediaMins: number;
-  youtubeMins: number;
-  gamingMins: number;
-  entertainmentMins: number;
-  randomBrowsingMins: number;
-  notes?: string;
-}
-
-export interface DisciplineStreakRecord {
-  id: string;
-  userId: string;
-  trackerName: string;
-  currentStreakDays: number;
-  bestStreakDays: number;
-  totalSuccessfulDays: number;
-  startDate: string;
-  lastCheckinDate: string;
-  historyLogs: Array<{ date: string; status: 'CLEAN' | 'RELAPSE'; note?: string; streakAtTime: number }>;
-}
-
-export interface PersonalGoal {
-  id: string;
-  userId: string;
-  title: string;
-  description?: string;
-  category: 'Discipline' | 'Trading' | 'Fitness' | 'Mind' | 'Learning' | 'Financial';
-  timeframe: 'SHORT_TERM' | 'MEDIUM_TERM' | 'LONG_TERM';
-  targetValue: number;
-  currentValue: number;
-  unit: string;
-  deadline: string;
-  status: 'IN_PROGRESS' | 'COMPLETED' | 'PAUSED';
-  milestones: Array<{ id: string; title: string; completed: boolean }>;
-  createdAt: string;
-}
-
-export interface PersonalRule {
-  id: string;
-  userId: string;
-  text: string;
-  category: 'TRADING' | 'LIFESTYLE' | 'DISCIPLINE' | 'HEALTH';
-  active: boolean;
-  order: number;
-  verifiedDates: string[]; // dates on which rule was verified
-}
-
-export interface GrowthScoreBreakdown {
-  totalScore: number;
-  disciplineScore: number;
-  productivityScore: number;
-  physicalScore: number;
-  mentalScore: number;
-  recoveryScore: number;
-  learningScore: number;
-  tradingDisciplineScore: number;
-  tradingMetrics: {
-    riskDiscipline: number;
-    ruleCompliance: number;
-    overtradingControl: number;
-    journalCompletion: number;
-    emotionalControl: number;
+  accountId?: string;
+  scope: 'GLOBAL' | 'ACCOUNT';
+  general: GlobalPreferences;
+  notifications: NotificationPreferences;
+  aiSettings: AiSettings;
+  tradeDefaults: TradeEntryDefaults;
+  commissionRules: CommissionRule[];
+  customTags?: CustomTag[];
+  profile?: {
+    bio?: string;
+    country?: string;
+    professionalTitle?: string;
+    phone?: string;
+    tradingStyle?: string;
   };
-  streakDays: number;
-  yesterdayScore: number;
-  sevenDayAvg: number;
-  thirtyDayAvg: number;
-  bestDayScore: number;
+  updatedAt?: string;
 }
 
-export interface GrowthAchievement {
+export interface UserBackup {
   id: string;
-  title: string;
-  description: string;
-  icon: string;
-  category: 'Discipline' | 'Habits' | 'DeepWork' | 'Reading' | 'Trading' | 'Consistency';
-  xpReward: number;
-  unlocked: boolean;
-  unlockedAt?: string;
-  progress: number;
-  maxProgress: number;
-}
-
-export interface UserGrowthLevel {
-  level: number;
-  currentXp: number;
-  nextLevelXp: number;
-  title: string;
+  name: string;
+  sizeBytes: number;
+  tradeCount: number;
+  notesCount: number;
+  backupData?: any;
+  createdAt: string;
 }
 
 

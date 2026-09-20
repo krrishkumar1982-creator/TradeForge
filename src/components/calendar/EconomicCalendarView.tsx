@@ -191,7 +191,7 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
       case 'MARKETS':
         return 'bg-indigo-500/20 text-indigo-300 border-indigo-500/40';
       default:
-        return 'bg-slate-800 text-slate-300 border-slate-700';
+        return 'bg-slate-800 text-slate-300 border-[#273141]';
     }
   };
 
@@ -203,7 +203,7 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-[1520px] mx-auto">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#1C232E]">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
             <CalendarDays className="w-6 h-6 text-indigo-400" />
@@ -215,12 +215,12 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
         </div>
 
         {/* View Switcher Tabs */}
-        <div className="flex items-center gap-1 p-1 bg-slate-900 border border-slate-800 rounded-xl">
+        <div className="flex items-center gap-1 p-1 bg-[#12161D] border border-[#1C232E] rounded-xl">
           <button
             onClick={() => setViewTab('trading')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
               viewTab === 'trading'
-                ? 'bg-blue-600 text-white shadow-xs'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -229,9 +229,9 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
           </button>
           <button
             onClick={() => setViewTab('economic')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
               viewTab === 'economic'
-                ? 'bg-blue-600 text-white shadow-xs'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -240,9 +240,9 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
           </button>
           <button
             onClick={() => setViewTab('intelligence')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
               viewTab === 'intelligence'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
                 : 'text-slate-400 hover:text-slate-200'
             }`}
           >
@@ -281,7 +281,7 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
       {viewTab === 'economic' && (
         <div className="space-y-6 animate-in fade-in">
           {/* Filter Bar */}
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-slate-900/90 border border-slate-800 p-3 rounded-2xl">
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-[#12161D] border border-[#1C232E] p-3 rounded-2xl">
             <div className="relative flex-1 min-w-[200px]">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
               <input
@@ -289,21 +289,21 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
                 placeholder="Search events (FOMC, CPI, GDP)..."
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                className="w-full rounded-xl bg-slate-950 border border-slate-800 py-1.5 pl-9 pr-4 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                className="w-full rounded-xl bg-[#0A0D14] border border-[#1C232E] py-1.5 pl-9 pr-4 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
               />
             </div>
 
             {/* Impact Selector */}
-            <div className="flex items-center gap-1.5 bg-slate-950 border border-slate-800 rounded-xl p-0.5 text-xs">
+            <div className="flex items-center gap-1.5 bg-[#0A0D14] border border-[#1C232E] rounded-xl p-0.5 text-xs">
               {(['ALL', 'HIGH', 'MEDIUM', 'LOW'] as const).map(imp => (
                 <button
                   key={imp}
                   onClick={() => setImpactFilter(imp)}
-                  className={`px-3 py-1 rounded-lg font-medium transition ${
+                  className={`px-3 py-1 rounded-lg font-medium transition cursor-pointer ${
                     impactFilter === imp
                       ? imp === 'HIGH'
-                        ? 'bg-rose-600 text-white'
-                        : 'bg-indigo-600 text-white'
+                        ? 'bg-rose-600 text-white shadow-xs'
+                        : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
                       : 'text-slate-400 hover:text-slate-200'
                   }`}
                 >
@@ -316,7 +316,7 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
             <select
               value={currencyFilter}
               onChange={e => setCurrencyFilter(e.target.value)}
-              className="rounded-xl bg-slate-950 border border-slate-800 px-3 py-1.5 text-xs text-slate-300 focus:outline-none cursor-pointer"
+              className="rounded-xl bg-[#0A0D14] border border-[#1C232E] px-3 py-1.5 text-xs text-slate-300 focus:outline-none cursor-pointer"
             >
               <option value="ALL">All Currencies</option>
               <option value="USD">USD ($)</option>
@@ -326,7 +326,7 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
           </div>
 
           {/* Calendar List */}
-          <div className="rounded-2xl border border-slate-800/90 bg-slate-900/90 shadow-xl overflow-hidden backdrop-blur-sm">
+          <div className="rounded-2xl border border-[#1C232E] bg-[#12161D] shadow-xl overflow-hidden backdrop-blur-sm">
             <div className="divide-y divide-slate-800/60">
               {filteredEvents.map(event => {
                 const isHigh = event.impact === 'HIGH';
@@ -335,20 +335,20 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
                 return (
                   <div
                     key={event.id}
-                    className="p-4 hover:bg-slate-800/40 transition flex flex-wrap items-center justify-between gap-4"
+                    className="p-4 hover:bg-[#1A1F27]/40 transition flex flex-wrap items-center justify-between gap-4"
                   >
                     {/* Left: Time & Flag & Event Name */}
-                    <div className="flex items-center gap-3 min-w-[280px]">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1 flex-wrap sm:flex-nowrap">
                       <button
                         onClick={() => toggleEventFavorite(event.id)}
-                        className="p-1 text-slate-500 hover:text-amber-400 transition"
+                        className="p-1 text-slate-500 hover:text-amber-400 transition shrink-0"
                       >
                         <Star
                           className={`w-4 h-4 ${event.isFavorite ? 'text-amber-400 fill-amber-400' : ''}`}
                         />
                       </button>
 
-                      <div className="flex flex-col">
+                      <div className="flex flex-col shrink-0">
                         <span className="text-xs font-mono font-bold text-slate-300 flex items-center gap-1.5">
                           <Clock className="w-3 h-3 text-slate-500" />
                           {event.time}
@@ -356,12 +356,12 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
                         <span className="text-[10px] text-slate-500 font-mono">{event.date}</span>
                       </div>
 
-                      <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] font-bold text-slate-200 border border-slate-700">
+                      <span className="px-2 py-0.5 rounded bg-slate-800 text-[10px] font-bold text-slate-200 border border-[#273141] shrink-0">
                         {event.currency}
                       </span>
 
                       <span
-                        className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                        className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider shrink-0 ${
                           isHigh
                             ? 'bg-rose-500/20 text-rose-400 border border-rose-500/30'
                             : isMed
@@ -372,11 +372,11 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
                         {event.impact}
                       </span>
 
-                      <span className="text-xs font-semibold text-slate-100">{event.event}</span>
+                      <span className="text-xs font-semibold text-slate-100 min-w-0 truncate">{event.event}</span>
                     </div>
 
                     {/* Right: Data Forecast, Previous, Actual + Reminder */}
-                    <div className="flex items-center gap-6 font-mono text-xs">
+                    <div className="flex items-center gap-3 sm:gap-6 font-mono text-xs shrink-0 flex-wrap">
                       <div>
                         <span className="text-[10px] text-slate-500 block">Actual</span>
                         <span className={`font-bold ${event.actual ? 'text-emerald-400' : 'text-slate-500'}`}>
@@ -399,7 +399,7 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
                         className={`p-2 rounded-xl border transition ${
                           event.hasReminder
                             ? 'bg-indigo-600/20 text-indigo-400 border-indigo-500/40'
-                            : 'border-slate-800 text-slate-500 hover:text-slate-300 hover:bg-slate-800'
+                            : 'border-[#1C232E] text-slate-500 hover:text-slate-300 hover:bg-[#1A1F27]'
                         }`}
                         title="Toggle Alert Reminder"
                       >
@@ -418,7 +418,7 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
       {viewTab === 'intelligence' && (
         <div className="space-y-8 animate-in fade-in">
           {/* Subtitle Header Banner */}
-          <div className="relative bg-gradient-to-r from-slate-900 via-slate-900/90 to-indigo-950/40 border border-slate-800 rounded-2xl p-6 overflow-hidden shadow-lg">
+          <div className="relative bg-gradient-to-r from-slate-900 via-slate-900/90 to-indigo-950/40 border border-[#1C232E] rounded-2xl p-6 overflow-hidden shadow-lg">
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1 max-w-2xl">
                 <div className="flex items-center gap-2 text-indigo-400 text-xs font-bold uppercase tracking-widest">
@@ -432,7 +432,7 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
               </div>
 
               {/* Quick Summary Pill */}
-              <div className="flex items-center gap-3 bg-slate-950/80 border border-slate-800/80 rounded-xl px-4 py-3 shrink-0">
+              <div className="flex items-center gap-3 bg-[#0A0D14] border border-[#1C232E] rounded-xl px-4 py-3 shrink-0">
                 <Bookmark className="w-5 h-5 text-indigo-400" />
                 <div className="text-xs">
                   <span className="text-slate-400 block">Verified Platforms</span>
@@ -443,17 +443,17 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
           </div>
 
           {/* Filter Bar & Search */}
-          <div className="flex flex-wrap items-center justify-between gap-4 bg-slate-900/90 border border-slate-800 p-3.5 rounded-2xl">
+          <div className="flex flex-wrap items-center justify-between gap-4 bg-[#12161D] border border-[#1C232E] p-3.5 rounded-2xl">
             {/* Category Filter Pills */}
             <div className="flex flex-wrap items-center gap-1.5">
               {(['All', 'Forex', 'Crypto', 'Macro', 'Global Markets'] as const).map(cat => (
                 <button
                   key={cat}
                   onClick={() => setResourceCategoryFilter(cat)}
-                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition ${
+                  className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
                     resourceCategoryFilter === cat
-                      ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
-                      : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
+                      ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/25'
+                      : 'text-slate-400 hover:text-slate-200 hover:bg-[#1A1F27]/60'
                   }`}
                 >
                   {cat}
@@ -469,7 +469,7 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
                 placeholder="Search resources..."
                 value={resourceSearch}
                 onChange={e => setResourceSearch(e.target.value)}
-                className="w-full rounded-xl bg-slate-950 border border-slate-800 py-2 pl-9 pr-4 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+                className="w-full rounded-xl bg-[#0A0D14] border border-[#1C232E] py-2 pl-9 pr-4 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
               />
             </div>
           </div>
@@ -533,7 +533,7 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
               {/* Forex Resources */}
               {forexItems.length > 0 && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-[#1C232E] pb-2">
                     <DollarSign className="w-5 h-5 text-blue-400" />
                     Forex Resources
                   </h3>
@@ -548,7 +548,7 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
               {/* Crypto Resources */}
               {cryptoItems.length > 0 && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-[#1C232E] pb-2">
                     <Coins className="w-5 h-5 text-emerald-400" />
                     Crypto Resources
                   </h3>
@@ -563,7 +563,7 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
               {/* Global Financial News */}
               {globalItems.length > 0 && (
                 <div className="space-y-4">
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-slate-800 pb-2">
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2 border-b border-[#1C232E] pb-2">
                     <Newspaper className="w-5 h-5 text-indigo-400" />
                     Global Financial News
                   </h3>
@@ -579,7 +579,7 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
             /* Filtered or Searched Grid */
             <div className="space-y-4">
               {filteredResources.length === 0 ? (
-                <div className="bg-slate-900/60 border border-slate-800 rounded-2xl p-12 text-center space-y-3">
+                <div className="bg-[#12161D] border border-[#1C232E] rounded-2xl p-12 text-center space-y-3">
                   <Search className="w-8 h-8 text-slate-500 mx-auto" />
                   <h4 className="text-base font-bold text-slate-300">No matching resources found</h4>
                   <p className="text-xs text-slate-500">Try adjusting your search query or category filter.</p>
@@ -595,8 +595,8 @@ export const EconomicCalendarView: React.FC<EconomicCalendarViewProps> = ({ defa
           )}
 
           {/* External-Link Disclaimer */}
-          <div className="pt-6 border-t border-slate-800/80">
-            <div className="flex items-center gap-2 text-xs text-slate-400/90 bg-slate-900/40 border border-slate-800/60 rounded-xl p-3.5 max-w-3xl">
+          <div className="pt-6 border-t border-[#1C232E]">
+            <div className="flex items-center gap-2 text-xs text-slate-400/90 bg-[#0E121A] border border-[#1C232E] rounded-xl p-3.5 max-w-3xl">
               <ShieldAlert className="w-4 h-4 text-slate-400 shrink-0" />
               <span>
                 External resources open in a new tab. TradeForge does not control the content, availability, or accuracy of third-party websites.
@@ -618,12 +618,12 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ item, getBadgeStyle }) => {
   const IconComponent = item.icon;
 
   return (
-    <div className="flex flex-col justify-between bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-slate-700/80 rounded-2xl p-5 transition-all shadow-md group hover:shadow-lg hover:-translate-y-0.5">
+    <div className="flex flex-col justify-between bg-[#12161D] hover:bg-[#12161D] border border-[#1C232E] hover:border-[#273141] rounded-2xl p-5 transition-all shadow-md group hover:shadow-lg hover:-translate-y-0.5">
       <div className="space-y-3">
         {/* Header: Logo / Icon, Name, Category Badge */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-slate-800 border border-slate-700/60 flex items-center justify-center text-slate-300 group-hover:text-indigo-400 group-hover:border-indigo-500/40 transition">
+            <div className="w-10 h-10 rounded-xl bg-slate-800 border border-[#273141]/60 flex items-center justify-center text-slate-300 group-hover:text-indigo-400 group-hover:border-indigo-500/40 transition">
               <IconComponent className="w-5 h-5" />
             </div>
             <div>
@@ -646,7 +646,7 @@ const ResourceCard: React.FC<ResourceCardProps> = ({ item, getBadgeStyle }) => {
       </div>
 
       {/* Footer CTA Button */}
-      <div className="pt-4 mt-2 border-t border-slate-800/60 flex items-center justify-between">
+      <div className="pt-4 mt-2 border-t border-[#1C232E] flex items-center justify-between">
         <a
           href={item.directUrl}
           target="_blank"

@@ -4,10 +4,14 @@ import { CheckSquare, Square, X, CalendarCheck2, Trophy } from 'lucide-react';
 import { DashboardInfoTooltip } from './DashboardInfoTooltip';
 import { useTrading } from '../../context/TradingContext';
 import { fetchDailyChecklist, saveDailyChecklistItemApi, saveDailyChecklistBulkApi } from '../../services/apiClient';
+import { toISODateKey, safeFormatDate } from '../../utils/dateUtils';
+import { CalendarDayDetailsModal } from './CalendarDayDetailsModal';
 
 interface ProgressTrackerCardProps {
   trades: Trade[];
   formatCurrency: (val: number) => string;
+  onViewCalendar?: () => void;
+  onSelectTrade?: (trade: Trade) => void;
 }
 
 interface ChecklistItem {
@@ -27,12 +31,19 @@ const CHECKLIST_ITEMS: ChecklistItem[] = [
 export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
   trades,
   formatCurrency,
+  onSelectTrade,
 }) => {
   const { theme, authUser } = useTrading();
   const isLight = theme === 'light';
-  const userId = authUser?.uid || null;
+  const userId = authUser?.id || (authUser as any)?.uid || null;
 
   const [isChecklistOpen, setIsChecklistOpen] = useState(false);
+  const [selectedDayData, setSelectedDayData] = useState<{
+    dateStr: string;
+    dateObj: Date;
+    trades: Trade[];
+  } | null>(null);
+
   const [hoveredCell, setHoveredCell] = useState<{
     dateStr: string;
     tradeCount: number;
@@ -41,7 +52,7 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
   } | null>(null);
 
   // Today's date string YYYY-MM-DD
-  const todayKey = useMemo(() => new Date().toISOString().split('T')[0], []);
+  const todayKey = useMemo(() => toISODateKey(new Date()) || new Date().toISOString().split('T')[0], []);
 
   // Daily checklist state
   const [completedItems, setCompletedItems] = useState<string[]>(['plan']);
@@ -52,7 +63,6 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
 
     async function loadAndMigrate() {
       if (!userId) {
-        // Fallback for unauthenticated users
         try {
           const saved = localStorage.getItem(`df_checklist_${todayKey}`);
           if (saved && isMounted) {
@@ -64,16 +74,12 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
         return;
       }
 
-      // Fetch today's items from Cloud SQL
       const dbItems = await fetchDailyChecklist(todayKey);
-
-      // Check migration marker
       const migrationMarker = `duskflow_checklist_cloudsql_migrated_v1_${userId}`;
       const hasMigrated = localStorage.getItem(migrationMarker);
 
       if (!hasMigrated) {
         try {
-          // Migrate all legacy localStorage keys starting with 'df_checklist_'
           for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
             if (key && key.startsWith('df_checklist_')) {
@@ -92,10 +98,8 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
             }
           }
 
-          // Mark migration completed
           localStorage.setItem(migrationMarker, 'true');
 
-          // Delete legacy localStorage keys safely
           const keysToDelete: string[] = [];
           for (let i = 0; i < localStorage.length; i++) {
             const key = localStorage.key(i);
@@ -105,7 +109,6 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
           }
           keysToDelete.forEach(k => localStorage.removeItem(k));
 
-          // Load migrated data
           const freshDbItems = await fetchDailyChecklist(todayKey);
           if (isMounted) {
             setCompletedItems(freshDbItems.length > 0 ? freshDbItems : ['plan']);
@@ -117,7 +120,6 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
           }
         }
       } else {
-        // Already migrated, use database items
         if (isMounted) {
           setCompletedItems(dbItems.length > 0 ? dbItems : ['plan']);
         }
@@ -137,108 +139,155 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
       ? completedItems.filter(item => item !== id)
       : [...completedItems, id];
 
-    // Optimistically update React state for instant user response
     setCompletedItems(updated);
+
+    try {
+      localStorage.setItem(`df_checklist_${todayKey}`, JSON.stringify(updated));
+    } catch {}
 
     if (userId) {
       try {
         await saveDailyChecklistItemApi(id, todayKey, !isCompleted);
-      } catch (err) {
-        console.error('Failed to persist checklist toggle to Postgres:', err);
-      }
-    } else {
-      try {
-        localStorage.setItem(`df_checklist_${todayKey}`, JSON.stringify(updated));
       } catch {
-        // ignore
+        // Handled silently by local-first cache
       }
     }
   };
 
-  // Group trade history by date
-  const tradeMap = useMemo(() => {
+  // Group trade history by date (using safe date key)
+  const { tradeMap, tradesByDate } = useMemo(() => {
     const map: { [dateStr: string]: { count: number; netPnl: number; wins: number } } = {};
+    const listMap: { [dateStr: string]: Trade[] } = {};
+
     trades.forEach(t => {
       if (!t.entryDate) return;
-      const dateStr = t.entryDate.split('T')[0];
-      if (!map[dateStr]) {
-        map[dateStr] = { count: 0, netPnl: 0, wins: 0 };
+      const key = toISODateKey(t.entryDate);
+      if (!key) return;
+
+      if (!map[key]) {
+        map[key] = { count: 0, netPnl: 0, wins: 0 };
+        listMap[key] = [];
       }
-      map[dateStr].count += 1;
-      map[dateStr].netPnl += t.netPnl;
-      if (t.netPnl > 0) map[dateStr].wins += 1;
+      map[key].count += 1;
+      map[key].netPnl += t.netPnl;
+      if (t.netPnl > 0) map[key].wins += 1;
+      listMap[key].push(t);
     });
-    return map;
+
+    return { tradeMap: map, tradesByDate: listMap };
   }, [trades]);
 
-  // Generate calendar grid for past 10-12 weeks (matching Screenshot 3 & 5)
-  const { weeks, monthLabels } = useMemo(() => {
+  // Generate calendar grid for past 11 weeks (77 days)
+  const { weeks, monthHeaders } = useMemo(() => {
     const today = new Date();
-    // Start 10 weeks ago from previous Sunday
+    // Anchor to Sunday 10 weeks ago
     const startDate = new Date(today);
     startDate.setDate(today.getDate() - (10 * 7 + today.getDay()));
+    startDate.setHours(0, 0, 0, 0);
 
-    const weeksList: Array<Array<{ date: Date; dateStr: string; tradeCount: number; netPnl: number; winRate: number }>> = [];
-    const monthsMap: { [monthName: string]: number } = {};
+    const weeksList: Array<Array<{
+      date: Date;
+      dateKey: string;
+      formattedDate: string;
+      tradeCount: number;
+      netPnl: number;
+      winRate: number;
+      trades: Trade[];
+    }>> = [];
 
-    let current = new Date(startDate);
-    let weekIndex = 0;
+    const monthStarts: Array<{ name: string; weekIndex: number }> = [];
+    let lastMonth = -1;
 
-    while (current <= today || weeksList.length < 11) {
-      const week: Array<{ date: Date; dateStr: string; tradeCount: number; netPnl: number; winRate: number }> = [];
-      
-      for (let day = 0; day < 7; day++) {
-        const dStr = current.toISOString().split('T')[0];
-        const monthName = current.toLocaleDateString('en-US', { month: 'short' });
-        
-        if (day === 0 && !monthsMap[monthName]) {
-          monthsMap[monthName] = weekIndex;
+    for (let w = 0; w < 11; w++) {
+      const weekDays: Array<{
+        date: Date;
+        dateKey: string;
+        formattedDate: string;
+        tradeCount: number;
+        netPnl: number;
+        winRate: number;
+        trades: Trade[];
+      }> = [];
+
+      for (let d = 0; d < 7; d++) {
+        const cellDate = new Date(startDate);
+        cellDate.setDate(startDate.getDate() + w * 7 + d);
+
+        const currentMonth = cellDate.getMonth();
+        if (currentMonth !== lastMonth && d <= 3) {
+          monthStarts.push({
+            name: cellDate.toLocaleDateString('en-US', { month: 'short' }),
+            weekIndex: w,
+          });
+          lastMonth = currentMonth;
         }
 
-        const data = tradeMap[dStr];
+        const dateKey = toISODateKey(cellDate);
+        const data = tradeMap[dateKey];
         const count = data ? data.count : 0;
         const pnl = data ? data.netPnl : 0;
         const winRate = count > 0 ? (data.wins / count) * 100 : 0;
+        const dayTradesList = tradesByDate[dateKey] || [];
 
-        week.push({
-          date: new Date(current),
-          dateStr: dStr,
+        weekDays.push({
+          date: cellDate,
+          dateKey,
+          formattedDate: safeFormatDate(cellDate, '—', {
+            weekday: 'short',
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric',
+          }),
           tradeCount: count,
           netPnl: pnl,
           winRate,
+          trades: dayTradesList,
         });
-
-        current.setDate(current.getDate() + 1);
       }
-
-      weeksList.push(week);
-      weekIndex++;
-      if (weeksList.length >= 11) break;
+      weeksList.push(weekDays);
     }
 
-    return {
-      weeks: weeksList,
-      monthLabels: Object.entries(monthsMap).map(([name, idx]) => ({ name, colIndex: idx })),
-    };
-  }, [tradeMap]);
+    return { weeks: weeksList, monthHeaders: monthStarts };
+  }, [tradeMap, tradesByDate]);
 
-  const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  const daysOfWeek = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
 
-  // Intensity color mapper
+  // Intensity color mapper with semantic P&L awareness
   const getCellColor = (count: number, pnl: number) => {
     if (count === 0) {
-      return isLight ? 'bg-[#F1F5F9] border border-[#E5E7EB]' : 'bg-[#111722] border border-[#20283A]';
+      return isLight
+        ? 'bg-slate-100/90 border-slate-200 hover:border-slate-300'
+        : 'bg-[#10131B] border-[rgba(255,255,255,0.05)] hover:border-[rgba(255,255,255,0.15)]';
     }
-    if (count === 1) {
-      return isLight ? 'bg-[rgba(37,99,255,0.20)] border border-[rgba(37,99,255,0.30)]' : 'bg-[rgba(37,99,255,0.25)] border border-[rgba(37,99,255,0.35)]';
+
+    if (pnl > 0) {
+      if (count === 1) {
+        return isLight ? 'bg-emerald-100 border-emerald-300' : 'bg-emerald-500/25 border-emerald-500/40';
+      }
+      if (count === 2) {
+        return isLight ? 'bg-emerald-300 border-emerald-400' : 'bg-emerald-500/50 border-emerald-500/60';
+      }
+      if (count <= 4) {
+        return isLight ? 'bg-emerald-500 border-emerald-600' : 'bg-emerald-500/80 border-emerald-400';
+      }
+      return 'bg-emerald-600 border-emerald-400 text-white';
     }
-    if (count === 2) {
-      return isLight ? 'bg-[rgba(37,99,255,0.40)] border border-[rgba(37,99,255,0.50)]' : 'bg-[rgba(37,99,255,0.45)] border border-[rgba(37,99,255,0.55)]';
+
+    if (pnl < 0) {
+      if (count === 1) {
+        return isLight ? 'bg-rose-100 border-rose-300' : 'bg-rose-500/25 border-rose-500/40';
+      }
+      if (count === 2) {
+        return isLight ? 'bg-rose-300 border-rose-400' : 'bg-rose-500/50 border-rose-500/60';
+      }
+      if (count <= 4) {
+        return isLight ? 'bg-rose-500 border-rose-600' : 'bg-rose-500/80 border-rose-400';
+      }
+      return 'bg-rose-600 border-rose-400 text-white';
     }
-    if (count <= 4) {
-      return isLight ? 'bg-[rgba(37,99,255,0.70)] border border-[rgba(37,99,255,0.80)]' : 'bg-[rgba(37,99,255,0.70)] border border-[rgba(37,99,255,0.80)]';
-    }
-    return 'bg-[#2563FF] border border-[#3B75FF]';
+
+    // Breakeven (0 P&L with trades)
+    return isLight ? 'bg-blue-200 border-blue-300' : 'bg-blue-500/30 border-blue-500/40';
   };
 
   const todayScore = completedItems.length;
@@ -248,52 +297,62 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
       {/* Heatmap Area */}
       <div className="relative">
         {/* Month Headers */}
-        <div className={`flex text-[10px] font-mono pl-7 mb-1.5 justify-between pr-2 ${
-          isLight ? 'text-[#6B7280]' : 'text-[#8C97AB]'
-        }`}>
-          {monthLabels.map(m => (
-            <span key={m.name}>{m.name}</span>
+        <div className="flex text-[10px] font-mono text-slate-400 pl-6 mb-1.5 h-4 relative">
+          {monthHeaders.map((m, idx) => (
+            <span
+              key={`${m.name}-${idx}`}
+              className="absolute text-slate-400 font-medium"
+              style={{ left: `calc(1.5rem + ${m.weekIndex * 9.09}%)` }}
+            >
+              {m.name}
+            </span>
           ))}
         </div>
 
         {/* Heatmap Grid (Sun-Sat rows x Week columns) */}
         <div className="flex gap-1.5 items-start">
           {/* Day of Week Labels */}
-          <div className={`flex flex-col gap-1 text-[9px] font-mono pr-1 pt-0.5 select-none ${
-            isLight ? 'text-[#9CA3AF]' : 'text-[#5F6B80]'
+          <div className={`flex flex-col gap-1 text-[9px] font-mono pr-1 pt-0.5 select-none w-5 ${
+            isLight ? 'text-slate-400' : 'text-slate-500'
           }`}>
             {daysOfWeek.map((d, i) => (
-              <span key={d} className="h-3.5 leading-none flex items-center">
-                {i % 2 === 0 ? d : ''}
+              <span key={`${d}-${i}`} className="h-3 sm:h-3.5 leading-none flex items-center justify-end">
+                {i % 2 === 1 ? d : ''}
               </span>
             ))}
           </div>
 
           {/* Grid Columns */}
-          <div className="flex-1 flex gap-1 justify-between">
+          <div className="flex-1 grid grid-cols-11 gap-1">
             {weeks.map((week, wIdx) => (
               <div key={wIdx} className="flex flex-col gap-1">
                 {week.map((day, dIdx) => (
-                  <div
+                  <button
                     key={dIdx}
+                    type="button"
+                    onClick={() => {
+                      if (day.tradeCount > 0) {
+                        setSelectedDayData({
+                          dateStr: day.formattedDate,
+                          dateObj: day.date,
+                          trades: day.trades,
+                        });
+                      }
+                    }}
                     onMouseEnter={() =>
                       setHoveredCell({
-                        dateStr: day.date.toLocaleDateString('en-US', {
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric',
-                          year: 'numeric',
-                        }),
+                        dateStr: day.formattedDate,
                         tradeCount: day.tradeCount,
                         netPnl: day.netPnl,
                         winRate: day.winRate,
                       })
                     }
                     onMouseLeave={() => setHoveredCell(null)}
-                    className={`w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-[3px] transition-transform hover:scale-125 cursor-pointer ${getCellColor(
+                    className={`w-full aspect-square rounded-[3px] border transition-transform hover:scale-125 cursor-pointer ${getCellColor(
                       day.tradeCount,
                       day.netPnl
                     )}`}
+                    title={`${day.formattedDate}: ${day.tradeCount} trades, ${formatCurrency(day.netPnl)}`}
                   />
                 ))}
               </div>
@@ -301,37 +360,48 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
           </div>
         </div>
 
-        {/* Heatmap Legend (Less -> More) */}
-        <div className={`flex items-center justify-end gap-1.5 mt-2.5 text-[9px] font-mono ${
-          isLight ? 'text-[#6B7280]' : 'text-[#8C97AB]'
+        {/* Heatmap Legend (Less -> More with Green/Red cues) */}
+        <div className={`flex items-center justify-between mt-2.5 text-[9px] font-mono ${
+          isLight ? 'text-slate-500' : 'text-slate-400'
         }`}>
-          <span>Less</span>
-          <div className={`w-2.5 h-2.5 rounded-[2px] ${isLight ? 'bg-[#F1F5F9] border border-[#E5E7EB]' : 'bg-[#111722] border border-[#20283A]'}`} />
-          <div className={`w-2.5 h-2.5 rounded-[2px] ${isLight ? 'bg-[rgba(37,99,255,0.20)] border border-[rgba(37,99,255,0.30)]' : 'bg-[rgba(37,99,255,0.25)] border border-[rgba(37,99,255,0.35)]'}`} />
-          <div className={`w-2.5 h-2.5 rounded-[2px] ${isLight ? 'bg-[rgba(37,99,255,0.40)] border border-[rgba(37,99,255,0.50)]' : 'bg-[rgba(37,99,255,0.45)] border border-[rgba(37,99,255,0.55)]'}`} />
-          <div className={`w-2.5 h-2.5 rounded-[2px] ${isLight ? 'bg-[rgba(37,99,255,0.70)] border border-[rgba(37,99,255,0.80)]' : 'bg-[rgba(37,99,255,0.70)] border border-[rgba(37,99,255,0.80)]'}`} />
-          <div className="w-2.5 h-2.5 rounded-[2px] bg-[#2563FF] border border-[#3B75FF]" />
-          <span>More</span>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 text-[9px]">
+              <span className="w-2 h-2 rounded-xs bg-emerald-500/80 inline-block" />
+              <span>Profit</span>
+            </span>
+            <span className="flex items-center gap-1 text-[9px]">
+              <span className="w-2 h-2 rounded-xs bg-rose-500/80 inline-block" />
+              <span>Loss</span>
+            </span>
+          </div>
+          <div className="flex items-center gap-1">
+            <span>Less</span>
+            <div className={`w-2 h-2 rounded-xs ${isLight ? 'bg-slate-100 border border-slate-200' : 'bg-[#10131B] border border-[rgba(255,255,255,0.05)]'}`} />
+            <div className={`w-2 h-2 rounded-xs ${isLight ? 'bg-emerald-200' : 'bg-emerald-500/30'}`} />
+            <div className={`w-2 h-2 rounded-xs ${isLight ? 'bg-emerald-400' : 'bg-emerald-500/60'}`} />
+            <div className={`w-2 h-2 rounded-xs ${isLight ? 'bg-emerald-600' : 'bg-emerald-500'}`} />
+            <span>More</span>
+          </div>
         </div>
 
         {/* Floating Cell Tooltip */}
         {hoveredCell && (
-          <div className={`absolute top-0 right-0 px-3 py-1.5 rounded-lg text-xs shadow-2xl z-30 pointer-events-none animate-in fade-in border ${
+          <div className={`absolute -top-1 right-0 px-2.5 py-1.5 rounded-lg text-xs shadow-xl z-30 pointer-events-none animate-in fade-in border ${
             isLight
-              ? 'bg-white border-[#E5E7EB] text-[#111827]'
-              : 'bg-[#0D111B] border-[#28344A] text-[#F3F6FB]'
+              ? 'bg-white border-slate-200 text-slate-900 shadow-slate-200/50'
+              : 'bg-[#0E121A] border-[rgba(255,255,255,0.12)] text-slate-100 shadow-black/60'
           }`}>
-            <div className={`font-semibold ${isLight ? 'text-[#111827]' : 'text-[#F3F6FB]'}`}>{hoveredCell.dateStr}</div>
-            <div className="flex items-center gap-2 mt-0.5 text-[11px] font-mono">
-              <span className={isLight ? 'text-[#6B7280]' : 'text-[#8C97AB]'}>{hoveredCell.tradeCount} trades</span>
-              <span className={isLight ? 'text-[#D1D5DB]' : 'text-[#20283A]'}>•</span>
-              <span className={hoveredCell.netPnl >= 0 ? (isLight ? 'text-[#059669] font-bold' : 'text-[#00D6A3] font-bold') : (isLight ? 'text-[#DC2626] font-bold' : 'text-[#FF3D6E] font-bold')}>
+            <div className="font-semibold text-[11px]">{hoveredCell.dateStr}</div>
+            <div className="flex items-center gap-1.5 mt-0.5 text-[10px] font-mono">
+              <span className="text-slate-400">{hoveredCell.tradeCount} trades</span>
+              <span className="text-slate-600">•</span>
+              <span className={`font-semibold ${hoveredCell.netPnl >= 0 ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')}`}>
                 {formatCurrency(hoveredCell.netPnl)}
               </span>
               {hoveredCell.tradeCount > 0 && (
                 <>
-                  <span className={isLight ? 'text-[#D1D5DB]' : 'text-[#20283A]'}>•</span>
-                  <span className={isLight ? 'text-[#1D4ED8]' : 'text-[#4C7DFF]'}>{hoveredCell.winRate.toFixed(0)}% Win</span>
+                  <span className="text-slate-600">•</span>
+                  <span className="text-blue-400">{hoveredCell.winRate.toFixed(0)}% Win</span>
                 </>
               )}
             </div>
@@ -340,14 +410,12 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
       </div>
 
       {/* Bottom Row: Today's Score & Daily Checklist button */}
-      <div className={`mt-3 pt-3 border-t flex items-center justify-between gap-3 ${
-        isLight ? 'border-[#E5E7EB]' : 'border-[#20283A]'
+      <div className={`mt-3 pt-2.5 border-t flex items-center justify-between gap-3 ${
+        isLight ? 'border-slate-200' : 'border-[rgba(255,255,255,0.06)]'
       }`}>
         <div className="flex-1">
-          <div className={`flex items-center gap-1 text-[11px] mb-1 ${
-            isLight ? 'text-[#6B7280]' : 'text-[#8C97AB]'
-          }`}>
-            <span>Today's score</span>
+          <div className="flex items-center gap-1 text-[11px] text-slate-400 mb-1">
+            <span>Today's discipline</span>
             <DashboardInfoTooltip
               info={{
                 title: "Today's Discipline Score",
@@ -357,17 +425,14 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
             />
           </div>
           <div className="flex items-center gap-2">
-            <span className={`font-mono font-bold text-sm ${
-              isLight ? 'text-[#111827]' : 'text-[#F3F6FB]'
-            }`}>
+            <span className="font-mono font-bold text-xs text-slate-200">
               {todayScore}/5
             </span>
-            {/* Progress bar */}
-            <div className={`h-1.5 flex-1 max-w-[130px] rounded-full overflow-hidden ${
-              isLight ? 'bg-[#E5E7EB]' : 'bg-[#111722]'
+            <div className={`h-1.5 flex-1 max-w-[120px] rounded-full overflow-hidden ${
+              isLight ? 'bg-slate-200' : 'bg-[#151922]'
             }`}>
               <div
-                className="h-full bg-[#2563FF] rounded-full transition-all duration-300"
+                className="h-full bg-blue-500 rounded-full transition-all duration-300"
                 style={{ width: `${(todayScore / 5) * 100}%` }}
               />
             </div>
@@ -377,14 +442,14 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
         {/* Daily Checklist Button */}
         <button
           onClick={() => setIsChecklistOpen(true)}
-          className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-semibold transition ${
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium transition cursor-pointer ${
             isLight
-              ? 'border-[#E5E7EB] bg-white hover:bg-[#F8FAFC] text-[#4B5563]'
-              : 'border-[#20283A] bg-[#0D111B] hover:bg-[#111722] hover:border-[#28344A] text-[#8C97AB] hover:text-[#F3F6FB]'
+              ? 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
+              : 'border-[rgba(255,255,255,0.08)] bg-[#12161F] hover:bg-[#181D28] text-slate-300 hover:text-white'
           }`}
         >
-          <CalendarCheck2 className={`w-3.5 h-3.5 ${isLight ? 'text-[#1D4ED8]' : 'text-[#4C7DFF]'}`} />
-          <span>Daily checklist</span>
+          <CalendarCheck2 className="w-3.5 h-3.5 text-blue-400" />
+          <span>Checklist</span>
         </button>
       </div>
 
@@ -404,27 +469,25 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
           <div
             role="dialog"
             aria-modal="true"
-            className={`w-full max-w-md rounded-xl border p-5 shadow-2xl space-y-4 ${
-              isLight ? 'bg-white border-[#E5E7EB] text-[#111827]' : 'bg-[#0D111B] border-[#28344A] text-[#F3F6FB]'
+            className={`w-full max-w-md rounded-2xl border p-5 shadow-2xl space-y-4 ${
+              isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#0E1118] border-[rgba(255,255,255,0.08)] text-slate-100'
             }`}
           >
-            <div className={`flex items-center justify-between pb-2 border-b ${
-              isLight ? 'border-[#E5E7EB]' : 'border-[#20283A]'
+            <div className={`flex items-center justify-between pb-3 border-b ${
+              isLight ? 'border-slate-200' : 'border-[rgba(255,255,255,0.06)]'
             }`}>
-              <div className="flex items-center gap-2">
-                <div className={`p-1.5 rounded-lg ${isLight ? 'bg-[rgba(37,99,255,0.08)] text-[#1D4ED8]' : 'bg-[rgba(37,99,255,0.12)] text-[#4C7DFF]'}`}>
+              <div className="flex items-center gap-2.5">
+                <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
                   <Trophy className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className={`text-sm font-semibold ${isLight ? 'text-[#111827]' : 'text-[#F3F6FB]'}`}>Daily Execution Checklist</h3>
-                  <p className={`text-[10px] font-mono ${isLight ? 'text-[#6B7280]' : 'text-[#8C97AB]'}`}>Today: {todayKey}</p>
+                  <h3 className="text-sm font-semibold text-slate-100">Daily Execution Checklist</h3>
+                  <p className="text-[10px] font-mono text-slate-400">Today: {todayKey}</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsChecklistOpen(false)}
-                className={`p-1 rounded-lg transition ${
-                  isLight ? 'text-[#9CA3AF] hover:text-[#111827]' : 'text-[#8C97AB] hover:text-[#F3F6FB]'
-                }`}
+                className="p-1 rounded-lg text-slate-400 hover:text-white transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -438,32 +501,28 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
                   <div
                     key={item.id}
                     onClick={() => toggleItem(item.id)}
-                    className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition select-none ${
+                    className={`flex items-start gap-3 p-3 rounded-xl border cursor-pointer transition select-none ${
                       isChecked
                         ? isLight
-                          ? 'bg-[rgba(37,99,255,0.05)] border-[rgba(37,99,255,0.25)] text-[#1D4ED8]'
-                          : 'bg-[rgba(37,99,255,0.08)] border-[rgba(37,99,255,0.25)] text-[#F3F6FB]'
+                          ? 'bg-blue-50 border-blue-200 text-blue-900'
+                          : 'bg-blue-500/10 border-blue-500/25 text-slate-100'
                         : isLight
-                        ? 'bg-[#F8FAFC] border-[#E5E7EB] text-[#4B5563] hover:border-[#CBD5E1]'
-                        : 'bg-[#0A0E16] border-[#20283A] text-[#8C97AB] hover:border-[#28344A]'
+                        ? 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
+                        : 'bg-[#121620] border-[rgba(255,255,255,0.05)] text-slate-300 hover:border-[rgba(255,255,255,0.12)]'
                     }`}
                   >
                     <div className="mt-0.5">
                       {isChecked ? (
-                        <CheckSquare className={`w-4 h-4 shrink-0 ${isLight ? 'text-[#1D4ED8]' : 'text-[#4C7DFF]'}`} />
+                        <CheckSquare className="w-4 h-4 shrink-0 text-blue-400" />
                       ) : (
-                        <Square className={`w-4 h-4 shrink-0 ${isLight ? 'text-[#9CA3AF]' : 'text-[#5F6B80]'}`} />
+                        <Square className="w-4 h-4 shrink-0 text-slate-500" />
                       )}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
-                        <span className={`text-xs font-semibold ${
-                          isChecked
-                            ? isLight ? 'text-[#111827]' : 'text-[#F3F6FB]'
-                            : isLight ? 'text-[#4B5563]' : 'text-[#8C97AB]'
-                        }`}>{item.label}</span>
-                        <span className={`text-[9px] uppercase font-bold px-1.5 py-0.5 rounded ${
-                          isLight ? 'text-[#6B7280] bg-[#F1F5F9]' : 'text-[#8C97AB] bg-[#111722]'
+                        <span className="text-xs font-medium">{item.label}</span>
+                        <span className={`text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded ${
+                          isLight ? 'text-slate-600 bg-slate-200' : 'text-slate-400 bg-[#161B26]'
                         }`}>
                           {item.category}
                         </span>
@@ -476,20 +535,31 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
 
             {/* Progress Footer */}
             <div className={`pt-3 border-t flex items-center justify-between ${
-              isLight ? 'border-[#E5E7EB]' : 'border-[#20283A]'
+              isLight ? 'border-slate-200' : 'border-[rgba(255,255,255,0.06)]'
             }`}>
-              <div className={`text-xs ${isLight ? 'text-[#6B7280]' : 'text-[#8C97AB]'}`}>
-                Score: <strong className={`font-mono ${isLight ? 'text-[#1D4ED8] font-bold' : 'text-[#4C7DFF] font-bold'}`}>{todayScore} / 5</strong>
+              <div className="text-xs text-slate-400">
+                Discipline: <strong className="font-mono text-blue-400">{todayScore} / 5</strong>
               </div>
               <button
                 onClick={() => setIsChecklistOpen(false)}
-                className="px-4 py-2 rounded-lg bg-[#2563FF] hover:bg-[#2F6BFF] text-white text-xs font-semibold transition active:scale-[0.98]"
+                className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold transition cursor-pointer"
               >
                 Save & Close
               </button>
             </div>
           </div>
         </div>
+      )}
+
+      {/* Selected Day Details Modal */}
+      {selectedDayData && (
+        <CalendarDayDetailsModal
+          dateStr={selectedDayData.dateStr}
+          dateObj={selectedDayData.dateObj}
+          trades={selectedDayData.trades}
+          onClose={() => setSelectedDayData(null)}
+          onSelectTrade={onSelectTrade}
+        />
       )}
     </div>
   );

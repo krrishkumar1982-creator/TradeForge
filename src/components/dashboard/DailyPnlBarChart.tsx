@@ -22,7 +22,7 @@ export const DailyPnlBarChart: React.FC<DailyPnlBarChartProps> = ({ trades, form
 
   const isLight = theme === 'light';
 
-  // Group trades by date (Hooks must always run before any conditional returns)
+  // Group trades by date
   const bars: BarData[] = useMemo(() => {
     const closed = trades.filter(t => t.status === 'CLOSED');
     if (closed.length === 0) return [];
@@ -45,8 +45,7 @@ export const DailyPnlBarChart: React.FC<DailyPnlBarChartProps> = ({ trades, form
       (a, b) => new Date(a).getTime() - new Date(b).getTime()
     );
 
-    // Keep the most recent 18 trading days so bars fit cleanly without overflowing or squeezing
-    return sortedDates.slice(-18).map(d => {
+    return sortedDates.map(d => {
       const dateObj = new Date(map[d].rawDate);
       return {
         dateKey: d,
@@ -82,9 +81,9 @@ export const DailyPnlBarChart: React.FC<DailyPnlBarChartProps> = ({ trades, form
   const maxAbs = Math.max(150, ...bars.map(b => Math.abs(b.pnl)));
 
   return (
-    <div className="relative w-full h-[220px] flex flex-col justify-between select-none overflow-hidden max-w-full">
+    <div className="relative w-full h-[220px] flex flex-col justify-between select-none">
       {/* Bars Container */}
-      <div className={`flex-1 flex items-center justify-between px-3 pt-4 pb-2 w-full overflow-hidden ${
+      <div className={`flex-1 flex items-center justify-between px-3 pt-4 pb-2 ${
         bars.length > 15 ? 'gap-0.5' : bars.length > 8 ? 'gap-1' : 'gap-1.5'
       }`}>
         {bars.map((bar, idx) => {
@@ -105,7 +104,7 @@ export const DailyPnlBarChart: React.FC<DailyPnlBarChartProps> = ({ trades, form
                   <div className="w-full flex flex-col items-center justify-end h-1/2">
                     <div
                       style={{ height: `${heightPercent}%` }}
-                      className="w-full max-w-[14px] rounded-t-sm transition-all bg-[#00D6A3] hover:opacity-85"
+                      className="w-full max-w-[14px] rounded-t-sm transition-all bg-emerald-500 hover:opacity-90"
                     />
                   </div>
                 ) : (
@@ -113,14 +112,14 @@ export const DailyPnlBarChart: React.FC<DailyPnlBarChartProps> = ({ trades, form
                 )}
 
                 {/* Zero baseline line */}
-                <div className={`w-full h-[1px] ${isLight ? 'bg-[#E5E7EB]' : 'bg-[#20283A]'}`} />
+                <div className={`w-full h-[1px] ${isLight ? 'bg-slate-200' : 'bg-[rgba(255,255,255,0.08)]'}`} />
 
                 {/* Negative (Bottom) */}
                 {!isPos ? (
                   <div className="w-full flex flex-col items-center justify-start h-1/2">
                     <div
                       style={{ height: `${heightPercent}%` }}
-                      className="w-full max-w-[14px] rounded-b-sm transition-all bg-[#FF3D6E] hover:opacity-85"
+                      className="w-full max-w-[14px] rounded-b-sm transition-all bg-rose-500 hover:opacity-90"
                     />
                   </div>
                 ) : (
@@ -130,7 +129,7 @@ export const DailyPnlBarChart: React.FC<DailyPnlBarChartProps> = ({ trades, form
 
               {/* Date label */}
               {idx % labelInterval === 0 ? (
-                <span className={`text-[9px] mt-1 font-mono whitespace-nowrap ${isLight ? 'text-[#6B7280]' : 'text-[#8C97AB]'}`}>
+                <span className={`text-[9px] mt-1 font-mono whitespace-nowrap ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
                   {bar.displayDate}
                 </span>
               ) : (
@@ -144,37 +143,42 @@ export const DailyPnlBarChart: React.FC<DailyPnlBarChartProps> = ({ trades, form
       {/* Hover tooltip */}
       {hoveredBar && (
         <div
-          className={`absolute top-1 right-4 px-3 py-1.5 rounded-lg text-xs z-20 pointer-events-none animate-in fade-in border ${
-            isLight
-              ? 'bg-white border-[#E5E7EB] text-[#111827] shadow-xl'
-              : 'bg-[#0D111B] border-[#28344A] text-[#F3F6FB] shadow-2xl'
-          }`}
+          className="absolute top-1 right-4 px-3.5 py-2 rounded-xl text-xs z-20 pointer-events-none animate-in fade-in glass-tooltip"
         >
-          <div className="text-[10px] font-semibold flex items-center justify-between gap-3 border-b pb-0.5 border-[#20283A]/30">
-            <span className={isLight ? 'text-[#6B7280]' : 'text-[#8C97AB]'}>{hoveredBar.dateKey}</span>
-            <span className={`${isLight ? 'text-[#6B7280]' : 'text-[#8C97AB]'} font-mono`}>{hoveredBar.tradeCount} trades</span>
-          </div>
-          <div className="mt-1 flex items-center justify-between gap-3 font-mono">
-            <span className={`${isLight ? 'text-[#6B7280]' : 'text-[#8C97AB]'} text-[11px]`}>Net P&L:</span>
-            <span className={`text-[12px] font-bold ${hoveredBar.pnl >= 0 ? (isLight ? 'text-[#059669]' : 'text-[#00D6A3]') : (isLight ? 'text-[#DC2626]' : 'text-[#FF3D6E]')}`}>
-              {formatCurrency(hoveredBar.pnl)}
+          <div className={`text-[10px] font-semibold flex items-center justify-between gap-4 border-b pb-1 ${
+            isLight ? 'border-slate-200 text-slate-500' : 'border-white/10 text-slate-400'
+          }`}>
+            <span className="font-sans">{hoveredBar.dateKey}</span>
+            <span className={`px-1.5 py-0.2 rounded font-mono text-[9px] font-semibold border ${
+              isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-white/[0.06] text-slate-300 border-white/10'
+            }`}>
+              {hoveredBar.tradeCount} trades
             </span>
           </div>
-          <div className="text-[9px] text-[#8C97AB] mt-0.5 flex items-center gap-1.5 font-mono">
-            <span className={isLight ? 'text-[#059669] font-semibold' : 'text-[#00D6A3]'}>{hoveredBar.wins}W</span>
-            <span>-</span>
-            <span className={isLight ? 'text-[#DC2626] font-semibold' : 'text-[#FF3D6E]'}>{hoveredBar.losses}L</span>
+          <div className="mt-1.5 flex items-center justify-between gap-4 font-mono tabular-nums">
+            <span className={`text-[11px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Net P&L:</span>
+            <span className={`text-[12px] font-bold ${hoveredBar.pnl >= 0 ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')}`}>
+              {hoveredBar.pnl >= 0 ? '+' : ''}{formatCurrency(hoveredBar.pnl)}
+            </span>
+          </div>
+          <div className="text-[10px] text-slate-400 mt-1 flex items-center justify-between gap-2 font-mono tabular-nums border-t pt-1 border-white/5">
+            <span className="text-[9px] font-sans text-slate-500">Record:</span>
+            <span className="space-x-1.5">
+              <span className={isLight ? 'text-emerald-600 font-semibold' : 'text-emerald-400 font-semibold'}>{hoveredBar.wins}W</span>
+              <span>•</span>
+              <span className={isLight ? 'text-rose-600 font-semibold' : 'text-rose-400 font-semibold'}>{hoveredBar.losses}L</span>
+            </span>
           </div>
         </div>
       )}
 
       {/* Bottom Summary Bar */}
-      <div className={`flex justify-between px-3 text-[10px] border-t pt-1.5 font-mono ${
-        isLight ? 'text-[#6B7280] border-[#E5E7EB]' : 'text-[#8C97AB] border-[#20283A]'
+      <div className={`flex justify-between px-3 text-[10px] border-t pt-1.5 font-mono tabular-nums ${
+        isLight ? 'text-slate-500 border-slate-100' : 'text-slate-400 border-[rgba(255,255,255,0.06)]'
       }`}>
         <span>{bars.length} Trading Days</span>
-        <span className={isLight ? 'text-[#111827]' : 'text-[#F3F6FB]'}>
-          Max Day: <strong className={isLight ? 'text-[#059669]' : 'text-[#00D6A3]'}>+{formatCurrency(Math.round(maxAbs))}</strong>
+        <span className={isLight ? 'text-slate-800' : 'text-slate-200'}>
+          Peak Session Range: <strong className={isLight ? 'text-emerald-600' : 'text-emerald-400'}>+{formatCurrency(Math.round(maxAbs))}</strong>
         </span>
       </div>
     </div>

@@ -134,7 +134,7 @@ export const DashboardInfoTooltip: React.FC<DashboardInfoTooltipProps> = ({
           e.preventDefault();
           setIsOpen(prev => !prev);
         }}
-        className="text-slate-400 hover:text-blue-400 p-0.5 rounded-full hover:bg-slate-800 transition-colors focus:outline-none"
+        className="text-slate-400 hover:text-blue-400 p-0.5 rounded-full hover:bg-[#1A1F27] transition-colors focus:outline-none"
         title={info.title}
         aria-label={`Info about ${info.title}`}
       >
@@ -145,9 +145,9 @@ export const DashboardInfoTooltip: React.FC<DashboardInfoTooltipProps> = ({
 
       {isOpen && (
         <div
-          className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 rounded-xl bg-slate-900 border border-slate-700/90 p-3.5 shadow-2xl backdrop-blur-md text-left animate-in fade-in zoom-in-95 pointer-events-auto select-text"
+          className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-72 rounded-xl bg-[#12161D] border border-[#273141] p-3.5 shadow-2xl backdrop-blur-md text-left animate-in fade-in zoom-in-95 pointer-events-auto select-text"
         >
-          <div className="flex items-center justify-between pb-1.5 border-b border-slate-800">
+          <div className="flex items-center justify-between pb-1.5 border-b border-[#1C232E]">
             <h4 className="text-xs font-bold text-slate-100 flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
               {info.title}
@@ -168,7 +168,7 @@ export const DashboardInfoTooltip: React.FC<DashboardInfoTooltipProps> = ({
           </p>
 
           {info.formula && (
-            <div className="mt-2 p-1.5 rounded-lg bg-slate-950/90 border border-slate-800 font-mono text-[10px] text-blue-300">
+            <div className="mt-2 p-1.5 rounded-lg bg-[#0A0D14]/90 border border-[#1C232E] font-mono text-[10px] text-blue-300">
               <span className="text-slate-400">Formula: </span>
               {info.formula}
             </div>
@@ -189,7 +189,7 @@ export const DashboardInfoTooltip: React.FC<DashboardInfoTooltipProps> = ({
           )}
 
           {/* Arrow */}
-          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-2 h-2 bg-slate-900 border-r border-b border-slate-700 rotate-45" />
+          <div className="absolute top-full left-1/2 -translate-x-1/2 -mt-px w-2 h-2 bg-[#12161D] border-r border-b border-[#273141] rotate-45" />
         </div>
       )}
     </div>

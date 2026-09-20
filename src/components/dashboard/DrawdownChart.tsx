@@ -2,6 +2,7 @@ import React, { useState, useMemo, useRef } from 'react';
 import { Trade } from '../../types';
 import { useTrading } from '../../context/TradingContext';
 import { Info, TrendingDown } from 'lucide-react';
+import { parseSafeDate, safeFormatDate, toISODateKey } from '../../utils/dateUtils';
 
 interface DrawdownChartProps {
   trades: Trade[];
@@ -20,39 +21,49 @@ interface DrawdownPoint {
 }
 
 export const DrawdownChart: React.FC<DrawdownChartProps> = ({ trades, formatCurrency }) => {
-  const { theme } = useTrading();
+  const { theme, accounts, selectedAccountId } = useTrading();
+  const currentAccount = accounts.find(a => a.id === selectedAccountId) || accounts[0];
   const [hoveredPoint, setHoveredPoint] = useState<DrawdownPoint | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   // Group trades chronologically and calculate running Drawdown
   const { points, yTicks, maxDrawdown, dateLabels } = useMemo(() => {
     const closed = trades
-      .filter(t => t.status === 'CLOSED' && t.entryDate)
-      .sort((a, b) => new Date(a.entryDate).getTime() - new Date(b.entryDate).getTime());
+      .filter(t => t.status === 'CLOSED' && (t.entryDate || t.exitDate))
+      .sort((a, b) => {
+        const timeA = parseSafeDate(a.entryDate)?.getTime() || 0;
+        const timeB = parseSafeDate(b.entryDate)?.getTime() || 0;
+        return timeA - timeB;
+      });
 
     if (closed.length === 0) {
       return {
         points: [],
         yTicks: [0, -100, -200, -300, -400, -500, -600, -700, -800, -900],
         maxDrawdown: 900,
-        dateLabels: ['05/01/24', '05/15/24', '06/01/24', '06/19/24'],
+        dateLabels: [],
       };
     }
 
     // Daily aggregation
-    const dayPnlMap: { [d: string]: number } = {};
+    const dayPnlMap: { [d: string]: { pnl: number; rawDate: string } } = {};
     closed.forEach(t => {
-      const d = t.entryDate.split('T')[0];
-      dayPnlMap[d] = (dayPnlMap[d] || 0) + t.netPnl;
+      const dKey = toISODateKey(t.entryDate || t.exitDate);
+      if (!dKey) return;
+      if (!dayPnlMap[dKey]) {
+        dayPnlMap[dKey] = { pnl: 0, rawDate: t.entryDate || t.exitDate || '' };
+      }
+      dayPnlMap[dKey].pnl += t.netPnl;
     });
 
     const sortedDates = Object.keys(dayPnlMap).sort();
-    let runningEquity = 50000;
-    let peakEquity = 50000;
+    const startingBalance = currentAccount?.initialBalance || currentAccount?.currentBalance || 50000;
+    let runningEquity = startingBalance;
+    let peakEquity = startingBalance;
     let maxDd = 0;
 
     const rawPoints = sortedDates.map((dateStr, idx) => {
-      runningEquity += dayPnlMap[dateStr];
+      runningEquity += dayPnlMap[dateStr].pnl;
       if (runningEquity > peakEquity) {
         peakEquity = runningEquity;
       }
@@ -60,11 +71,10 @@ export const DrawdownChart: React.FC<DrawdownChartProps> = ({ trades, formatCurr
       const ddPercent = peakEquity > 0 ? (ddDollar / peakEquity) * 100 : 0;
       if (ddDollar > maxDd) maxDd = ddDollar;
 
-      const d = new Date(dateStr);
-      const month = (d.getMonth() + 1).toString().padStart(2, '0');
-      const day = d.getDate().toString().padStart(2, '0');
-      const year = d.getFullYear().toString().slice(-2);
-      const displayDate = `${month}/${day}/${year}`;
+      const parsed = parseSafeDate(dayPnlMap[dateStr].rawDate) || parseSafeDate(dateStr);
+      const displayDate = parsed
+        ? safeFormatDate(parsed, dateStr, { month: '2-digit', day: '2-digit', year: '2-digit' })
+        : dateStr;
 
       return {
         dateStr,
@@ -144,18 +154,18 @@ export const DrawdownChart: React.FC<DrawdownChartProps> = ({ trades, formatCurr
 
   return (
     <div
-      className={`rounded-xl border p-4 shadow-sm transition flex flex-col justify-between relative select-none ${
+      className={`rounded-2xl border p-4 sm:p-5 transition-all duration-200 flex flex-col justify-between relative select-none ${
         theme === 'light'
-          ? 'bg-white border-[#E5E7EB]'
-          : 'bg-[#0D111B] border-[#20283A]'
+          ? 'bg-white border-[#E5E7EB] shadow-xs'
+          : 'bg-[#12141A] border-[rgba(255,255,255,0.08)] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]'
       }`}
     >
       {/* Header */}
       <div className={`flex items-center justify-between pb-3 border-b mb-2 ${
-        theme === 'light' ? 'border-[#E5E7EB]' : 'border-[#20283A]'
+        theme === 'light' ? 'border-[#E5E7EB]' : 'border-[rgba(255,255,255,0.08)]'
       }`}>
         <h3 className={`text-xs sm:text-sm font-semibold flex items-center gap-1.5 ${
-          theme === 'light' ? 'text-[#111827]' : 'text-[#F3F6FB]'
+          theme === 'light' ? 'text-[#111827]' : 'text-[#F8FAFC]'
         }`}>
           Drawdown
           <span
@@ -166,9 +176,15 @@ export const DrawdownChart: React.FC<DrawdownChartProps> = ({ trades, formatCurr
           </span>
         </h3>
 
-        <div className="text-xs font-mono">
+        <div className="text-xs font-mono tabular-nums flex items-center gap-1.5">
           <span className={theme === 'light' ? 'text-[#6B7280]' : 'text-[#8C97AB]'}>Max DD: </span>
-          <span className={`font-bold ${theme === 'light' ? 'text-[#DC2626]' : 'text-[#FF3D6E]'}`}>-${maxDrawdown.toLocaleString()}</span>
+          <span className={`px-2 py-0.5 rounded font-bold border text-[11px] ${
+            theme === 'light'
+              ? 'bg-rose-50 text-rose-700 border-rose-200'
+              : 'bg-rose-500/10 text-rose-400 border-rose-500/25'
+          }`}>
+            -${maxDrawdown.toLocaleString()}
+          </span>
         </div>
       </div>
 
@@ -271,30 +287,37 @@ export const DrawdownChart: React.FC<DrawdownChartProps> = ({ trades, formatCurr
           {/* Hover Tooltip */}
           {hoveredPoint && (
             <div
-              className={`absolute z-30 transform -translate-x-1/2 -translate-y-full -mt-2 pointer-events-none p-2 rounded-lg shadow-xl border text-xs min-w-[140px] animate-in fade-in ${
-                theme === 'light'
-                  ? 'bg-white border-[#E5E7EB] text-[#111827]'
-                  : 'bg-[#0D111B] border-[#28344A] text-[#F3F6FB]'
-              }`}
+              className="absolute z-30 transform -translate-x-1/2 -translate-y-full -mt-2.5 pointer-events-none p-3 rounded-xl glass-tooltip text-xs min-w-[160px] animate-in fade-in"
               style={{
                 left: `${hoveredPoint.x}%`,
                 top: `${Math.max(25, hoveredPoint.y)}%`,
               }}
             >
-              <div className={`text-[10px] pb-1 border-b mb-1 font-mono ${
-                theme === 'light' ? 'text-[#6B7280] border-[#E5E7EB]' : 'text-[#8C97AB] border-[#20283A]'
+              <div className={`text-[10px] pb-1 border-b mb-1.5 font-mono flex items-center justify-between ${
+                theme === 'light' ? 'text-[#6B7280] border-slate-200' : 'text-[#8C97AB] border-white/10'
               }`}>
-                {hoveredPoint.displayDate}
+                <span>{hoveredPoint.displayDate}</span>
+                <span className="text-[9px] uppercase font-semibold text-rose-500">Peak DD</span>
               </div>
-              <div className="flex items-center justify-between text-[11px]">
-                <span className={theme === 'light' ? 'text-[#6B7280]' : 'text-[#8C97AB]'}>Drawdown:</span>
-                <span className={`font-mono font-bold ${theme === 'light' ? 'text-[#DC2626]' : 'text-[#FF3D6E]'}`}>
-                  {formatCurrency(hoveredPoint.drawdownDollar)}
-                </span>
-              </div>
-              <div className={`flex items-center justify-between text-[10px] ${theme === 'light' ? 'text-[#6B7280]' : 'text-[#8C97AB]'}`}>
-                <span>Depth:</span>
-                <span className={`font-mono ${theme === 'light' ? 'text-[#DC2626]' : 'text-[#FF3D6E]'}`}>-{hoveredPoint.drawdownPercent.toFixed(1)}%</span>
+              <div className="space-y-1 font-mono tabular-nums">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className={theme === 'light' ? 'text-[#6B7280]' : 'text-[#8C97AB]'}>Drawdown:</span>
+                  <span className={`font-bold ${theme === 'light' ? 'text-[#DC2626]' : 'text-[#FF3D6E]'}`}>
+                    {formatCurrency(hoveredPoint.drawdownDollar)}
+                  </span>
+                </div>
+                <div className={`flex items-center justify-between text-[10px] ${theme === 'light' ? 'text-[#6B7280]' : 'text-[#8C97AB]'}`}>
+                  <span>Depth %:</span>
+                  <span className={`font-semibold ${theme === 'light' ? 'text-[#DC2626]' : 'text-[#FF3D6E]'}`}>
+                    -{hoveredPoint.drawdownPercent.toFixed(1)}%
+                  </span>
+                </div>
+                <div className={`flex items-center justify-between text-[10px] pt-1 border-t ${
+                  theme === 'light' ? 'border-slate-100 text-slate-500' : 'border-white/5 text-slate-400'
+                }`}>
+                  <span>Account Equity:</span>
+                  <span className="font-semibold">{formatCurrency(hoveredPoint.currentEquity)}</span>
+                </div>
               </div>
             </div>
           )}

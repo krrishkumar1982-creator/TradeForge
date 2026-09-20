@@ -17,11 +17,15 @@ import {
   Calendar,
   Layers,
   ArrowUpRight,
-  ArrowDownRight
+  ArrowDownRight,
+  Shield,
+  Star,
+  Tag
 } from 'lucide-react';
 import { useTrading } from '../../context/TradingContext';
 import { Trade } from '../../types';
 import { generateAiTradeReview, AiTradeReviewResult } from '../../services/geminiAi';
+import { getTagColor, hexToRgba } from '../../utils/tagColors';
 
 interface TradeDetailDrawerProps {
   trade: Trade | null;
@@ -32,12 +36,15 @@ interface TradeDetailDrawerProps {
 export const TradeDetailDrawer: React.FC<TradeDetailDrawerProps> = ({ trade, onClose, onOpenEdit }) => {
   const {
     playbooks,
+    accounts,
+    propFirmAccounts,
     deleteTrade,
     duplicateTrade,
     formatCurrency,
     formatRMultiple,
     addCommunityPost,
-    addToast
+    addToast,
+    userSettings,
   } = useTrading();
 
   const [aiReview, setAiReview] = useState<AiTradeReviewResult | null>(null);
@@ -72,13 +79,13 @@ export const TradeDetailDrawer: React.FC<TradeDetailDrawerProps> = ({ trade, onC
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex justify-end bg-slate-950/70 backdrop-blur-sm animate-in fade-in">
+    <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-in fade-in">
       <div
-        className="w-full max-w-2xl h-full bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col animate-in slide-in-from-right duration-200 overflow-hidden"
+        className="w-full max-w-2xl h-full bg-[#12161D] border-l border-[#1C232E] shadow-2xl flex flex-col animate-in slide-in-from-right duration-200 overflow-hidden"
         onClick={e => e.stopPropagation()}
       >
         {/* Top Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-950">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-[#1C232E] bg-[#07090D]">
           <div className="flex items-center gap-3">
             <span
               className={`px-2.5 py-1 rounded-lg text-xs font-black tracking-wide ${
@@ -95,24 +102,42 @@ export const TradeDetailDrawer: React.FC<TradeDetailDrawerProps> = ({ trade, onC
                 <span className="text-xs font-mono text-slate-400 font-normal">
                   #{trade?.id ? (trade.id.length > 6 ? trade.id.substring(trade.id.length - 6) : trade.id) : ''}
                 </span>
+                {trade.propFirmAccountId && (() => {
+                  const pf = propFirmAccounts.find(p => p.id === trade.propFirmAccountId);
+                  return (
+                    <span
+                      className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/15 text-blue-300 border border-blue-500/30 flex items-center gap-1"
+                      title={pf ? `${pf.name} • ${pf.firmName}` : 'Prop Firm Linked'}
+                    >
+                      <Shield className="w-2.5 h-2.5 text-blue-400" />
+                      <span>{pf?.firmName || 'Prop Firm'}</span>
+                    </span>
+                  );
+                })()}
               </h2>
-              <p className="text-[11px] text-slate-400 font-mono">
-                {(trade?.entryDate ? new Date(trade.entryDate) : new Date()).toLocaleString()} • {trade?.session || 'New York'} Session
-              </p>
+              <div className="flex items-center gap-2 flex-wrap text-[11px] text-slate-400 font-mono mt-0.5">
+                <span>{(trade?.entryDate ? new Date(trade.entryDate) : new Date()).toLocaleString()}</span>
+                <span>•</span>
+                <span>{trade?.session || 'New York'} Session</span>
+                <span>•</span>
+                <span className="text-slate-300">
+                  {accounts.find(a => a.id === trade.accountId)?.name || 'Account'}
+                </span>
+              </div>
             </div>
           </div>
 
           <div className="flex items-center gap-1.5">
             <button
               onClick={() => onOpenEdit(trade)}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-[#1A1F27] transition"
               title="Edit Trade"
             >
               <Edit2 className="w-4 h-4" />
             </button>
             <button
               onClick={() => duplicateTrade(trade.id)}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition"
+              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-[#1A1F27] transition"
               title="Duplicate"
             >
               <Copy className="w-4 h-4" />
@@ -122,14 +147,14 @@ export const TradeDetailDrawer: React.FC<TradeDetailDrawerProps> = ({ trade, onC
                 deleteTrade(trade.id);
                 onClose();
               }}
-              className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-slate-800 transition"
+              className="p-2 rounded-xl text-slate-400 hover:text-rose-400 hover:bg-[#1A1F27] transition"
               title="Delete"
             >
               <Trash2 className="w-4 h-4" />
             </button>
             <button
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition ml-2"
+              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-[#1A1F27] transition ml-2"
             >
               <X className="w-5 h-5" />
             </button>
@@ -137,9 +162,9 @@ export const TradeDetailDrawer: React.FC<TradeDetailDrawerProps> = ({ trade, onC
         </div>
 
         {/* Scrollable Content Body */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-slate-900">
+        <div className="flex-1 overflow-y-auto p-6 space-y-6 custom-scrollbar bg-[#12161D]">
           {/* Main P&L Banner */}
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+          <div className="p-4 rounded-2xl bg-[#0A0D14] border border-[#1C232E] flex flex-wrap items-center justify-between gap-4">
             <div>
               <span className="text-xs text-slate-400">Realized Net P&L</span>
               <div
@@ -158,11 +183,11 @@ export const TradeDetailDrawer: React.FC<TradeDetailDrawerProps> = ({ trade, onC
                   {formatRMultiple(trade.rMultiple)}
                 </span>
               </div>
-              <div className="border-l border-slate-800 pl-4">
+              <div className="border-l border-[#1C232E] pl-4">
                 <span className="text-[10px] text-slate-500 block">Duration</span>
                 <span className="font-bold text-sm text-slate-200">{trade.durationMinutes} mins</span>
               </div>
-              <div className="border-l border-slate-800 pl-4">
+              <div className="border-l border-[#1C232E] pl-4">
                 <span className="text-[10px] text-slate-500 block">Commission & Fees</span>
                 <span className="font-bold text-sm text-slate-400">${trade.commission.toFixed(2)}</span>
               </div>
@@ -170,7 +195,7 @@ export const TradeDetailDrawer: React.FC<TradeDetailDrawerProps> = ({ trade, onC
           </div>
 
           {/* Execution Details Grid */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-slate-950/60 p-4 rounded-2xl border border-slate-800 text-xs">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 bg-[#0A0D14] p-4 rounded-2xl border border-[#1C232E] text-xs">
             <div>
               <span className="text-slate-500 block text-[10px]">Entry Price</span>
               <span className="font-mono font-bold text-slate-100">${trade.entryPrice}</span>
@@ -190,8 +215,8 @@ export const TradeDetailDrawer: React.FC<TradeDetailDrawerProps> = ({ trade, onC
           </div>
 
           {/* Setup & Discipline Status */}
-          <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-3">
-            <div className="flex items-center justify-between text-xs border-b border-slate-800/80 pb-2.5">
+          <div className="p-4 rounded-2xl bg-[#0A0D14] border border-[#1C232E] space-y-3">
+            <div className="flex items-center justify-between text-xs border-b border-[#1C232E] pb-2.5">
               <span className="text-slate-400 font-medium">Assigned Playbook & Setup</span>
               <div className="flex items-center gap-2">
                 <span className="font-bold text-blue-400">{trade.setupType}</span>
@@ -229,7 +254,7 @@ export const TradeDetailDrawer: React.FC<TradeDetailDrawerProps> = ({ trade, onC
 
             {/* Display rule breakdown if matchedPlaybook exists */}
             {matchedPlaybook && matchedPlaybook.rules && matchedPlaybook.rules.length > 0 && (
-              <div className="pt-2 border-t border-slate-800/80 space-y-1.5">
+              <div className="pt-2 border-t border-[#1C232E] space-y-1.5">
                 <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider block">Rule Execution Verification:</span>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
                   {matchedPlaybook.rules.map((rule) => {
@@ -272,14 +297,65 @@ export const TradeDetailDrawer: React.FC<TradeDetailDrawerProps> = ({ trade, onC
               </div>
             )}
 
-            <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-800/80">
+            <div className="flex items-center justify-between text-xs pt-1 border-t border-[#1C232E]">
               <span className="text-slate-400 font-medium">Emotional Baseline</span>
               <span className="text-slate-200 font-medium">{trade.emotionalState || 'Disciplined & Calm'}</span>
             </div>
+
+            {/* Quality Rating */}
+            {trade.rating && (
+              <div className="flex items-center justify-between text-xs pt-1 border-t border-[#1C232E]">
+                <span className="text-slate-400 font-medium">Quality Rating</span>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <Star
+                      key={star}
+                      className={`w-3.5 h-3.5 ${
+                        star <= (trade.rating || 0)
+                          ? 'text-amber-400 fill-amber-400'
+                          : 'text-slate-700'
+                      }`}
+                    />
+                  ))}
+                  <span className="ml-1 text-[11px] font-mono text-slate-400">
+                    {trade.rating}/5
+                  </span>
+                </div>
+              </div>
+            )}
+
+            {/* Custom Tags */}
+            {trade.tags && trade.tags.length > 0 && (
+              <div className="pt-2 border-t border-[#1C232E] space-y-1.5">
+                <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider flex items-center gap-1">
+                  <Tag className="w-3 h-3 text-blue-400" />
+                  <span>Custom Tags:</span>
+                </span>
+                <div className="flex flex-wrap gap-1.5">
+                  {trade.tags.map((tag, idx) => {
+                    const color = getTagColor(tag, userSettings.customTags);
+                    return (
+                      <span
+                        key={idx}
+                        style={{
+                          backgroundColor: hexToRgba(color, 0.15),
+                          borderColor: hexToRgba(color, 0.4),
+                          color: color,
+                        }}
+                        className="px-2.5 py-0.5 rounded-full text-[11px] font-medium border inline-flex items-center gap-1 shadow-xs"
+                      >
+                        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+                        #{tag}
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
 
           {/* AI Trading Coach Audit Card */}
-          <div className="p-5 rounded-2xl border border-blue-500/30 bg-blue-950/20 space-y-4 relative overflow-hidden">
+          <div className="p-5 rounded-2xl border border-blue-500/30 bg-[#1A1F27] space-y-4 relative overflow-hidden">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <div className="p-1.5 rounded-lg bg-blue-600/30 text-blue-300">
@@ -293,7 +369,7 @@ export const TradeDetailDrawer: React.FC<TradeDetailDrawerProps> = ({ trade, onC
                 <button
                   onClick={handleRunAiAudit}
                   disabled={isLoadingAi}
-                  className="flex items-center gap-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white px-3 py-1.5 text-xs font-semibold shadow-md shadow-blue-600/20 transition disabled:opacity-50"
+                  className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white px-3 py-1.5 text-xs font-semibold shadow-md shadow-blue-600/20 transition disabled:opacity-50"
                 >
                   <Sparkles className="w-3.5 h-3.5" />
                   <span>{isLoadingAi ? 'Auditing...' : 'Run AI Review'}</span>
@@ -304,7 +380,7 @@ export const TradeDetailDrawer: React.FC<TradeDetailDrawerProps> = ({ trade, onC
             {aiReview ? (
               <div className="space-y-3 text-xs animate-in fade-in">
                 {/* Score badge */}
-                <div className="flex items-center justify-between bg-slate-900/80 p-3 rounded-xl border border-blue-500/20">
+                <div className="flex items-center justify-between bg-[#0A0D14] p-3 rounded-xl border border-blue-500/20">
                   <span className="text-slate-300 font-medium">Execution Quality Score</span>
                   <span className="text-base font-black font-mono text-emerald-400">{aiReview.score} / 100</span>
                 </div>
@@ -363,7 +439,7 @@ export const TradeDetailDrawer: React.FC<TradeDetailDrawerProps> = ({ trade, onC
               <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
                 Execution Chart Screenshot
               </label>
-              <div className="rounded-xl overflow-hidden border border-slate-800 bg-slate-950">
+              <div className="rounded-xl overflow-hidden border border-[#1C232E] bg-[#0A0D14]">
                 <img src={trade.screenshotUrl} alt="Execution Chart" className="w-full h-auto max-h-72 object-contain" />
               </div>
             </div>
@@ -374,17 +450,17 @@ export const TradeDetailDrawer: React.FC<TradeDetailDrawerProps> = ({ trade, onC
             <label className="text-xs font-bold text-slate-300 uppercase tracking-wider">
               Trader Journal Notes
             </label>
-            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 text-xs text-slate-300 font-mono leading-relaxed">
+            <div className="p-4 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-xs text-slate-300 font-mono leading-relaxed">
               {trade.notes || 'No custom notes logged for this trade execution.'}
             </div>
           </div>
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-slate-800 bg-slate-950 flex items-center justify-between">
+        <div className="p-4 border-t border-[#1C232E] bg-[#07090D] flex items-center justify-between">
           <button
             onClick={handleShareToLounge}
-            className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 font-semibold"
+            className="flex items-center gap-1.5 text-xs text-blue-400 hover:text-blue-300 font-semibold cursor-pointer"
           >
             <Share2 className="w-4 h-4" />
             <span>Share in Traders Lounge</span>
@@ -392,7 +468,7 @@ export const TradeDetailDrawer: React.FC<TradeDetailDrawerProps> = ({ trade, onC
 
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200"
+            className="px-4 py-2 rounded-xl bg-[#1A1F27] hover:bg-[#222834] border border-[#1C232E] text-xs font-semibold text-slate-200 cursor-pointer"
           >
             Close Drawer
           </button>

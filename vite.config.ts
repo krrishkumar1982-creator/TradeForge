@@ -15,7 +15,7 @@ function expressApiPlugin(): Plugin {
       }
       startBackgroundRetryProcessor();
       server.middlewares.use((req, res, next) => {
-        if (req.url && req.url.startsWith('/api')) {
+        if (req.url && (req.url.startsWith('/api') || req.url.startsWith('/health'))) {
           return app(req as any, res as any, next);
         }
         next();
@@ -30,7 +30,7 @@ function expressApiPlugin(): Plugin {
       }
       startBackgroundRetryProcessor();
       server.middlewares.use((req, res, next) => {
-        if (req.url && req.url.startsWith('/api')) {
+        if (req.url && (req.url.startsWith('/api') || req.url.startsWith('/health'))) {
           return app(req as any, res as any, next);
         }
         next();

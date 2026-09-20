@@ -1,442 +1,330 @@
 @import "tailwindcss";
 
 @layer base {
+  html,
+  body,
+  #root {
+    max-width: 100%;
+    overflow-x: hidden;
+    height: 100%;
+  }
+
   body {
-    @apply antialiased selection:bg-[#2563FF] selection:text-white transition-colors duration-150;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    @apply antialiased transition-colors duration-150;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum" 1;
+    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: #07080B;
+    color: #F8FAFC;
+  }
+
+  /* Monospace tabular numeral defaults */
+  .font-mono,
+  code,
+  kbd,
+  samp {
+    font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-feature-settings: "tnum" 1, "zero" 1;
+  }
+
+  img,
+  svg,
+  video,
+  canvas {
+    max-width: 100%;
+    height: auto;
   }
 }
 
 /* ==========================================================================
-   CSS DESIGN TOKENS & SYSTEM VARIABLES (QUANTIX-STYLE PREMIUM DESIGN SYSTEM)
+   CSS DESIGN TOKENS & SYSTEM VARIABLES (TRADEFORGE INSTITUTIONAL DESIGN SYSTEM)
    ========================================================================== */
 
 /* --------------------------------------------------------------------------
-   1. DARK THEME (Quantix True Neutral Dark Terminal)
+   1. DARK THEME (TradeForge Institutional Terminal - SOURCE OF TRUTH)
    -------------------------------------------------------------------------- */
 :root,
 .theme-dark,
 html.dark {
-  --page-bg: #09090B;
-  --sidebar-bg: #0C0C0E;
-  --header-bg: #09090B;
-  --section-bg: #121215;
-  --surface: #121215;
-  --surface-elevated: #18181C;
-  --surface-subtle: #0E0E11;
-  --surface-hover: #1C1C21;
-  --surface-active: rgba(37, 99, 255, 0.08);
-  --dropdown-bg: #121215;
-  --modal-bg: #121215;
-  --input-bg: #0E0E11;
+  /* Exact Surface Hierarchy */
+  --bg-app: #07080B;
+  --bg-app-alt: #090A0E;
+  --bg-surface: #101116;
+  --bg-surface-card: #12141A;
+  --bg-surface-elevated: #181A21;
+  --bg-surface-modal: #1C1F27;
+  --bg-surface-subtle: #0C0D11;
+  --bg-surface-hover: #15171D;
+  --bg-surface-active: #181A21;
+  --bg-overlay: rgba(7, 8, 11, 0.85);
 
-  --text-primary: #F4F4F5;
-  --text-secondary: #A1A1AA;
-  --text-muted: #71717A;
-  --text-disabled: #52525B;
+  --page-bg: #07080B;
+  --sidebar-bg: #090A0E;
+  --header-bg: rgba(9, 10, 14, 0.92);
+  --section-bg: #101116;
+  --surface: #12141A;
+  --surface-elevated: #181A21;
+  --surface-subtle: #0C0D11;
+  --surface-hover: #15171D;
+  --surface-active: #181A21;
+  --dropdown-bg: #15171D;
+  --modal-bg: #181A21;
+  --input-bg: #0C0D11;
 
-  --border: #26262B;
-  --border-subtle: #1C1C20;
-  --border-strong: #36363D;
-  --border-focus: #2563FF;
-  --border-active: rgba(37, 99, 255, 0.18);
+  /* Institutional Subtle Borders */
+  --border: rgba(255, 255, 255, 0.075);
+  --border-subtle: rgba(255, 255, 255, 0.055);
+  --border-default: rgba(255, 255, 255, 0.075);
+  --border-strong: rgba(255, 255, 255, 0.10);
+  --border-focus: rgba(59, 130, 246, 0.5);
+  --border-active: rgba(59, 130, 246, 0.35);
 
-  --primary: #2563FF;
-  --primary-bright: #2F6BFF;
-  --primary-hover: #2F6BFF;
-  --primary-subtle: rgba(37, 99, 255, 0.08);
-  --primary-active: rgba(37, 99, 255, 0.12);
+  /* Restrained Accents */
+  --accent-primary: #3B82F6;
+  --accent-secondary: #6366F1;
+  --accent-tertiary: #8B5CF6;
+  --accent-glow: none;
 
-  --success: #00D6A3;
-  --success-bg: rgba(0, 214, 163, 0.10);
-  --success-border: rgba(0, 214, 163, 0.30);
+  --primary: #3B82F6;
+  --primary-bright: #60A5FA;
+  --primary-hover: #2563EB;
+  --primary-subtle: rgba(59, 130, 246, 0.08);
+  --primary-active: rgba(59, 130, 246, 0.14);
 
-  --danger: #FF3D6E;
-  --danger-bg: rgba(255, 61, 110, 0.10);
-  --danger-border: rgba(255, 61, 110, 0.30);
+  /* Precise Text Contrast */
+  --text-primary: #F8FAFC;
+  --text-secondary: #94A3B8;
+  --text-muted: #64748B;
+  --text-disabled: #475569;
 
-  --warning: #F5B82E;
-  --warning-bg: rgba(245, 184, 46, 0.10);
-  --warning-border: rgba(245, 184, 46, 0.30);
+  /* Semantic Status Colors */
+  --success: #10B981;
+  --success-bg: rgba(16, 185, 129, 0.08);
+  --success-border: rgba(16, 185, 129, 0.20);
 
-  --card-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-  --dropdown-shadow: 0 15px 40px rgba(0, 0, 0, 0.50);
-  --modal-shadow: 0 20px 60px rgba(0, 0, 0, 0.65);
-  --overlay: rgba(0, 0, 0, 0.70);
+  --danger: #EF4444;
+  --danger-bg: rgba(239, 68, 68, 0.08);
+  --danger-border: rgba(239, 68, 68, 0.20);
 
-  background-color: #09090B;
-  color: #F4F4F5;
-}
+  --warning: #F59E0B;
+  --warning-bg: rgba(245, 158, 11, 0.08);
+  --warning-border: rgba(245, 158, 11, 0.20);
 
-/* Surface Utility Classes */
-.quantix-card {
-  background-color: #121215;
-  border: 1px solid #26262B;
-  border-radius: 14px;
-  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
-  transition: border-color 0.15s ease, background-color 0.15s ease;
-}
+  --info: #3B82F6;
+  --info-bg: rgba(59, 130, 246, 0.08);
+  --info-border: rgba(59, 130, 246, 0.20);
 
-.quantix-card-hover:hover {
-  border-color: #36363D;
-  background-color: #18181C;
-}
+  /* Controlled Shadows */
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.25);
+  --dropdown-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
+  --modal-shadow: 0 20px 45px rgba(0, 0, 0, 0.8);
+  --overlay: rgba(7, 8, 11, 0.85);
 
-.quantix-card-elevated {
-  background-color: #18181C;
-  border: 1px solid #36363D;
-  border-radius: 14px;
-}
-
-/* Global Reusable Checkbox & Table Selection Column Utilities */
-.table-checkbox-th,
-.table-checkbox-td {
-  width: 40px !important;
-  min-width: 40px !important;
-  max-width: 40px !important;
-  padding-left: 8px !important;
-  padding-right: 4px !important;
-  padding-top: 10px !important;
-  padding-bottom: 10px !important;
-  text-align: center !important;
-  vertical-align: middle !important;
-}
-
-.table-checkbox-btn {
-  display: inline-flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  padding: 2px !important;
-  border-radius: 4px !important;
-  background: transparent !important;
-  line-height: 1 !important;
-  transition: opacity 0.12s ease, transform 0.12s ease !important;
-}
-
-.table-checkbox-btn:hover {
-  opacity: 0.85;
-}
-
-/* Global Dark Theme Element Overrides */
-.theme-dark input,
-.theme-dark select,
-.theme-dark textarea,
-html.dark:not(.theme-light) input,
-html.dark:not(.theme-light) select,
-html.dark:not(.theme-light) textarea {
-  background-color: #0E0E11;
-  border-color: #26262B;
-  color: #F4F4F5;
-  border-radius: 8px;
-}
-
-.theme-dark input::placeholder,
-.theme-dark textarea::placeholder,
-html.dark:not(.theme-light) input::placeholder,
-html.dark:not(.theme-light) textarea::placeholder {
-  color: #71717A;
-}
-
-.theme-dark input:focus,
-.theme-dark select:focus,
-.theme-dark textarea:focus,
-html.dark:not(.theme-light) input:focus,
-html.dark:not(.theme-light) select:focus,
-html.dark:not(.theme-light) textarea:focus {
-  border-color: #2563FF !important;
-  box-shadow: 0 0 0 2px rgba(37, 99, 255, 0.10) !important;
-  outline: none;
-}
-
-/* Tables in Dark Mode */
-.theme-dark thead,
-.theme-dark th,
-html.dark:not(.theme-light) thead,
-html.dark:not(.theme-light) th {
-  background-color: #0C0C0E;
-  color: #A1A1AA;
-  border-color: #1C1C20;
-  font-size: 12px;
-  font-weight: 600;
-}
-
-.theme-dark tbody tr,
-html.dark:not(.theme-light) tbody tr {
-  border-color: #1C1C20;
-  background-color: transparent;
-  transition: background-color 150ms ease;
-}
-
-.theme-dark tbody tr:hover,
-html.dark:not(.theme-light) tbody tr:hover {
-  background-color: #16161A;
-}
-
-/* Modals & Dropdown Popovers in Dark Mode */
-.theme-dark .shadow-2xl:not([class*="fixed"]),
-.theme-dark .shadow-xl:not([class*="fixed"]),
-html.dark:not(.theme-light) .shadow-2xl:not([class*="fixed"]),
-html.dark:not(.theme-light) .shadow-xl:not([class*="fixed"]) {
-  background-color: #121215;
-  border: 1px solid #36363D;
-  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.50) !important;
-  border-radius: 10px;
+  background-color: #07080B;
+  color: #F8FAFC;
 }
 
 /* --------------------------------------------------------------------------
-   2. BRIGHT / LIGHT THEME (Clean Standard Modern SaaS Dashboard Interface)
+   2. LIGHT THEME (Clean High-Contrast Terminal)
    -------------------------------------------------------------------------- */
 .theme-light,
-.theme-light body,
 html.theme-light,
 html.light {
+  --bg-app: #F8FAFC;
+  --bg-app-alt: #F1F5F9;
+  --bg-surface: #FFFFFF;
+  --bg-surface-card: #FFFFFF;
+  --bg-surface-elevated: #FFFFFF;
+  --bg-surface-modal: #FFFFFF;
+  --bg-surface-subtle: #F8FAFC;
+  --bg-surface-hover: #F1F5F9;
+  --bg-surface-active: #E2E8F0;
+  --bg-overlay: rgba(15, 23, 42, 0.5);
+
   --page-bg: #F8FAFC;
   --sidebar-bg: #FFFFFF;
-  --header-bg: #FFFFFF;
+  --header-bg: rgba(255, 255, 255, 0.95);
   --section-bg: #FFFFFF;
   --surface: #FFFFFF;
   --surface-elevated: #FFFFFF;
+  --surface-subtle: #F8FAFC;
   --surface-hover: #F1F5F9;
-  --surface-active: #EFF6FF;
+  --surface-active: #E2E8F0;
   --dropdown-bg: #FFFFFF;
   --modal-bg: #FFFFFF;
   --input-bg: #FFFFFF;
 
-  --text-primary: #111827;
-  --text-secondary: #4B5563;
-  --text-muted: #6B7280;
-  --text-disabled: #9CA3AF;
-
-  --border: #E5E7EB;
+  --border: #E2E8F0;
   --border-subtle: #F1F5F9;
-  --border-medium: #D1D5DB;
-  --border-strong: #D1D5DB;
-  --border-focus: #2563FF;
+  --border-default: #E2E8F0;
+  --border-strong: #CBD5E1;
+  --border-focus: #3B82F6;
+  --border-active: rgba(59, 130, 246, 0.35);
 
-  --primary: #2563FF;
-  --primary-bright: #2F6BFF;
+  --accent-primary: #2563EB;
+  --accent-secondary: #4F46E5;
+  --accent-tertiary: #7C3AED;
+  --accent-glow: none;
+
+  --primary: #2563EB;
+  --primary-bright: #3B82F6;
   --primary-hover: #1D4ED8;
+  --primary-subtle: rgba(37, 99, 235, 0.08);
+  --primary-active: rgba(37, 99, 235, 0.14);
+
+  --text-primary: #0F172A;
+  --text-secondary: #475569;
+  --text-muted: #64748B;
+  --text-disabled: #94A3B8;
 
   --success: #059669;
+  --success-bg: rgba(5, 150, 105, 0.08);
+  --success-border: rgba(5, 150, 105, 0.20);
+
   --danger: #DC2626;
+  --danger-bg: rgba(220, 38, 38, 0.08);
+  --danger-border: rgba(220, 38, 38, 0.20);
+
   --warning: #D97706;
+  --warning-bg: rgba(217, 119, 6, 0.08);
+  --warning-border: rgba(217, 119, 6, 0.20);
 
-  --overlay: rgba(0, 0, 0, 0.60);
+  --info: #2563EB;
+  --info-bg: rgba(37, 99, 235, 0.08);
+  --info-border: rgba(37, 99, 235, 0.20);
 
-  background-color: #F8FAFC !important;
-  color: #111827 !important;
+  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.02);
+  --dropdown-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+  --modal-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.2);
+  --overlay: rgba(15, 23, 42, 0.5);
+
+  background-color: #F8FAFC;
+  color: #0F172A;
 }
 
-/* Main workspace containers in Light Theme */
-.theme-light main,
-.theme-light main.bg-slate-950,
-.theme-light main.bg-zinc-950,
-.theme-light [class*="bg-slate-950"]:not(span):not(button):not(input):not(aside):not(header):not(nav):not(tbody):not(thead):not(tr):not(td):not(th):not([class*="fixed"]):not([class*="absolute z-"]):not([style*="rgba(0, 0, 0, 0.65)"]),
-.theme-light [class*="bg-zinc-950"]:not(span):not(button):not(input):not(aside):not(header):not(nav):not(tbody):not(thead):not(tr):not(td):not(th):not([class*="fixed"]):not([class*="absolute z-"]):not([style*="rgba(0, 0, 0, 0.65)"]) {
-  background-color: #F8FAFC !important;
+/* --------------------------------------------------------------------------
+   3. REUSABLE TRADEFORGE CARD & SURFACE UTILITY CLASSES
+   -------------------------------------------------------------------------- */
+.tf-card,
+.quantix-card {
+  background-color: #12141A;
+  border: 1px solid rgba(255, 255, 255, 0.075);
+  border-radius: 16px;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), var(--card-shadow);
+  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
 }
 
-/* Standard Clean White Cards, Widgets & Containers in Light Theme */
-.theme-light .quantix-card,
-.theme-light .dashboard-card,
-.theme-light .performance-stat-card,
-.theme-light div.bg-slate-900:not([class*="fixed"]):not([class*="modal-backdrop"]),
-.theme-light div.bg-slate-900\/95:not([class*="fixed"]),
-.theme-light div.bg-slate-900\/90:not([class*="fixed"]),
-.theme-light div.bg-slate-900\/80:not([class*="fixed"]),
-.theme-light div.bg-slate-900\/70:not([class*="fixed"]),
-.theme-light div.bg-slate-900\/60:not([class*="fixed"]),
-.theme-light div.bg-slate-900\/50:not([class*="fixed"]),
-.theme-light div.bg-slate-900\/40:not([class*="fixed"]),
-.theme-light div.bg-zinc-900:not([class*="fixed"]),
-.theme-light div.bg-zinc-900\/95:not([class*="fixed"]),
-.theme-light div.bg-zinc-900\/90:not([class*="fixed"]),
-.theme-light div.bg-zinc-900\/80:not([class*="fixed"]),
-.theme-light div.bg-zinc-900\/60:not([class*="fixed"]),
-.theme-light div.bg-zinc-900\/50:not([class*="fixed"]),
-.theme-light div.bg-zinc-900\/40:not([class*="fixed"]),
-.theme-light section.bg-slate-900,
-.theme-light section.bg-zinc-900,
-.theme-light article.bg-slate-900,
-.theme-light article.bg-zinc-900 {
-  background-color: #FFFFFF !important;
-  border-color: #E5E7EB !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05) !important;
-  color: #111827 !important;
+.theme-light .tf-card,
+.theme-light .quantix-card {
+  background-color: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
-/* Secondary Surfaces, Filter Bars & Sub-panels in Light Theme */
-.theme-light div.bg-slate-800:not([class*="fixed"]):not([class*="modal-backdrop"]),
-.theme-light div.bg-slate-800\/90:not([class*="fixed"]),
-.theme-light div.bg-slate-800\/80:not([class*="fixed"]),
-.theme-light div.bg-slate-800\/70:not([class*="fixed"]),
-.theme-light div.bg-slate-800\/60:not([class*="fixed"]),
-.theme-light div.bg-slate-800\/50:not([class*="fixed"]),
-.theme-light div.bg-slate-800\/40:not([class*="fixed"]),
-.theme-light div.bg-slate-800\/30:not([class*="fixed"]),
-.theme-light div.bg-slate-800\/20:not([class*="fixed"]),
-.theme-light div.bg-zinc-800:not([class*="fixed"]),
-.theme-light div.bg-zinc-800\/80:not([class*="fixed"]),
-.theme-light div.bg-zinc-800\/50:not([class*="fixed"]),
-.theme-light div.bg-zinc-800\/40:not([class*="fixed"]),
-.theme-light div.bg-zinc-800\/30:not([class*="fixed"]) {
-  background-color: #F8FAFC !important;
-  color: #374151 !important;
-  border-color: #E5E7EB !important;
+.tf-card-hover:hover,
+.quantix-card-hover:hover {
+  border-color: rgba(255, 255, 255, 0.13);
+  background-color: #15171D;
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 8px 24px -4px rgba(0, 0, 0, 0.5);
 }
 
-/* Badges, Count Chips, Status Pills, and Small Stat Tags in Light Theme */
-.theme-light span.bg-slate-800,
-.theme-light span.bg-slate-900,
-.theme-light span.bg-slate-950,
-.theme-light span.bg-zinc-800,
-.theme-light span.bg-zinc-900,
-.theme-light span.bg-zinc-950,
-.theme-light span.bg-slate-700,
-.theme-light span.bg-zinc-700,
-.theme-light .badge-neutral {
-  background-color: #F1F5F9 !important;
-  color: #475569 !important;
-  border: 1px solid #E2E8F0 !important;
-  font-weight: 500 !important;
+.theme-light .tf-card-hover:hover,
+.theme-light .quantix-card-hover:hover {
+  border-color: #CBD5E1;
+  background-color: #FAFAFC;
+  transform: translateY(-1px);
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 1), 0 8px 20px -4px rgba(0, 0, 0, 0.06);
 }
 
-/* Sidebar Styling in Light Theme */
-.theme-light aside {
-  background: #FFFFFF !important;
-  border-right: 1px solid #E5E7EB !important;
-  box-shadow: none !important;
+.tf-card-elevated,
+.quantix-card-elevated {
+  background-color: #181A21;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  border-radius: 16px;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), var(--dropdown-shadow);
 }
 
-.theme-light aside .text-slate-400,
-.theme-light aside .text-slate-500,
-.theme-light aside .text-slate-300,
-.theme-light aside .text-zinc-400,
-.theme-light aside .text-zinc-500,
-.theme-light aside .text-zinc-300 {
-  color: #4B5563 !important;
+.theme-light .tf-card-elevated,
+.theme-light .quantix-card-elevated {
+  background-color: #FFFFFF;
+  border: 1px solid #CBD5E1;
+  box-shadow: 0 12px 28px -6px rgba(0, 0, 0, 0.08);
 }
 
-/* Inactive Sidebar Navigation Items in Light */
-.theme-light aside nav button {
-  background: transparent !important;
-  border: 1px solid transparent !important;
-  box-shadow: none !important;
-  color: #4B5563 !important;
+/* Institutional Glass Tooltip */
+.glass-tooltip {
+  background: rgba(16, 20, 29, 0.92);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
 }
 
-.theme-light aside nav button:hover {
-  background: #F8FAFC !important;
-  border: 1px solid transparent !important;
-  color: #111827 !important;
+.theme-light .glass-tooltip {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid #E2E8F0;
+  box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.10), inset 0 1px 0 0 rgba(255, 255, 255, 1);
 }
 
-/* Active Sidebar Navigation Item in Light */
-.theme-light aside nav button.active,
-.theme-light aside nav button[data-active="true"] {
-  background: rgba(37, 99, 255, 0.08) !important;
-  color: #1D4ED8 !important;
-  border: 1px solid rgba(37, 99, 255, 0.20) !important;
-  font-weight: 600 !important;
+.tf-card-subtle {
+  background-color: #0C0D11;
+  border: 1px solid rgba(255, 255, 255, 0.055);
+  border-radius: 12px;
 }
 
-.theme-light aside nav button.active svg,
-.theme-light aside nav button[data-active="true"] svg {
-  color: #2563FF !important;
+.theme-light .tf-card-subtle {
+  background-color: #F8FAFC;
+  border: 1px solid #E2E8F0;
 }
 
-/* Header / Navbar Styling in Light Theme */
-.theme-light header {
-  background: #FFFFFF !important;
-  border-bottom: 1px solid #E5E7EB !important;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.04) !important;
+/* Glass Header (Restrained blur, high opacity) */
+.tf-glass-header {
+  background-color: rgba(9, 10, 14, 0.92);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
 }
 
-/* Primary Action Buttons */
-.theme-light button.bg-blue-600,
-.theme-light button.bg-blue-500,
-.theme-light .bg-blue-600 {
-  background: #2563FF !important;
-  color: #FFFFFF !important;
-  font-weight: 500 !important;
+.theme-light .tf-glass-header {
+  background-color: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border-bottom: 1px solid #E2E8F0;
 }
 
-.theme-light button.bg-blue-600:hover,
-.theme-light button.bg-blue-500:hover {
-  background: #1D4ED8 !important;
+/* Active Nav Item */
+.tf-active-nav {
+  background-color: #15171D;
+  color: #FFFFFF;
+  border: 1px solid rgba(255, 255, 255, 0.09);
 }
 
-/* Inputs, Selects and Textareas in Light Mode */
-.theme-light input,
-.theme-light select,
-.theme-light textarea {
-  background-color: #FFFFFF !important;
-  border: 1px solid #D1D5DB !important;
-  color: #111827 !important;
-  border-radius: 8px !important;
-}
-
-.theme-light input::placeholder,
-.theme-light textarea::placeholder {
-  color: #9CA3AF !important;
-}
-
-.theme-light input:focus,
-.theme-light select:focus,
-.theme-light textarea:focus {
-  background-color: #FFFFFF !important;
-  border-color: #2563FF !important;
-  box-shadow: 0 0 0 2px rgba(37, 99, 255, 0.15) !important;
-}
-
-/* Tables in Light Mode */
-.theme-light table {
-  color: #111827 !important;
-}
-
-.theme-light thead,
-.theme-light th {
-  background-color: #F8FAFC !important;
-  color: #4B5563 !important;
-  border-color: #E5E7EB !important;
-  font-weight: 600 !important;
-}
-
-.theme-light tbody tr {
-  border-color: #E5E7EB !important;
-  color: #111827 !important;
-}
-
-.theme-light tbody tr:hover {
-  background-color: #F8FAFC !important;
-}
-
-/* Semantic Badges in Light Mode */
-.theme-light .badge-success {
-  background-color: rgba(5, 150, 105, 0.10) !important;
-  color: #059669 !important;
-  border: 1px solid rgba(5, 150, 105, 0.30) !important;
-}
-
-.theme-light .badge-danger {
-  background-color: rgba(220, 38, 38, 0.10) !important;
-  color: #DC2626 !important;
-  border: 1px solid rgba(220, 38, 38, 0.30) !important;
+.theme-light .tf-active-nav {
+  background-color: #F1F5F9;
+  color: #0F172A;
+  border: 1px solid #E2E8F0;
 }
 
 /* Tactile Button Transitions */
 button:not(:disabled) {
-  transition: transform 140ms cubic-bezier(0.16, 1, 0.3, 1), box-shadow 140ms cubic-bezier(0.16, 1, 0.3, 1), background-color 140ms ease, border-color 140ms ease, opacity 140ms ease;
+  transition: transform 120ms cubic-bezier(0.16, 1, 0.3, 1), background-color 120ms ease, border-color 120ms ease, color 120ms ease;
 }
 
 button:not(:disabled):active {
   transform: translateY(1px);
 }
 
-/* Custom Scrollbars */
+/* Monospace Tabular Alignment */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+}
+
+/* Refined Institutional Dark Scrollbars */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
@@ -444,19 +332,18 @@ button:not(:disabled):active {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #26262B;
+  background: rgba(255, 255, 255, 0.12);
   border-radius: 9999px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #36363D;
+  background: rgba(255, 255, 255, 0.22);
 }
 
 .theme-light .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #CBD5E1;
 }
 
 .theme-light .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #94a3b8;
+  background: #94A3B8;
 }
-

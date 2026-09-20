@@ -13,74 +13,176 @@ export const CinematicSpaceBackground: React.FC = () => {
     let width = (canvas.width = window.innerWidth);
     let height = (canvas.height = window.innerHeight);
 
+    // Check if user prefers reduced motion
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
     const handleResize = () => {
       if (!canvas) return;
       width = canvas.width = window.innerWidth;
       height = canvas.height = window.innerHeight;
-      drawStatic();
+      initParticles();
     };
 
     window.addEventListener('resize', handleResize);
 
-    // Generate static stars
-    const starsCount = 120;
-    const stars: Array<{ x: number; y: number; size: number; alpha: number; speed: number }> = [];
-    for (let i = 0; i < starsCount; i++) {
-      stars.push({
-        x: Math.random() * width,
-        y: Math.random() * (height * 0.7), // Mostly upper cosmic sky
-        size: Math.random() * 1.5 + 0.5,
-        alpha: Math.random() * 0.7 + 0.2,
-        speed: Math.random() * 0.015 + 0.005,
-      });
+    // Micro-particles setup
+    interface Particle {
+      x: number;
+      y: number;
+      size: number;
+      alpha: number;
+      baseAlpha: number;
+      speedY: number;
+      speedX: number;
+      pulseSpeed: number;
     }
 
+    const particles: Particle[] = [];
+    const initParticles = () => {
+      particles.length = 0;
+      const count = Math.min(65, Math.floor(width / 25));
+      for (let i = 0; i < count; i++) {
+        const baseAlpha = Math.random() * 0.45 + 0.1;
+        particles.push({
+          x: Math.random() * width,
+          y: Math.random() * height,
+          size: Math.random() * 1.5 + 0.6,
+          alpha: baseAlpha,
+          baseAlpha,
+          speedY: -(Math.random() * 0.25 + 0.08),
+          speedX: (Math.random() - 0.5) * 0.15,
+          pulseSpeed: Math.random() * 0.02 + 0.01,
+        });
+      }
+    };
+    initParticles();
+
+    // Wireframe wave grid parameters
     let time = 0;
+
     const render = () => {
-      time += 0.02;
       ctx.clearRect(0, 0, width, height);
 
-      // 1. Base deep space background
-      const baseGradient = ctx.createLinearGradient(0, 0, width, height);
-      baseGradient.addColorStop(0, '#020409');
-      baseGradient.addColorStop(0.3, '#040714');
-      baseGradient.addColorStop(0.6, '#060A1A');
-      baseGradient.addColorStop(1, '#020408');
-      ctx.fillStyle = baseGradient;
+      // 1. Deep Space Base Gradient (#02040A to #070B16)
+      const baseGrad = ctx.createLinearGradient(0, 0, 0, height);
+      baseGrad.addColorStop(0, '#02040A');
+      baseGrad.addColorStop(0.35, '#040712');
+      baseGrad.addColorStop(0.7, '#060B18');
+      baseGrad.addColorStop(1, '#02040A');
+      ctx.fillStyle = baseGrad;
       ctx.fillRect(0, 0, width, height);
 
-      // 2. Cosmic Purple / Blue Nebula Bloom in center-left
-      const nebulaX = width * 0.38;
-      const nebulaY = height * 0.48;
-      const nebulaGrad = ctx.createRadialGradient(
-        nebulaX,
-        nebulaY,
-        10,
-        nebulaX,
-        nebulaY,
-        Math.min(width, height) * 0.65
-      );
-      nebulaGrad.addColorStop(0, 'rgba(59, 130, 246, 0.25)');
-      nebulaGrad.addColorStop(0.35, 'rgba(139, 92, 246, 0.15)');
-      nebulaGrad.addColorStop(0.7, 'rgba(30, 41, 75, 0.08)');
-      nebulaGrad.addColorStop(1, 'rgba(2, 4, 9, 0)');
-      ctx.fillStyle = nebulaGrad;
+      // 2. Soft Atmospheric Radial Nebulas (Blue Behind Hero, Purple Behind Card)
+      // Left Blue Nebula Bloom (behind hero text)
+      const heroGlowX = width * 0.28;
+      const heroGlowY = height * 0.45;
+      const heroRadius = Math.min(width, height) * 0.55;
+      const heroGrad = ctx.createRadialGradient(heroGlowX, heroGlowY, 0, heroGlowX, heroGlowY, heroRadius);
+      heroGrad.addColorStop(0, 'rgba(37, 99, 255, 0.16)');
+      heroGrad.addColorStop(0.4, 'rgba(30, 64, 175, 0.08)');
+      heroGrad.addColorStop(0.75, 'rgba(15, 23, 42, 0.03)');
+      heroGrad.addColorStop(1, 'rgba(2, 4, 10, 0)');
+      ctx.fillStyle = heroGrad;
       ctx.fillRect(0, 0, width, height);
 
-      // 3. Render sparkling stars
-      stars.forEach((star) => {
-        const currentAlpha = star.alpha + Math.sin(time + star.x) * 0.2;
-        ctx.fillStyle = `rgba(226, 232, 240, ${Math.max(0.1, Math.min(1, currentAlpha))})`;
+      // Right Purple Nebula Bloom (behind login card)
+      const cardGlowX = width * 0.76;
+      const cardGlowY = height * 0.52;
+      const cardRadius = Math.min(width, height) * 0.52;
+      const cardGrad = ctx.createRadialGradient(cardGlowX, cardGlowY, 0, cardGlowX, cardGlowY, cardRadius);
+      cardGrad.addColorStop(0, 'rgba(139, 92, 246, 0.14)');
+      cardGrad.addColorStop(0.35, 'rgba(99, 102, 241, 0.08)');
+      cardGrad.addColorStop(0.7, 'rgba(76, 29, 149, 0.02)');
+      cardGrad.addColorStop(1, 'rgba(2, 4, 10, 0)');
+      ctx.fillStyle = cardGrad;
+      ctx.fillRect(0, 0, width, height);
+
+      // 3. Render Micro-Particles
+      particles.forEach((p) => {
+        if (!prefersReducedMotion) {
+          p.y += p.speedY;
+          p.x += p.speedX;
+          if (p.y < -10) p.y = height + 10;
+          if (p.x < -10) p.x = width + 10;
+          if (p.x > width + 10) p.x = -10;
+        }
+
+        const alpha = p.baseAlpha + Math.sin(time * 2 + p.x) * 0.15;
+        ctx.fillStyle = `rgba(186, 215, 255, ${Math.max(0.05, Math.min(0.8, alpha))})`;
         ctx.beginPath();
-        ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
         ctx.fill();
       });
 
-      animationFrameId = requestAnimationFrame(render);
-    };
+      // 4. Undulating 3D Market Wireframe Terrain at Bottom
+      // Draws smooth 3D market topology ribbon lines across bottom third
+      const waveBaseY = height * 0.74;
+      const ribbonCount = 8;
+      const numPoints = 40;
+      const stepX = width / (numPoints - 1);
 
-    const drawStatic = () => {
-      // Re-trigger layout
+      ctx.save();
+      for (let r = 0; r < ribbonCount; r++) {
+        const ribbonProgress = r / ribbonCount;
+        const currentYOffset = waveBaseY + ribbonProgress * (height * 0.24);
+        const waveAlpha = (1 - ribbonProgress * 0.55) * 0.28;
+
+        ctx.beginPath();
+        for (let i = 0; i < numPoints; i++) {
+          const px = i * stepX;
+          const distFromLeft = px / width;
+
+          // Double sine wave modulated by horizontal position to simulate market peaks & troughs
+          const wave1 = Math.sin(px * 0.004 + time * 0.4 + r * 0.6) * 38;
+          const wave2 = Math.cos(px * 0.007 - time * 0.25 + r * 0.4) * 22;
+          const taper = Math.sin(distFromLeft * Math.PI); // Tapers at edges
+          const py = currentYOffset + (wave1 + wave2) * taper;
+
+          if (i === 0) {
+            ctx.moveTo(px, py);
+          } else {
+            ctx.lineTo(px, py);
+          }
+        }
+
+        // Color transition from vibrant cyan to electric blue/purple
+        const isAccent = r === 2 || r === 5;
+        ctx.strokeStyle = isAccent
+          ? `rgba(56, 189, 248, ${waveAlpha * 1.5})`
+          : `rgba(37, 99, 255, ${waveAlpha})`;
+        ctx.lineWidth = isAccent ? 1.4 : 1.0;
+        ctx.stroke();
+      }
+
+      // Vertical wireframe ribs connecting the waves for the 3D topographical mesh feel
+      const ribCount = 26;
+      for (let k = 0; k < ribCount; k++) {
+        const px = (k / (ribCount - 1)) * width;
+        const distFromLeft = px / width;
+        const taper = Math.sin(distFromLeft * Math.PI);
+
+        ctx.beginPath();
+        for (let r = 0; r < ribbonCount; r++) {
+          const ribbonProgress = r / ribbonCount;
+          const currentYOffset = waveBaseY + ribbonProgress * (height * 0.24);
+          const wave1 = Math.sin(px * 0.004 + time * 0.4 + r * 0.6) * 38;
+          const wave2 = Math.cos(px * 0.007 - time * 0.25 + r * 0.4) * 22;
+          const py = currentYOffset + (wave1 + wave2) * taper;
+
+          if (r === 0) ctx.moveTo(px, py);
+          else ctx.lineTo(px, py);
+        }
+        ctx.strokeStyle = 'rgba(70, 110, 255, 0.12)';
+        ctx.lineWidth = 0.8;
+        ctx.stroke();
+      }
+      ctx.restore();
+
+      if (!prefersReducedMotion) {
+        time += 0.012;
+      }
+
+      animationFrameId = requestAnimationFrame(render);
     };
 
     render();
@@ -92,230 +194,174 @@ export const CinematicSpaceBackground: React.FC = () => {
   }, []);
 
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0">
-      {/* Dynamic Starfield & Nebula Canvas */}
+    <div className="absolute inset-0 overflow-hidden pointer-events-none z-0 selection:bg-transparent">
+      {/* 1. Dynamic Canvas Layer: Deep space gradient, micro-particles & 3D wireframe market terrain */}
       <canvas ref={canvasRef} className="absolute inset-0 w-full h-full" />
 
-      {/* SVG Layer for Exact Planet Sphere & Glowing Atmosphere */}
+      {/* 2. Scalable High-Fidelity SVG Layer: Orbital Arc + Candlestick Silhouettes */}
       <svg
         className="absolute inset-0 w-full h-full pointer-events-none"
         xmlns="http://www.w3.org/2000/svg"
         preserveAspectRatio="xMidYMid slice"
-        viewBox="0 0 1440 900"
+        viewBox="0 0 1600 900"
       >
         <defs>
-          {/* Planet Rim Blur Filter */}
-          <filter id="planetGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="blur1" />
-            <feGaussianBlur in="SourceGraphic" stdDeviation="40" result="blur2" />
+          {/* Orbital Neon Arc Outer Glow Filter */}
+          <filter id="orbitalGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur1" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="16" result="blur2" />
+            <feGaussianBlur in="SourceGraphic" stdDeviation="35" result="blur3" />
             <feMerge>
+              <feMergeNode in="blur3" />
               <feMergeNode in="blur2" />
               <feMergeNode in="blur1" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
 
-          <filter id="ambientVioletGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur in="SourceGraphic" stdDeviation="60" />
+          {/* Candlestick Soft Glow Filter */}
+          <filter id="candleGlow" x="-30%" y="-30%" width="160%" height="160%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
           </filter>
 
-          {/* Radial Planet Body Gradient */}
-          <radialGradient id="planetBody" cx="30%" cy="30%" r="70%">
-            <stop offset="0%" stopColor="#0B132B" stopOpacity="0.9" />
-            <stop offset="35%" stopColor="#060A17" stopOpacity="0.95" />
-            <stop offset="70%" stopColor="#03050C" stopOpacity="0.99" />
-            <stop offset="100%" stopColor="#020308" stopOpacity="1" />
-          </radialGradient>
-
-          {/* Planet Atmosphere Rim Gradient */}
-          <linearGradient id="rimGlowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#60A5FA" stopOpacity="0.95" />
-            <stop offset="25%" stopColor="#3B82FF" stopOpacity="0.85" />
-            <stop offset="55%" stopColor="#2563FF" stopOpacity="0.4" />
-            <stop offset="85%" stopColor="#8B5CF6" stopOpacity="0.15" />
-            <stop offset="100%" stopColor="#050814" stopOpacity="0" />
+          {/* Arc Rim Gradient: Cyan to Electric Blue to Violet */}
+          <linearGradient id="arcNeonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#38BDF8" stopOpacity="0.95" />
+            <stop offset="30%" stopColor="#2563FF" stopOpacity="0.85" />
+            <stop offset="65%" stopColor="#7C3AED" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#6D4AFF" stopOpacity="0.05" />
           </linearGradient>
 
-          {/* Mountain Gradient Back Layer */}
-          <linearGradient id="mountainBackGrad" x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%" stopColor="#0D1322" stopOpacity="0.95" />
-            <stop offset="40%" stopColor="#090E1A" stopOpacity="0.98" />
-            <stop offset="100%" stopColor="#04060E" stopOpacity="1" />
+          {/* Candle Up (Cyan/Emerald) Gradient */}
+          <linearGradient id="candleUpGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#38BDF8" stopOpacity="0.85" />
+            <stop offset="100%" stopColor="#0284C7" stopOpacity="0.65" />
           </linearGradient>
 
-          {/* Mountain Gradient Mid Layer */}
-          <linearGradient id="mountainMidGrad" x1="30%" y1="0%" x2="70%" y2="100%">
-            <stop offset="0%" stopColor="#0E1628" />
-            <stop offset="50%" stopColor="#080C17" />
-            <stop offset="100%" stopColor="#03050B" />
-          </linearGradient>
-
-          {/* Mountain Gradient Foreground Crags */}
-          <linearGradient id="mountainForeGrad" x1="50%" y1="0%" x2="50%" y2="100%">
-            <stop offset="0%" stopColor="#0A0F1E" />
-            <stop offset="30%" stopColor="#060913" />
-            <stop offset="100%" stopColor="#020307" />
-          </linearGradient>
-
-          {/* Mountain Ridge Rim Light */}
-          <linearGradient id="ridgeLight" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#93C5FD" stopOpacity="0.7" />
-            <stop offset="30%" stopColor="#3B82FF" stopOpacity="0.4" />
-            <stop offset="70%" stopColor="#8B5CF6" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="transparent" stopOpacity="0" />
-          </linearGradient>
-
-          {/* Valley Purple Ambient Light */}
-          <linearGradient id="valleyLight" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="transparent" />
-            <stop offset="40%" stopColor="#6366F1" stopOpacity="0.15" />
-            <stop offset="60%" stopColor="#A855F7" stopOpacity="0.12" />
-            <stop offset="100%" stopColor="transparent" />
+          {/* Candle Down (Purple/Magenta) Gradient */}
+          <linearGradient id="candleDownGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#C084FC" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#7E22CE" stopOpacity="0.6" />
           </linearGradient>
         </defs>
 
-        {/* Ambient Purple Light Blooming behind Planet & Mountain */}
-        <circle cx="560" cy="420" r="320" fill="url(#valleyLight)" filter="url(#ambientVioletGlow)" opacity="0.7" />
-
-        {/* 1. Large Planet Sphere */}
-        <g transform="translate(520, 390)">
-          {/* Planet Outer Atmospheric Outer Glow */}
-          <circle
-            cx="0"
-            cy="0"
-            r="280"
+        {/* ----------------------------------------------------------------- */}
+        {/* A. Atmospheric Grand Orbital Arc (Loops around Hero & into Center) */}
+        {/* ----------------------------------------------------------------- */}
+        <g opacity="0.9">
+          {/* Outer diffused atmospheric halo */}
+          <ellipse
+            cx="640"
+            cy="360"
+            rx="520"
+            ry="460"
             fill="none"
-            stroke="url(#rimGlowGrad)"
-            strokeWidth="38"
-            filter="url(#planetGlow)"
+            stroke="url(#arcNeonGradient)"
+            strokeWidth="18"
+            strokeDasharray="950 1500"
+            strokeDashoffset="-280"
+            filter="url(#orbitalGlow)"
+            opacity="0.35"
+          />
+
+          {/* Core crisp glowing neon edge line */}
+          <ellipse
+            cx="640"
+            cy="360"
+            rx="520"
+            ry="460"
+            fill="none"
+            stroke="#60A5FA"
+            strokeWidth="3.2"
+            strokeDasharray="920 1550"
+            strokeDashoffset="-280"
+            filter="url(#orbitalGlow)"
             opacity="0.85"
           />
 
-          {/* Planet Inner Body */}
-          <circle cx="0" cy="0" r="275" fill="url(#planetBody)" />
-
-          {/* Planet Bright Crescent Rim Arc on Top-Left */}
-          <path
-            d="M -195 -195 A 275 275 0 0 1 120 -245"
+          {/* High-intensity focal spark highlight at upper crest */}
+          <ellipse
+            cx="640"
+            cy="360"
+            rx="520"
+            ry="460"
             fill="none"
-            stroke="#93C5FD"
-            strokeWidth="5"
-            filter="url(#planetGlow)"
-            opacity="0.9"
-          />
-          <path
-            d="M -235 -140 A 275 275 0 0 1 180 -205"
-            fill="none"
-            stroke="#3B82FF"
-            strokeWidth="12"
-            opacity="0.65"
+            stroke="#E0F2FE"
+            strokeWidth="1.6"
+            strokeDasharray="320 2100"
+            strokeDashoffset="-420"
+            opacity="0.95"
           />
         </g>
 
-        {/* 2. Deep Mountain Silhouettes (Back Ridge) */}
-        <path
-          d="M 0 540 
-             L 110 500 
-             L 210 530 
-             L 340 430 
-             L 420 480 
-             L 510 390 
-             L 580 430 
-             L 660 360 
-             L 730 420 
-             L 860 330 
-             L 980 410 
-             L 1120 350 
-             L 1260 440 
-             L 1440 410 
-             L 1440 900 
-             L 0 900 Z"
-          fill="url(#mountainBackGrad)"
-          opacity="0.9"
-        />
+        {/* ----------------------------------------------------------------- */}
+        {/* B. Subtle Candlestick Silhouettes in Center & Background */}
+        {/* ----------------------------------------------------------------- */}
+        <g opacity="0.32" filter="url(#candleGlow)">
+          {/* Cluster 1: Left Background (behind hero right side) */}
+          {/* Candle 1 (Down - Purple) */}
+          <line x1="260" y1="380" x2="260" y2="470" stroke="#C084FC" strokeWidth="1.5" />
+          <rect x="254" y="400" width="12" height="45" rx="1.5" fill="url(#candleDownGrad)" />
 
-        {/* Back Ridge Rim Glow */}
-        <path
-          d="M 210 530 L 340 430 L 420 480 L 510 390 L 580 430 L 660 360 L 730 420 L 860 330 L 980 410"
-          fill="none"
-          stroke="url(#ridgeLight)"
-          strokeWidth="2.5"
-          filter="url(#planetGlow)"
-          opacity="0.8"
-        />
+          {/* Candle 2 (Down - Purple) */}
+          <line x1="285" y1="410" x2="285" y2="500" stroke="#C084FC" strokeWidth="1.5" />
+          <rect x="279" y="430" width="12" height="50" rx="1.5" fill="url(#candleDownGrad)" />
 
-        {/* 3. Midground Rocky Crags & Mountain Faces */}
-        <path
-          d="M 0 600 
-             L 90 560 
-             L 180 610 
-             L 260 520 
-             L 330 550 
-             L 400 480 
-             L 490 540 
-             L 570 460 
-             L 630 510 
-             L 720 430 
-             L 810 500 
-             L 920 450 
-             L 1040 530 
-             L 1180 480 
-             L 1320 560 
-             L 1440 520 
-             L 1440 900 
-             L 0 900 Z"
-          fill="url(#mountainMidGrad)"
-        />
+          {/* Candle 3 (Up - Cyan) */}
+          <line x1="310" y1="420" x2="310" y2="495" stroke="#38BDF8" strokeWidth="1.5" />
+          <rect x="304" y="440" width="12" height="35" rx="1.5" fill="url(#candleUpGrad)" />
 
-        {/* Midground Ridge Edge Highlights */}
-        <path
-          d="M 260 520 L 330 550 L 400 480 L 490 540 L 570 460 L 630 510 L 720 430"
-          fill="none"
-          stroke="url(#ridgeLight)"
-          strokeWidth="1.8"
-          opacity="0.6"
-        />
+          {/* Cluster 2: Center Midground (between hero and login card) */}
+          {/* Candle 4 (Down - Purple) */}
+          <line x1="720" y1="320" x2="720" y2="430" stroke="#C084FC" strokeWidth="1.5" />
+          <rect x="714" y="340" width="12" height="60" rx="1.5" fill="url(#candleDownGrad)" />
 
-        {/* 4. Foreground Mountain Terrain & Jagged Basins */}
-        <path
-          d="M 0 680 
-             L 140 640 
-             L 240 700 
-             L 360 600 
-             L 440 660 
-             L 530 580 
-             L 620 650 
-             L 700 560 
-             L 790 640 
-             L 890 570 
-             L 1000 660 
-             L 1140 590 
-             L 1280 680 
-             L 1440 630 
-             L 1440 900 
-             L 0 900 Z"
-          fill="url(#mountainForeGrad)"
-        />
+          {/* Candle 5 (Down - Purple) */}
+          <line x1="745" y1="360" x2="745" y2="465" stroke="#C084FC" strokeWidth="1.5" />
+          <rect x="739" y="380" width="12" height="55" rx="1.5" fill="url(#candleDownGrad)" />
 
-        {/* Foreground Valley Glowing Highlights (Ethereal River / Canyon Glow) */}
-        <path
-          d="M 380 780 Q 480 720 540 760 T 680 810 T 800 790 T 960 840"
-          fill="none"
-          stroke="rgba(139, 92, 246, 0.35)"
-          strokeWidth="6"
-          filter="url(#planetGlow)"
-        />
-        <path
-          d="M 440 740 Q 510 700 580 730 T 720 780"
-          fill="none"
-          stroke="rgba(59, 130, 246, 0.45)"
-          strokeWidth="3"
-        />
+          {/* Candle 6 (Up - Cyan) */}
+          <line x1="770" y1="310" x2="770" y2="440" stroke="#38BDF8" strokeWidth="1.5" />
+          <rect x="764" y="335" width="12" height="70" rx="1.5" fill="url(#candleUpGrad)" />
+
+          {/* Candle 7 (Up - Cyan) */}
+          <line x1="795" y1="270" x2="795" y2="390" stroke="#38BDF8" strokeWidth="1.5" />
+          <rect x="789" y="295" width="12" height="65" rx="1.5" fill="url(#candleUpGrad)" />
+
+          {/* Candle 8 (Up - Cyan tall rally) */}
+          <line x1="820" y1="230" x2="820" y2="360" stroke="#38BDF8" strokeWidth="1.5" />
+          <rect x="814" y="250" width="12" height="80" rx="1.5" fill="url(#candleUpGrad)" />
+
+          {/* Candle 9 (Down - Purple pullback) */}
+          <line x1="845" y1="280" x2="845" y2="370" stroke="#C084FC" strokeWidth="1.5" />
+          <rect x="839" y="300" width="12" height="40" rx="1.5" fill="url(#candleDownGrad)" />
+
+          {/* Cluster 3: Far Right Background (behind HUD stats & card rim) */}
+          {/* Candle 10 (Up - Cyan) */}
+          <line x1="1330" y1="280" x2="1330" y2="390" stroke="#38BDF8" strokeWidth="1.5" />
+          <rect x="1324" y="305" width="12" height="60" rx="1.5" fill="url(#candleUpGrad)" />
+
+          {/* Candle 11 (Up - Cyan) */}
+          <line x1="1355" y1="240" x2="1355" y2="360" stroke="#38BDF8" strokeWidth="1.5" />
+          <rect x="1349" y="260" width="12" height="75" rx="1.5" fill="url(#candleUpGrad)" />
+
+          {/* Candle 12 (Down - Purple) */}
+          <line x1="1380" y1="290" x2="1380" y2="400" stroke="#C084FC" strokeWidth="1.5" />
+          <rect x="1374" y="315" width="12" height="50" rx="1.5" fill="url(#candleDownGrad)" />
+
+          {/* Candle 13 (Up - Cyan) */}
+          <line x1="1405" y1="260" x2="1405" y2="370" stroke="#38BDF8" strokeWidth="1.5" />
+          <rect x="1399" y="280" width="12" height="60" rx="1.5" fill="url(#candleUpGrad)" />
+        </g>
       </svg>
 
-      {/* Atmospheric Vignette & Soft Gradient Overlay for Readability */}
-      <div className="absolute inset-0 bg-gradient-to-t from-[#020408] via-transparent to-transparent opacity-80" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#03050B]/90 via-transparent to-[#03050B]/80" />
+      {/* 3. Subtle Vignette & Dark Edge Shading for Perfect Contrast */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#02040A]/70 via-transparent to-[#02040A]/90 pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_40%,rgba(2,4,10,0.85)_100%)] pointer-events-none" />
     </div>
   );
 };

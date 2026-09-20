@@ -5,7 +5,8 @@ import {
   FileSpreadsheet,
   CheckCircle2,
   AlertTriangle,
-  Download
+  Download,
+  Shield
 } from 'lucide-react';
 import { useTrading } from '../../context/TradingContext';
 import { Trade } from '../../types';
@@ -16,9 +17,19 @@ interface ImportTradesModalProps {
 }
 
 export const ImportTradesModal: React.FC<ImportTradesModalProps> = ({ isOpen, onClose }) => {
-  const { importTrades, addToast, accounts } = useTrading();
+  const { importTrades, addToast, accounts, propFirmAccounts, selectedAccountId } = useTrading();
   const [csvText, setCsvText] = useState('');
   const [isDragOver, setIsDragOver] = useState(false);
+  const [targetAccountId, setTargetAccountId] = useState<string>(() => {
+    return selectedAccountId !== 'all' && accounts.some(a => a.id === selectedAccountId)
+      ? selectedAccountId
+      : (accounts[0]?.id || 'acc-1');
+  });
+  const [targetPropFirmAccountId, setTargetPropFirmAccountId] = useState<string>(() => {
+    return selectedAccountId !== 'all' && propFirmAccounts.some(pf => pf.id === selectedAccountId)
+      ? selectedAccountId
+      : '';
+  });
 
   if (!isOpen) return null;
 
@@ -52,7 +63,8 @@ ES,BUY,5635.00,5630.00,-250.00,-1.00,Gap Up and Fail,2026-08-22T09:40:00.000Z`;
         const date = cols[7] || new Date().toISOString();
 
         newTrades.push({
-          accountId: accounts[0]?.id || 'acc-1',
+          accountId: targetAccountId || accounts[0]?.id || 'acc-1',
+          propFirmAccountId: targetPropFirmAccountId || undefined,
           symbol,
           market: 'Futures',
           direction,
@@ -91,9 +103,9 @@ ES,BUY,5635.00,5630.00,-250.00,-1.00,Gap Up and Fail,2026-08-22T09:40:00.000Z`;
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/75 backdrop-blur-sm p-4 animate-in fade-in">
-      <div className="w-full max-w-xl rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl space-y-4 animate-in zoom-in-95">
-        <div className="flex items-center justify-between pb-3 border-b border-slate-800">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#07090D]/80 backdrop-blur-sm p-4 animate-in fade-in">
+      <div className="w-full max-w-xl rounded-2xl border border-[#1C232E] bg-[#12161D] p-6 shadow-2xl space-y-4 animate-in zoom-in-95">
+        <div className="flex items-center justify-between pb-3 border-b border-[#1C232E]">
           <h3 className="text-sm font-bold text-slate-100 flex items-center gap-2">
             <Upload className="w-4 h-4 text-indigo-400" />
             Import Trades via CSV / Broker Export
@@ -101,6 +113,45 @@ ES,BUY,5635.00,5630.00,-250.00,-1.00,Gap Up and Fail,2026-08-22T09:40:00.000Z`;
           <button onClick={onClose} className="text-slate-400 hover:text-white">
             <X className="w-5 h-5" />
           </button>
+        </div>
+
+        {/* Portfolio Destination Selectors */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]">
+          <div>
+            <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+              Target Broker Account
+            </label>
+            <select
+              value={targetAccountId}
+              onChange={e => setTargetAccountId(e.target.value)}
+              className="w-full rounded-lg bg-[#12161D] border border-[#1C232E] px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-indigo-500"
+            >
+              {accounts.map(acc => (
+                <option key={acc.id} value={acc.id}>
+                  {acc.name} ({acc.broker})
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-[11px] font-semibold text-indigo-300 mb-1 flex items-center gap-1">
+              <Shield className="w-3 h-3 text-indigo-400" />
+              <span>Link to Prop Firm Account</span>
+            </label>
+            <select
+              value={targetPropFirmAccountId}
+              onChange={e => setTargetPropFirmAccountId(e.target.value)}
+              className="w-full rounded-lg bg-[#12161D] border border-indigo-500/40 px-2.5 py-1.5 text-xs text-indigo-200 focus:outline-none focus:border-indigo-400"
+            >
+              <option value="">None (Personal Trades)</option>
+              {propFirmAccounts.map(pf => (
+                <option key={pf.id} value={pf.id}>
+                  🛡️ {pf.name} ({pf.firmName})
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
 
         {/* Drag Drop Area */}
@@ -118,7 +169,7 @@ ES,BUY,5635.00,5630.00,-250.00,-1.00,Gap Up and Fail,2026-08-22T09:40:00.000Z`;
             }
           }}
           className={`border-2 border-dashed rounded-2xl p-6 text-center transition cursor-pointer ${
-            isDragOver ? 'border-indigo-500 bg-indigo-500/10' : 'border-slate-800 bg-slate-950/60 hover:border-slate-700'
+            isDragOver ? 'border-indigo-500 bg-indigo-500/10' : 'border-[#1C232E] bg-[#0A0D14]/60 hover:border-[#1C232E]'
           }`}
         >
           <FileSpreadsheet className="w-8 h-8 text-indigo-400 mx-auto mb-2" />
@@ -136,12 +187,12 @@ ES,BUY,5635.00,5630.00,-250.00,-1.00,Gap Up and Fail,2026-08-22T09:40:00.000Z`;
             value={csvText}
             onChange={e => setCsvText(e.target.value)}
             placeholder={sampleCsv}
-            className="w-full rounded-xl bg-slate-950 border border-slate-800 p-3 text-[11px] font-mono text-slate-200 focus:outline-none focus:border-indigo-500 custom-scrollbar"
+            className="w-full rounded-xl bg-[#0A0D14] border border-[#1C232E] p-3 text-[11px] font-mono text-slate-200 focus:outline-none focus:border-indigo-500 custom-scrollbar"
           />
         </div>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-slate-800 flex items-center justify-between">
+        <div className="pt-3 border-t border-[#1C232E] flex items-center justify-between">
           <button
             onClick={() => setCsvText(sampleCsv)}
             className="text-xs text-indigo-400 hover:text-indigo-300 font-semibold"
@@ -152,7 +203,7 @@ ES,BUY,5635.00,5630.00,-250.00,-1.00,Gap Up and Fail,2026-08-22T09:40:00.000Z`;
           <div className="flex items-center gap-2">
             <button
               onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300"
+              className="px-4 py-2 rounded-xl bg-[#1A1F27] hover:bg-[#222936] text-xs font-semibold text-slate-300"
             >
               Cancel
             </button>

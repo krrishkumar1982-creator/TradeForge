@@ -25,7 +25,14 @@ import {
   backtestDrawings,
   chartTemplates,
   tradingAccountConnections,
-  connectionSyncLogs
+  connectionSyncLogs,
+  propFirmAccounts,
+  userSettings,
+  customTags,
+  importHistory,
+  activityLogs,
+  userBackups,
+  riskEvents,
 } from './schema.ts';
 import { eq, and, inArray, desc, sql, not, lte, ilike, or } from 'drizzle-orm';
 import bcrypt from 'bcrypt';
@@ -39,13 +46,25 @@ import {
   JournalNote,
   JournalFolder,
   RiskGoalSettings,
+  RiskEvent,
   CommunityPost,
   MentorStudent,
   AppNotification,
   MarketType,
   SessionType,
   TradeDirection,
-  TradeSource
+  TradeSource,
+  PropFirmAccount,
+  UserSettings,
+  CustomTag,
+  ImportHistoryItem,
+  ActivityLogItem,
+  CommissionRule,
+  TradeEntryDefaults,
+  GlobalPreferences,
+  NotificationPreferences,
+  AiSettings,
+  UserBackup,
 } from '../types/index.ts';
 import { calculatePlaybookMetrics } from '../lib/metrics.ts';
 
@@ -178,14 +197,17 @@ export async function upsertUserProfile(
     const existingUsers = await db.select().from(users).where(eq(users.uid, userId));
     const now = new Date();
 
-    // Determine permanent code: if an existing valid code exists in profiles OR users, KEEP IT PERMANENTLY.
+    // Determine accountCode / trader handle:
+    // If the user explicitly provided a non-empty accountCode, validate and use it!
     let permanentCode: string | null = null;
-    if (existingProfiles.length > 0 && isValidMentorCode(existingProfiles[0].accountCode)) {
+    const requestedCode = data.accountCode ? data.accountCode.trim().toUpperCase() : null;
+    
+    if (requestedCode && /^[A-Z0-9_-]{3,32}$/i.test(requestedCode)) {
+      permanentCode = requestedCode;
+    } else if (existingProfiles.length > 0 && existingProfiles[0].accountCode) {
       permanentCode = existingProfiles[0].accountCode;
-    } else if (existingUsers.length > 0 && isValidMentorCode(existingUsers[0].accountCode)) {
+    } else if (existingUsers.length > 0 && existingUsers[0].accountCode) {
       permanentCode = existingUsers[0].accountCode;
-    } else if (isValidMentorCode(data.accountCode)) {
-      permanentCode = data.accountCode!;
     } else {
       permanentCode = await generateUniqueMentorCode();
       console.log(`[MENTOR CODE] Generated new code in upsertUserProfile for ${userId}: ${permanentCode}`);
@@ -239,7 +261,7 @@ export async function upsertUserProfile(
 
 export async function getOrCreateUser(
   uid: string,
-  email = 'user@duskflow.io',
+  email = '',
   name = 'Trader',
   accountCode?: string
 ) {
@@ -375,6 +397,7 @@ export async function getTrades(userId: string): Promise<Trade[]> {
     return rows.map((r) => ({
       id: r.id,
       accountId: r.accountId,
+      propFirmAccountId: r.propFirmAccountId || undefined,
       connectionId: r.connectionId || undefined,
       externalTradeId: r.externalTradeId || undefined,
       platform: r.platform || undefined,
@@ -444,6 +467,7 @@ export async function saveTrade(userId: string, trade: Trade) {
         .update(trades)
         .set({
           accountId: trade.accountId,
+          propFirmAccountId: trade.propFirmAccountId || null,
           connectionId: trade.connectionId || null,
           externalTradeId: trade.externalTradeId || null,
           platform: trade.platform || null,
@@ -498,6 +522,7 @@ export async function saveTrade(userId: string, trade: Trade) {
         id: trade.id,
         userId,
         accountId: trade.accountId,
+        propFirmAccountId: trade.propFirmAccountId || null,
         connectionId: trade.connectionId || null,
         externalTradeId: trade.externalTradeId || null,
         platform: trade.platform || null,
@@ -803,7 +828,7 @@ export async function getJournalNotes(userId: string): Promise<JournalNote[]> {
       accountId: r.accountId,
       date: r.date,
       title: r.title,
-      folderId: r.folderId,
+      folderId: r.folderId || '',
       tags: Array.isArray(r.tags) ? (r.tags as string[]) : [],
       content: r.content,
       preMarketPlan: (r.preMarketPlan as any) || {},
@@ -815,6 +840,10 @@ export async function getJournalNotes(userId: string): Promise<JournalNote[]> {
       screenshots: Array.isArray(r.screenshots) ? (r.screenshots as string[]) : [],
       templateUsed: r.templateUsed || undefined,
       isFavorite: r.isFavorite || false,
+      isDeleted: Boolean(r.isDeleted),
+      deletedAt: r.deletedAt ? new Date(r.deletedAt).toISOString() : undefined,
+      deletedBy: r.deletedBy || undefined,
+      originalFolderId: r.originalFolderId || undefined,
     }));
   } catch (error) {
     console.error('getJournalNotes error:', error);
@@ -829,6 +858,12 @@ export async function saveJournalNote(userId: string, note: JournalNote) {
       .from(journalNotes)
       .where(eq(journalNotes.id, note.id));
 
+    const cleanFolderId = (note.folderId && note.folderId.trim()) ? note.folderId.trim() : null;
+    const isDel = Boolean(note.isDeleted);
+    const delAt = note.deletedAt ? new Date(note.deletedAt) : null;
+    const delBy = note.deletedBy || (isDel ? userId : null);
+    const origFolderId = note.originalFolderId || (isDel ? (note.folderId || null) : null);
+
     if (existing.length > 0) {
       if (existing[0].owner !== userId) {
         throw new Error('Forbidden: Journal note belongs to another user');
@@ -836,12 +871,12 @@ export async function saveJournalNote(userId: string, note: JournalNote) {
       await db
         .update(journalNotes)
         .set({
-          accountId: note.accountId,
+          accountId: note.accountId || 'default',
           date: note.date,
           title: note.title,
-          folderId: note.folderId,
+          folderId: cleanFolderId,
           tags: note.tags || [],
-          content: note.content,
+          content: note.content || '',
           preMarketPlan: note.preMarketPlan || {},
           postMarketReview: note.postMarketReview || {},
           contractsTraded: note.contractsTraded || null,
@@ -851,18 +886,22 @@ export async function saveJournalNote(userId: string, note: JournalNote) {
           screenshots: note.screenshots || [],
           templateUsed: note.templateUsed || null,
           isFavorite: note.isFavorite || false,
+          isDeleted: isDel,
+          deletedAt: delAt,
+          deletedBy: delBy,
+          originalFolderId: origFolderId,
         })
         .where(and(eq(journalNotes.id, note.id), eq(journalNotes.userId, userId)));
     } else {
       await db.insert(journalNotes).values({
         id: note.id,
         userId,
-        accountId: note.accountId,
+        accountId: note.accountId || 'default',
         date: note.date,
         title: note.title,
-        folderId: note.folderId,
+        folderId: cleanFolderId,
         tags: note.tags || [],
-        content: note.content,
+        content: note.content || '',
         preMarketPlan: note.preMarketPlan || {},
         postMarketReview: note.postMarketReview || {},
         contractsTraded: note.contractsTraded || null,
@@ -872,6 +911,10 @@ export async function saveJournalNote(userId: string, note: JournalNote) {
         screenshots: note.screenshots || [],
         templateUsed: note.templateUsed || null,
         isFavorite: note.isFavorite || false,
+        isDeleted: isDel,
+        deletedAt: delAt,
+        deletedBy: delBy,
+        originalFolderId: origFolderId,
       });
     }
   } catch (error) {
@@ -880,7 +923,66 @@ export async function saveJournalNote(userId: string, note: JournalNote) {
   }
 }
 
-export async function deleteJournalNote(userId: string, id: string) {
+export async function softDeleteJournalNote(userId: string, id: string) {
+  try {
+    const existing = await db
+      .select({ owner: journalNotes.userId, folderId: journalNotes.folderId })
+      .from(journalNotes)
+      .where(eq(journalNotes.id, id));
+
+    if (existing.length > 0 && existing[0].owner !== userId) {
+      throw new Error('Forbidden: Journal note belongs to another user');
+    }
+
+    const currentFolder = existing.length > 0 ? existing[0].folderId : null;
+
+    await db
+      .update(journalNotes)
+      .set({
+        isDeleted: true,
+        deletedAt: new Date(),
+        deletedBy: userId,
+        originalFolderId: currentFolder,
+      })
+      .where(and(eq(journalNotes.id, id), eq(journalNotes.userId, userId)));
+  } catch (error) {
+    console.error('softDeleteJournalNote error:', error);
+    throw error;
+  }
+}
+
+export async function restoreJournalNote(userId: string, id: string, originalFolderId?: string) {
+  try {
+    const existing = await db
+      .select({ owner: journalNotes.userId, originalFolderId: journalNotes.originalFolderId, folderId: journalNotes.folderId })
+      .from(journalNotes)
+      .where(eq(journalNotes.id, id));
+
+    if (existing.length > 0 && existing[0].owner !== userId) {
+      throw new Error('Forbidden: Journal note belongs to another user');
+    }
+
+    const targetFolder = originalFolderId || existing[0]?.originalFolderId || existing[0]?.folderId || null;
+
+    await db
+      .update(journalNotes)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+        deletedBy: null,
+        folderId: targetFolder,
+      })
+      .where(and(eq(journalNotes.id, id), eq(journalNotes.userId, userId)));
+  } catch (error) {
+    console.error('restoreJournalNote error:', error);
+    throw error;
+  }
+}
+
+export async function deleteJournalNote(userId: string, id: string, permanent: boolean = false) {
+  if (!permanent) {
+    return await softDeleteJournalNote(userId, id);
+  }
   try {
     const existing = await db
       .select({ owner: journalNotes.userId })
@@ -900,6 +1002,10 @@ export async function deleteJournalNote(userId: string, id: string) {
   }
 }
 
+export async function permanentDeleteJournalNote(userId: string, id: string) {
+  return await deleteJournalNote(userId, id, true);
+}
+
 // Journal Folders
 export async function getJournalFolders(userId: string): Promise<JournalFolder[]> {
   try {
@@ -912,6 +1018,9 @@ export async function getJournalFolders(userId: string): Promise<JournalFolder[]
       name: r.name,
       icon: r.icon || undefined,
       count: r.count || 0,
+      isDeleted: Boolean(r.isDeleted),
+      deletedAt: r.deletedAt ? new Date(r.deletedAt).toISOString() : undefined,
+      deletedBy: r.deletedBy || undefined,
     }));
   } catch (error) {
     console.error('getJournalFolders error:', error);
@@ -926,6 +1035,10 @@ export async function saveJournalFolder(userId: string, folder: JournalFolder) {
       .from(journalFolders)
       .where(eq(journalFolders.id, folder.id));
 
+    const isDel = Boolean(folder.isDeleted);
+    const delAt = folder.deletedAt ? new Date(folder.deletedAt) : null;
+    const delBy = folder.deletedBy || (isDel ? userId : null);
+
     if (existing.length > 0) {
       if (existing[0].owner !== userId) {
         throw new Error('Forbidden: Folder belongs to another user');
@@ -936,6 +1049,9 @@ export async function saveJournalFolder(userId: string, folder: JournalFolder) {
           name: folder.name,
           icon: folder.icon || null,
           count: folder.count || 0,
+          isDeleted: isDel,
+          deletedAt: delAt,
+          deletedBy: delBy,
         })
         .where(and(eq(journalFolders.id, folder.id), eq(journalFolders.userId, userId)));
     } else {
@@ -945,6 +1061,9 @@ export async function saveJournalFolder(userId: string, folder: JournalFolder) {
         name: folder.name,
         icon: folder.icon || null,
         count: folder.count || 0,
+        isDeleted: isDel,
+        deletedAt: delAt,
+        deletedBy: delBy,
       });
     }
   } catch (error) {
@@ -953,7 +1072,7 @@ export async function saveJournalFolder(userId: string, folder: JournalFolder) {
   }
 }
 
-export async function deleteJournalFolder(userId: string, id: string) {
+export async function softDeleteJournalFolder(userId: string, id: string) {
   try {
     const existing = await db
       .select({ owner: journalFolders.userId })
@@ -964,12 +1083,136 @@ export async function deleteJournalFolder(userId: string, id: string) {
       throw new Error('Forbidden: Folder belongs to another user');
     }
 
+    const now = new Date();
+
+    // 1. Soft delete the folder
+    await db
+      .update(journalFolders)
+      .set({
+        isDeleted: true,
+        deletedAt: now,
+        deletedBy: userId,
+      })
+      .where(and(eq(journalFolders.id, id), eq(journalFolders.userId, userId)));
+
+    // 2. Cascade soft-delete notes inside this folder
+    await db
+      .update(journalNotes)
+      .set({
+        isDeleted: true,
+        deletedAt: now,
+        deletedBy: userId,
+        originalFolderId: id,
+      })
+      .where(and(eq(journalNotes.folderId, id), eq(journalNotes.userId, userId)));
+  } catch (error) {
+    console.error('softDeleteJournalFolder error:', error);
+    throw error;
+  }
+}
+
+export async function restoreJournalFolder(userId: string, id: string) {
+  try {
+    const existing = await db
+      .select({ owner: journalFolders.userId })
+      .from(journalFolders)
+      .where(eq(journalFolders.id, id));
+
+    if (existing.length > 0 && existing[0].owner !== userId) {
+      throw new Error('Forbidden: Folder belongs to another user');
+    }
+
+    // 1. Restore folder
+    await db
+      .update(journalFolders)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+        deletedBy: null,
+      })
+      .where(and(eq(journalFolders.id, id), eq(journalFolders.userId, userId)));
+
+    // 2. Restore child notes
+    await db
+      .update(journalNotes)
+      .set({
+        isDeleted: false,
+        deletedAt: null,
+        deletedBy: null,
+        folderId: id,
+      })
+      .where(and(
+        or(eq(journalNotes.folderId, id), eq(journalNotes.originalFolderId, id)),
+        eq(journalNotes.userId, userId)
+      ));
+  } catch (error) {
+    console.error('restoreJournalFolder error:', error);
+    throw error;
+  }
+}
+
+export async function deleteJournalFolder(userId: string, id: string, permanent: boolean = false) {
+  if (!permanent) {
+    return await softDeleteJournalFolder(userId, id);
+  }
+  try {
+    const existing = await db
+      .select({ owner: journalFolders.userId })
+      .from(journalFolders)
+      .where(eq(journalFolders.id, id));
+
+    if (existing.length > 0 && existing[0].owner !== userId) {
+      throw new Error('Forbidden: Folder belongs to another user');
+    }
+
+    // Cascade delete notes inside this folder
+    await db
+      .delete(journalNotes)
+      .where(and(
+        or(eq(journalNotes.folderId, id), eq(journalNotes.originalFolderId, id)),
+        eq(journalNotes.userId, userId)
+      ));
+
+    // Delete folder
     await db
       .delete(journalFolders)
       .where(and(eq(journalFolders.id, id), eq(journalFolders.userId, userId)));
   } catch (error) {
     console.error('deleteJournalFolder error:', error);
     throw error;
+  }
+}
+
+export async function permanentDeleteJournalFolder(userId: string, id: string) {
+  return await deleteJournalFolder(userId, id, true);
+}
+
+// 2-Day Automatic Trash Purge Engine
+export async function purgeExpiredTrash(userId?: string) {
+  try {
+    const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+
+    // 1. Delete notes in trash older than 2 days
+    const noteCondition = userId
+      ? and(eq(journalNotes.isDeleted, true), lte(journalNotes.deletedAt, twoDaysAgo), eq(journalNotes.userId, userId))
+      : and(eq(journalNotes.isDeleted, true), lte(journalNotes.deletedAt, twoDaysAgo));
+
+    const purgedNotes = await db.delete(journalNotes).where(noteCondition).returning({ id: journalNotes.id });
+
+    // 2. Delete folders in trash older than 2 days
+    const folderCondition = userId
+      ? and(eq(journalFolders.isDeleted, true), lte(journalFolders.deletedAt, twoDaysAgo), eq(journalFolders.userId, userId))
+      : and(eq(journalFolders.isDeleted, true), lte(journalFolders.deletedAt, twoDaysAgo));
+
+    const purgedFolders = await db.delete(journalFolders).where(folderCondition).returning({ id: journalFolders.id });
+
+    return {
+      purgedNotesCount: purgedNotes.length,
+      purgedFoldersCount: purgedFolders.length,
+    };
+  } catch (error) {
+    console.error('purgeExpiredTrash error:', error);
+    return { purgedNotesCount: 0, purgedFoldersCount: 0 };
   }
 }
 
@@ -997,11 +1240,14 @@ export async function getRiskGoals(userId: string, tradingAccountId?: string): P
       monthlyProfitTarget: r.monthlyProfitTarget || undefined,
       maxDailyLoss: r.maxDailyLoss || r.dailyMaxLoss || undefined,
       dailyMaxLoss: r.dailyMaxLoss || r.maxDailyLoss || undefined,
-      maxWeeklyLoss: r.maxWeeklyLoss || undefined,
-      maxDrawdown: r.maxDrawdown || r.maxDrawdownLimit || undefined,
-      maxDrawdownLimit: r.maxDrawdownLimit || r.maxDrawdown || undefined,
+      maxWeeklyLoss: r.maxWeeklyLoss || r.weeklyLossLimit || undefined,
+      weeklyLossLimit: r.weeklyLossLimit || r.maxWeeklyLoss || undefined,
+      maxDrawdown: r.maxDrawdown || r.maxDrawdownLimit || r.trailingDrawdownLimit || undefined,
+      maxDrawdownLimit: r.maxDrawdownLimit || r.maxDrawdown || r.trailingDrawdownLimit || undefined,
+      trailingDrawdownLimit: r.trailingDrawdownLimit || r.maxDrawdown || r.maxDrawdownLimit || undefined,
       maxRiskPerTradePercent: r.maxRiskPerTradePercent || undefined,
       maxRiskPerTradeAmount: r.maxRiskPerTradeAmount || undefined,
+      riskMode: (r.riskMode as any) || 'LOWER_OF_BOTH',
       maxTradesPerDay: r.maxTradesPerDay || undefined,
       maxConsecutiveLosses: r.maxConsecutiveLosses || undefined,
       maxContractsPerTrade: r.maxContractsPerTrade || undefined,
@@ -1012,6 +1258,22 @@ export async function getRiskGoals(userId: string, tradingAccountId?: string): P
       enforceCircuitBreaker: r.enforceCircuitBreaker || false,
       circuitBreakerTriggered: r.circuitBreakerTriggered || false,
       circuitBreakerState: (r.circuitBreakerState as any) || 'DISARMED',
+      hardLockEnabled: r.hardLockEnabled || false,
+      warningThresholdPercent: r.warningThresholdPercent ?? 75,
+      criticalThresholdPercent: r.criticalThresholdPercent ?? 90,
+      timezone: r.timezone || 'America/New_York',
+      dailyResetTime: r.dailyResetTime || '17:00',
+      includeFloatingPnl: r.includeFloatingPnl || false,
+      includeFees: r.includeFees ?? true,
+      includeCommissions: r.includeCommissions ?? true,
+      drawdownMethodology: (r.drawdownMethodology as any) || 'EQUITY_BASED',
+      weeklyTargetAction: (r.weeklyTargetAction as any) || 'CONTINUE',
+      requireManualUnlock: r.requireManualUnlock ?? true,
+      lockReason: r.lockReason || undefined,
+      lockedAt: r.lockedAt || undefined,
+      unlockedAt: r.unlockedAt || undefined,
+      unlockedBy: r.unlockedBy || undefined,
+      unlockReason: r.unlockReason || undefined,
     };
   } catch (error) {
     console.error('getRiskGoals error:', error);
@@ -1035,11 +1297,14 @@ export async function saveRiskGoals(userId: string, goals: RiskGoalSettings, tra
         monthlyProfitTarget: goals.monthlyProfitTarget || null,
         maxDailyLoss: goals.dailyMaxLoss || goals.maxDailyLoss || null,
         dailyMaxLoss: goals.dailyMaxLoss || goals.maxDailyLoss || null,
-        maxWeeklyLoss: goals.maxWeeklyLoss || null,
-        maxDrawdown: goals.maxDrawdown || goals.maxDrawdownLimit || null,
-        maxDrawdownLimit: goals.maxDrawdown || goals.maxDrawdownLimit || null,
+        maxWeeklyLoss: goals.weeklyLossLimit || goals.maxWeeklyLoss || null,
+        weeklyLossLimit: goals.weeklyLossLimit || goals.maxWeeklyLoss || null,
+        maxDrawdown: goals.trailingDrawdownLimit || goals.maxDrawdown || goals.maxDrawdownLimit || null,
+        maxDrawdownLimit: goals.trailingDrawdownLimit || goals.maxDrawdown || goals.maxDrawdownLimit || null,
+        trailingDrawdownLimit: goals.trailingDrawdownLimit || goals.maxDrawdown || goals.maxDrawdownLimit || null,
         maxRiskPerTradePercent: goals.maxRiskPerTradePercent || null,
         maxRiskPerTradeAmount: goals.maxRiskPerTradeAmount || null,
+        riskMode: goals.riskMode || 'LOWER_OF_BOTH',
         maxTradesPerDay: goals.maxTradesPerDay || null,
         maxConsecutiveLosses: goals.maxConsecutiveLosses || null,
         maxContractsPerTrade: goals.maxContractsPerTrade || null,
@@ -1050,6 +1315,22 @@ export async function saveRiskGoals(userId: string, goals: RiskGoalSettings, tra
         enforceCircuitBreaker: goals.enforceCircuitBreaker || false,
         circuitBreakerTriggered: goals.circuitBreakerTriggered || false,
         circuitBreakerState: goals.circuitBreakerState || 'DISARMED',
+        hardLockEnabled: goals.hardLockEnabled || false,
+        warningThresholdPercent: goals.warningThresholdPercent ?? 75,
+        criticalThresholdPercent: goals.criticalThresholdPercent ?? 90,
+        timezone: goals.timezone || 'America/New_York',
+        dailyResetTime: goals.dailyResetTime || '17:00',
+        includeFloatingPnl: goals.includeFloatingPnl || false,
+        includeFees: goals.includeFees ?? true,
+        includeCommissions: goals.includeCommissions ?? true,
+        drawdownMethodology: goals.drawdownMethodology || 'EQUITY_BASED',
+        weeklyTargetAction: goals.weeklyTargetAction || 'CONTINUE',
+        requireManualUnlock: goals.requireManualUnlock ?? true,
+        lockReason: goals.lockReason || null,
+        lockedAt: goals.lockedAt || null,
+        unlockedAt: goals.unlockedAt || null,
+        unlockedBy: goals.unlockedBy || null,
+        unlockReason: goals.unlockReason || null,
       })
       .onConflictDoUpdate({
         target: riskGoals.id,
@@ -1060,11 +1341,14 @@ export async function saveRiskGoals(userId: string, goals: RiskGoalSettings, tra
           monthlyProfitTarget: goals.monthlyProfitTarget || null,
           maxDailyLoss: goals.dailyMaxLoss || goals.maxDailyLoss || null,
           dailyMaxLoss: goals.dailyMaxLoss || goals.maxDailyLoss || null,
-          maxWeeklyLoss: goals.maxWeeklyLoss || null,
-          maxDrawdown: goals.maxDrawdown || goals.maxDrawdownLimit || null,
-          maxDrawdownLimit: goals.maxDrawdown || goals.maxDrawdownLimit || null,
+          maxWeeklyLoss: goals.weeklyLossLimit || goals.maxWeeklyLoss || null,
+          weeklyLossLimit: goals.weeklyLossLimit || goals.maxWeeklyLoss || null,
+          maxDrawdown: goals.trailingDrawdownLimit || goals.maxDrawdown || goals.maxDrawdownLimit || null,
+          maxDrawdownLimit: goals.trailingDrawdownLimit || goals.maxDrawdown || goals.maxDrawdownLimit || null,
+          trailingDrawdownLimit: goals.trailingDrawdownLimit || goals.maxDrawdown || goals.maxDrawdownLimit || null,
           maxRiskPerTradePercent: goals.maxRiskPerTradePercent || null,
           maxRiskPerTradeAmount: goals.maxRiskPerTradeAmount || null,
+          riskMode: goals.riskMode || 'LOWER_OF_BOTH',
           maxTradesPerDay: goals.maxTradesPerDay || null,
           maxConsecutiveLosses: goals.maxConsecutiveLosses || null,
           maxContractsPerTrade: goals.maxContractsPerTrade || null,
@@ -1075,12 +1359,86 @@ export async function saveRiskGoals(userId: string, goals: RiskGoalSettings, tra
           enforceCircuitBreaker: goals.enforceCircuitBreaker || false,
           circuitBreakerTriggered: goals.circuitBreakerTriggered || false,
           circuitBreakerState: goals.circuitBreakerState || 'DISARMED',
+          hardLockEnabled: goals.hardLockEnabled || false,
+          warningThresholdPercent: goals.warningThresholdPercent ?? 75,
+          criticalThresholdPercent: goals.criticalThresholdPercent ?? 90,
+          timezone: goals.timezone || 'America/New_York',
+          dailyResetTime: goals.dailyResetTime || '17:00',
+          includeFloatingPnl: goals.includeFloatingPnl || false,
+          includeFees: goals.includeFees ?? true,
+          includeCommissions: goals.includeCommissions ?? true,
+          drawdownMethodology: goals.drawdownMethodology || 'EQUITY_BASED',
+          weeklyTargetAction: goals.weeklyTargetAction || 'CONTINUE',
+          requireManualUnlock: goals.requireManualUnlock ?? true,
+          lockReason: goals.lockReason || null,
+          lockedAt: goals.lockedAt || null,
+          unlockedAt: goals.unlockedAt || null,
+          unlockedBy: goals.unlockedBy || null,
+          unlockReason: goals.unlockReason || null,
           updatedAt: new Date(),
         },
       });
   } catch (error) {
     console.error('saveRiskGoals error:', error);
     throw error;
+  }
+}
+
+export async function getRiskEvents(userId: string, accountId?: string): Promise<RiskEvent[]> {
+  try {
+    const rows = await db
+      .select()
+      .from(riskEvents)
+      .where(eq(riskEvents.userId, userId))
+      .orderBy(desc(riskEvents.createdAt))
+      .limit(100);
+
+    return rows.map((r) => ({
+      id: r.id,
+      userId: r.userId,
+      accountId: r.accountId || undefined,
+      accountName: r.accountName || undefined,
+      eventType: r.eventType as any,
+      rule: r.rule,
+      currentValue: r.currentValue || '',
+      limitValue: r.limitValue || '',
+      severity: r.severity as any,
+      actionTaken: r.actionTaken,
+      notes: r.notes || undefined,
+      unlockedBy: r.unlockedBy || undefined,
+      unlockReason: r.unlockReason || undefined,
+      timestamp: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
+      metadata: (r.metadata as any) || undefined,
+    }));
+  } catch (error) {
+    console.error('getRiskEvents error:', error);
+    return [];
+  }
+}
+
+export async function saveRiskEvent(userId: string, event: Partial<RiskEvent>) {
+  try {
+    const id = event.id || `re_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    await db.insert(riskEvents).values({
+      id,
+      userId,
+      accountId: event.accountId || null,
+      accountName: event.accountName || null,
+      eventType: event.eventType || 'WARNING',
+      rule: event.rule || 'General Risk Rule',
+      currentValue: event.currentValue || null,
+      limitValue: event.limitValue || null,
+      severity: event.severity || 'CAUTION',
+      actionTaken: event.actionTaken || 'Notification',
+      notes: event.notes || null,
+      unlockedBy: event.unlockedBy || null,
+      unlockReason: event.unlockReason || null,
+      metadata: event.metadata || null,
+    });
+    return id;
+  } catch (error) {
+    console.error('saveRiskEvent error:', error);
+    return null;
   }
 }
 
@@ -4234,6 +4592,849 @@ export async function disconnectMentorStudentRelationship(userId: string, target
 
   return true;
 }
+
+// Prop Firm Accounts CRUD
+export async function getPropFirmAccounts(userId: string): Promise<PropFirmAccount[]> {
+  try {
+    const rows = await db
+      .select()
+      .from(propFirmAccounts)
+      .where(eq(propFirmAccounts.userId, userId))
+      .orderBy(desc(propFirmAccounts.createdAt));
+
+    return rows.map((r: any) => ({
+      id: r.id,
+      name: r.name,
+      firmName: r.firmName,
+      tradingBrand: r.tradingBrand || undefined,
+      legalEntity: r.legalEntity || undefined,
+      registrationNumber: r.registrationNumber || undefined,
+      jurisdiction: r.jurisdiction || undefined,
+      termsEffectiveDate: r.termsEffectiveDate || undefined,
+      rulesVersion: r.rulesVersion || undefined,
+      accountNumber: r.accountNumber || undefined,
+      accountSize: r.accountSize ?? r.startingBalance,
+      startingBalance: r.startingBalance,
+      currentBalance: r.currentBalance,
+      equity: r.equity,
+      highWaterMark: r.highWaterMark ?? undefined,
+      currency: r.currency || 'USD',
+      programModel: r.programModel || 'TWO_STEP',
+      phases: Array.isArray(r.phases) ? r.phases : [],
+      activePhaseIndex: r.activePhaseIndex ?? 0,
+      phase: r.phase || 'PHASE_1',
+      phaseName: r.phaseName || undefined,
+      status: r.status || 'ACTIVE',
+      riskState: r.riskState || 'SAFE',
+      enforcementMode: r.enforcementMode || 'MONITOR',
+      drawdownModel: r.drawdownModel || 'STATIC',
+      dailyDrawdownModel: r.dailyDrawdownModel || 'START_OF_DAY_BALANCE',
+      dailyLossMethod: r.dailyLossMethod || 'REALIZED_ONLY',
+      maxRiskPerSymbolPercent: r.maxRiskPerSymbolPercent ?? undefined,
+      minTradeDurationSec: r.minTradeDurationSec ?? undefined,
+      avgTradeDurationSec: r.avgTradeDurationSec ?? undefined,
+      minTradingDays: r.minTradingDays ?? 0,
+      maxTradingDays: r.maxTradingDays ?? 0,
+      startDate: r.startDate || undefined,
+      deadline: r.deadline || undefined,
+      qualifyingDayProfitPercent: r.qualifyingDayProfitPercent ?? undefined,
+      profitTargetPercent: r.profitTargetPercent ?? undefined,
+      dailyLossPercent: r.dailyLossPercent ?? undefined,
+      totalLossPercent: r.totalLossPercent ?? undefined,
+      profitTargetAmount: r.profitTargetAmount ?? undefined,
+      dailyLossAmount: r.dailyLossAmount ?? undefined,
+      totalLossAmount: r.totalLossAmount ?? undefined,
+      consistencyMaxDayPercent: r.consistencyMaxDayPercent ?? undefined,
+      maxProfitConcentrationPercent: r.maxProfitConcentrationPercent ?? undefined,
+      newsTradingAllowed: r.newsTradingAllowed || 'ALLOWED',
+      weekendHoldingAllowed: r.weekendHoldingAllowed ?? true,
+      overnightHoldingAllowed: r.overnightHoldingAllowed ?? true,
+      eaAllowed: r.eaAllowed || 'ALLOWED',
+      copyTradingAllowed: r.copyTradingAllowed || 'ALLOWED',
+      hedgingAllowed: r.hedgingAllowed || 'ALLOWED',
+      maxLotSize: r.maxLotSize ?? undefined,
+      minLotSize: r.minLotSize ?? undefined,
+      maxPositions: r.maxPositions ?? undefined,
+      maxLeverage: r.maxLeverage ?? 100,
+      ipRestrictions: r.ipRestrictions || {},
+      prohibitedStrategies: Array.isArray(r.prohibitedStrategies) ? r.prohibitedStrategies : [],
+      rewardBufferPercent: r.rewardBufferPercent ?? undefined,
+      rewardSplitPercent: r.rewardSplitPercent ?? 80,
+      profitSplitTraderPercent: r.profitSplitTraderPercent ?? 80,
+      profitSplitFirmPercent: r.profitSplitFirmPercent ?? 20,
+      minRewardRequest: r.minRewardRequest ?? undefined,
+      payoutFrequency: r.payoutFrequency || 'BIWEEKLY',
+      activationFee: r.activationFee ?? undefined,
+      inactivityMaxDays: r.inactivityMaxDays ?? 30,
+      newsWindowMinutes: r.newsWindowMinutes ?? 5,
+      sessionTimezone: r.sessionTimezone || 'America/New_York',
+      scalingRules: r.scalingRules || {},
+      rules: Array.isArray(r.rules) ? r.rules : [],
+      violations: Array.isArray(r.violations) ? r.violations : [],
+      timeline: Array.isArray(r.timeline) ? r.timeline : [],
+      payoutInfo: r.payoutInfo || {},
+      tradingAccountLink: r.tradingAccountLink || undefined,
+      notes: r.notes || undefined,
+      createdAt: r.createdAt ? new Date(r.createdAt).toISOString() : new Date().toISOString(),
+      updatedAt: r.updatedAt ? new Date(r.updatedAt).toISOString() : undefined,
+    }));
+  } catch (error) {
+    console.error('getPropFirmAccounts error:', error);
+    return [];
+  }
+}
+
+export async function savePropFirmAccount(userId: string, account: PropFirmAccount): Promise<PropFirmAccount> {
+  try {
+    const existing = await db
+      .select({ id: propFirmAccounts.id, owner: propFirmAccounts.userId })
+      .from(propFirmAccounts)
+      .where(eq(propFirmAccounts.id, account.id));
+
+    const now = new Date();
+
+    const dbValues = {
+      id: account.id,
+      userId,
+      name: account.name,
+      firmName: account.firmName,
+      tradingBrand: account.tradingBrand || null,
+      legalEntity: account.legalEntity || null,
+      registrationNumber: account.registrationNumber || null,
+      jurisdiction: account.jurisdiction || null,
+      termsEffectiveDate: account.termsEffectiveDate || null,
+      rulesVersion: account.rulesVersion || null,
+      accountNumber: account.accountNumber || null,
+      accountSize: account.accountSize ?? account.startingBalance,
+      startingBalance: account.startingBalance,
+      currentBalance: account.currentBalance,
+      equity: account.equity,
+      highWaterMark: account.highWaterMark ?? null,
+      currency: account.currency || 'USD',
+      programModel: account.programModel || 'TWO_STEP',
+      phases: account.phases || [],
+      activePhaseIndex: account.activePhaseIndex ?? 0,
+      phase: account.phase || 'PHASE_1',
+      phaseName: account.phaseName || null,
+      status: account.status || 'ACTIVE',
+      riskState: account.riskState || 'SAFE',
+      enforcementMode: account.enforcementMode || 'MONITOR',
+      drawdownModel: account.drawdownModel || 'STATIC',
+      dailyDrawdownModel: account.dailyDrawdownModel || 'START_OF_DAY_BALANCE',
+      dailyLossMethod: account.dailyLossMethod || 'REALIZED_ONLY',
+      maxRiskPerSymbolPercent: account.maxRiskPerSymbolPercent ?? null,
+      minTradeDurationSec: account.minTradeDurationSec ?? null,
+      avgTradeDurationSec: account.avgTradeDurationSec ?? null,
+      minTradingDays: account.minTradingDays ?? 0,
+      maxTradingDays: account.maxTradingDays ?? 0,
+      startDate: account.startDate || null,
+      deadline: account.deadline || null,
+      qualifyingDayProfitPercent: account.qualifyingDayProfitPercent ?? null,
+      profitTargetPercent: account.profitTargetPercent ?? null,
+      dailyLossPercent: account.dailyLossPercent ?? null,
+      totalLossPercent: account.totalLossPercent ?? null,
+      profitTargetAmount: account.profitTargetAmount ?? null,
+      dailyLossAmount: account.dailyLossAmount ?? null,
+      totalLossAmount: account.totalLossAmount ?? null,
+      consistencyMaxDayPercent: account.consistencyMaxDayPercent ?? null,
+      maxProfitConcentrationPercent: account.maxProfitConcentrationPercent ?? null,
+      newsTradingAllowed: account.newsTradingAllowed || 'ALLOWED',
+      weekendHoldingAllowed: account.weekendHoldingAllowed ?? true,
+      overnightHoldingAllowed: account.overnightHoldingAllowed ?? true,
+      eaAllowed: account.eaAllowed || 'ALLOWED',
+      copyTradingAllowed: account.copyTradingAllowed || 'ALLOWED',
+      hedgingAllowed: account.hedgingAllowed || 'ALLOWED',
+      maxLotSize: account.maxLotSize ?? null,
+      minLotSize: account.minLotSize ?? null,
+      maxPositions: account.maxPositions ?? null,
+      maxLeverage: account.maxLeverage ?? 100,
+      ipRestrictions: account.ipRestrictions || {},
+      prohibitedStrategies: account.prohibitedStrategies || [],
+      rewardBufferPercent: account.rewardBufferPercent ?? null,
+      rewardSplitPercent: account.rewardSplitPercent ?? 80,
+      profitSplitTraderPercent: account.profitSplitTraderPercent ?? 80,
+      profitSplitFirmPercent: account.profitSplitFirmPercent ?? 20,
+      minRewardRequest: account.minRewardRequest ?? null,
+      payoutFrequency: account.payoutFrequency || 'BIWEEKLY',
+      activationFee: account.activationFee ?? null,
+      inactivityMaxDays: account.inactivityMaxDays ?? 30,
+      newsWindowMinutes: account.newsWindowMinutes ?? 5,
+      sessionTimezone: account.sessionTimezone || 'America/New_York',
+      scalingRules: account.scalingRules || {},
+      rules: account.rules || [],
+      violations: account.violations || [],
+      timeline: account.timeline || [],
+      payoutInfo: account.payoutInfo || {},
+      tradingAccountLink: account.tradingAccountLink || null,
+      notes: account.notes || null,
+      updatedAt: now,
+    };
+
+    if (existing.length > 0) {
+      if (existing[0].owner !== userId) {
+        throw new Error('Forbidden: Prop firm account belongs to another user');
+      }
+      await db
+        .update(propFirmAccounts)
+        .set(dbValues)
+        .where(eq(propFirmAccounts.id, account.id));
+    } else {
+      await db
+        .insert(propFirmAccounts)
+        .values({
+          ...dbValues,
+          createdAt: account.createdAt ? new Date(account.createdAt) : now,
+        });
+    }
+
+    return account;
+  } catch (error) {
+    console.error('savePropFirmAccount error:', error);
+    throw error;
+  }
+}
+
+export async function deletePropFirmAccount(userId: string, accountId: string): Promise<boolean> {
+  try {
+    const existing = await db
+      .select({ owner: propFirmAccounts.userId })
+      .from(propFirmAccounts)
+      .where(eq(propFirmAccounts.id, accountId));
+
+    if (existing.length === 0) return true;
+    if (existing[0].owner !== userId) {
+      throw new Error('Forbidden: Prop firm account belongs to another user');
+    }
+
+    await db.delete(propFirmAccounts).where(eq(propFirmAccounts.id, accountId));
+    return true;
+  } catch (error) {
+    console.error('deletePropFirmAccount error:', error);
+    throw error;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// DEFAULT SETTINGS GENERATOR
+// ---------------------------------------------------------------------------
+export function getDefaultUserSettings(userId: string, accountId?: string): UserSettings {
+  return {
+    id: accountId ? `set_${userId}_${accountId}` : `set_${userId}`,
+    userId,
+    accountId,
+    scope: accountId ? 'ACCOUNT' : 'GLOBAL',
+    general: {
+      theme: 'dark',
+      accentColor: '#3B82F6',
+      density: 'comfortable',
+      chartAnimations: true,
+      reducedMotion: false,
+      currency: 'USD',
+      currencyMode: 'USD',
+      numberFormat: 'en-US',
+      decimalPrecision: 2,
+      percentagePrecision: 2,
+      roundingBehavior: 'round',
+      timezone: 'America/New_York',
+      dateFormat: 'YYYY-MM-DD',
+      timeFormat: '12h',
+      firstDayOfWeek: 'Sunday',
+      calendarTimezone: 'America/New_York',
+      sessionTimezone: 'America/New_York',
+    },
+    notifications: {
+      tradeAlerts: true,
+      riskAlerts: true,
+      propFirmWarnings: true,
+      syncNotifications: true,
+      dailyJournalReminder: true,
+      weeklyPerformanceReview: true,
+      soundEnabled: true,
+    },
+    aiSettings: {
+      aiCoachEnabled: true,
+      responseStyle: 'institutional',
+      analysisScope: 'all',
+      autoReviewTrades: true,
+    },
+    tradeDefaults: {
+      defaultAccountId: '',
+      defaultMarket: 'Futures',
+      defaultDirection: 'BUY',
+      defaultOrderType: 'MARKET',
+      defaultQuantity: 1,
+      defaultRiskValue: 1.0,
+      defaultRiskUnit: 'PERCENT',
+      defaultStopLossBehavior: 'POINTS',
+      defaultTakeProfitBehavior: 'R_TARGET',
+      defaultRTarget: 2.0,
+      maxPlannedRisk: 500,
+      defaultSetup: 'Opening Drive',
+      defaultPlaybookId: '',
+      defaultSession: 'New York',
+      defaultStatus: 'CLOSED',
+      requireSetup: false,
+      requireStopLoss: false,
+      requireTakeProfit: false,
+      requireNotes: false,
+      requireScreenshot: false,
+      requireMistakeOnLoss: false,
+      allowPartialExits: true,
+      allowMultipleEntries: true,
+      allowMultipleExits: true,
+      trackCommissions: true,
+      trackSwapFees: true,
+      trackSlippage: false,
+      defaultTableColumns: ['date', 'symbol', 'direction', 'market', 'entryPrice', 'exitPrice', 'netPnl', 'rMultiple', 'status'],
+      defaultTradeSort: 'date_desc',
+    },
+    commissionRules: [
+      {
+        id: 'cr-default-futures',
+        account: 'ALL',
+        instrument: 'Futures',
+        symbol: 'ALL',
+        mode: 'Per Contract',
+        apply: 'Round-Trip',
+        commission: 2.50,
+        exchangeFee: 1.25,
+        clearingFee: 0.20,
+        platformFee: 0.50,
+        otherFee: 0,
+      },
+      {
+        id: 'cr-default-forex',
+        account: 'ALL',
+        instrument: 'Forex',
+        symbol: 'ALL',
+        mode: 'Per Lot',
+        apply: 'Round-Trip',
+        commission: 3.50,
+        exchangeFee: 0,
+        clearingFee: 0,
+        platformFee: 0,
+        otherFee: 0,
+      },
+      {
+        id: 'cr-default-stocks',
+        account: 'ALL',
+        instrument: 'Stocks',
+        symbol: 'ALL',
+        mode: 'Per Share',
+        apply: 'Both Sides',
+        commission: 0.005,
+        exchangeFee: 0.001,
+        clearingFee: 0.0005,
+        platformFee: 0,
+        otherFee: 0,
+      },
+      {
+        id: 'cr-default-crypto',
+        account: 'ALL',
+        instrument: 'Crypto',
+        symbol: 'ALL',
+        mode: 'Percentage',
+        apply: 'Both Sides',
+        commission: 0.05,
+        exchangeFee: 0,
+        clearingFee: 0,
+        platformFee: 0,
+        otherFee: 0,
+      },
+    ],
+    profile: {
+      bio: 'Quantitative price action trader specializing in index futures and momentum breakouts.',
+      country: 'United States',
+      professionalTitle: 'Independent Prop Trader',
+      phone: '',
+      tradingStyle: 'Day Trader',
+    },
+  };
+}
+
+// ---------------------------------------------------------------------------
+// USER SETTINGS REPOSITORY
+// ---------------------------------------------------------------------------
+export async function getUserSettings(userId: string, accountId?: string): Promise<UserSettings> {
+  await ensureLoungeTables();
+  try {
+    const id = accountId ? `set_${userId}_${accountId}` : `set_${userId}`;
+    const found = await db.select().from(userSettings).where(eq(userSettings.id, id)).limit(1);
+
+    if (found.length > 0) {
+      const row = found[0];
+      const defaults = getDefaultUserSettings(userId, accountId);
+      return {
+        id: row.id,
+        userId: row.userId,
+        accountId: row.accountId || undefined,
+        scope: (row.scope as 'GLOBAL' | 'ACCOUNT') || 'GLOBAL',
+        general: { ...defaults.general, ...(row.general as any) },
+        notifications: { ...defaults.notifications, ...(row.notifications as any) },
+        aiSettings: { ...defaults.aiSettings, ...(row.aiSettings as any) },
+        tradeDefaults: { ...defaults.tradeDefaults, ...(row.tradeDefaults as any) },
+        commissionRules: Array.isArray(row.commissionRules) && row.commissionRules.length > 0
+          ? (row.commissionRules as any)
+          : defaults.commissionRules,
+        profile: { ...defaults.profile, ...(row.profile as any) },
+        updatedAt: row.updatedAt ? row.updatedAt.toISOString() : undefined,
+      };
+    }
+
+    // If account-specific setting not found, fallback to global
+    if (accountId) {
+      return getUserSettings(userId);
+    }
+
+    // Return defaults if none created yet
+    return getDefaultUserSettings(userId);
+  } catch (error) {
+    console.warn('getUserSettings warning, returning defaults:', error);
+    return getDefaultUserSettings(userId, accountId);
+  }
+}
+
+export async function saveUserSettings(userId: string, settings: UserSettings, accountId?: string): Promise<UserSettings> {
+  await ensureLoungeTables();
+  try {
+    const targetId = accountId ? `set_${userId}_${accountId}` : `set_${userId}`;
+    const scope = accountId ? 'ACCOUNT' : 'GLOBAL';
+
+    const existing = await db.select().from(userSettings).where(eq(userSettings.id, targetId)).limit(1);
+
+    if (existing.length > 0) {
+      await db
+        .update(userSettings)
+        .set({
+          general: settings.general as any,
+          notifications: settings.notifications as any,
+          aiSettings: settings.aiSettings as any,
+          tradeDefaults: settings.tradeDefaults as any,
+          commissionRules: settings.commissionRules as any,
+          profile: settings.profile as any,
+          updatedAt: new Date(),
+        })
+        .where(eq(userSettings.id, targetId));
+    } else {
+      await db.insert(userSettings).values({
+        id: targetId,
+        userId,
+        accountId: accountId || null,
+        scope,
+        general: settings.general as any,
+        notifications: settings.notifications as any,
+        aiSettings: settings.aiSettings as any,
+        tradeDefaults: settings.tradeDefaults as any,
+        commissionRules: settings.commissionRules as any,
+        profile: settings.profile as any,
+      });
+    }
+
+    return {
+      ...settings,
+      id: targetId,
+      userId,
+      accountId,
+      scope,
+      updatedAt: new Date().toISOString(),
+    };
+  } catch (error) {
+    console.error('saveUserSettings error:', error);
+    throw error;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// DEFAULT TAGS GENERATOR & REPOSITORY
+// ---------------------------------------------------------------------------
+const DEFAULT_SYSTEM_TAGS: Array<Omit<CustomTag, 'id' | 'createdAt'>> = [
+  { name: 'A+ Setup', category: 'Setup', color: '#10B981', description: 'Optimal execution matching all playbook rules perfectly' },
+  { name: 'Opening Drive', category: 'Setup', color: '#3B82F6', description: 'Aggressive opening bell market auction trend' },
+  { name: 'Revenge Trading', category: 'Mistake', color: '#EF4444', description: 'Impulsive entry following a loss without a valid signal' },
+  { name: 'FOMO', category: 'Psychology', color: '#F59E0B', description: 'Fear of missing out on rapid price movement' },
+  { name: 'Breakout', category: 'Market', color: '#8B5CF6', description: 'Key support/resistance level expansion' },
+  { name: 'Early Exit', category: 'Execution', color: '#EC4899', description: 'Closed position prematurely prior to target' },
+  { name: 'Moved Stop', category: 'Mistake', color: '#DC2626', description: 'Violated risk parameters by shifting stop loss further' },
+  { name: 'Disciplined', category: 'Psychology', color: '#06B6D4', description: 'Flawless mental focus and rule compliance' },
+  { name: 'Clean Trend', category: 'Market', color: '#14B8A6', description: 'Clear directional sequence of higher highs/lower lows' },
+  { name: 'News Volatility', category: 'Market', color: '#6366F1', description: 'CPI, FOMC, or economic report catalyst' },
+];
+
+export async function getCustomTags(userId: string): Promise<CustomTag[]> {
+  await ensureLoungeTables();
+  try {
+    const rows = await db
+      .select()
+      .from(customTags)
+      .where(eq(customTags.userId, userId))
+      .orderBy(desc(customTags.createdAt));
+
+    if (rows.length === 0) {
+      // Seed initial default tags for new user
+      const initialTags: CustomTag[] = [];
+      for (let i = 0; i < DEFAULT_SYSTEM_TAGS.length; i++) {
+        const item = DEFAULT_SYSTEM_TAGS[i];
+        const tag: CustomTag = {
+          id: `tag-${userId.replace(/[^a-zA-Z0-9]/g, '')}-${i + 1}`,
+          name: item.name,
+          category: item.category,
+          color: item.color,
+          description: item.description,
+          isArchived: false,
+          createdAt: new Date(Date.now() - (DEFAULT_SYSTEM_TAGS.length - i) * 60000).toISOString(),
+        };
+        try {
+          await db.insert(customTags).values({
+            id: tag.id,
+            userId,
+            name: tag.name,
+            category: tag.category,
+            color: tag.color,
+            description: tag.description,
+            isArchived: false,
+          });
+          initialTags.push(tag);
+        } catch {
+          // ignore duplicate insert errors
+        }
+      }
+      return initialTags;
+    }
+
+    return rows.map(r => ({
+      id: r.id,
+      name: r.name,
+      category: r.category as any,
+      color: r.color,
+      description: r.description || undefined,
+      isArchived: r.isArchived,
+      createdAt: r.createdAt ? r.createdAt.toISOString() : new Date().toISOString(),
+      updatedAt: r.updatedAt ? r.updatedAt.toISOString() : undefined,
+    }));
+  } catch (error) {
+    console.warn('getCustomTags error, returning fallback:', error);
+    return DEFAULT_SYSTEM_TAGS.map((t, idx) => ({
+      id: `tag-fallback-${idx}`,
+      ...t,
+      isArchived: false,
+      createdAt: new Date().toISOString(),
+    }));
+  }
+}
+
+export async function saveCustomTag(userId: string, tag: CustomTag): Promise<CustomTag> {
+  await ensureLoungeTables();
+  try {
+    const existing = await db.select().from(customTags).where(eq(customTags.id, tag.id)).limit(1);
+
+    if (existing.length > 0) {
+      if (existing[0].userId !== userId) {
+        throw new Error('Forbidden: Tag belongs to another user');
+      }
+      await db
+        .update(customTags)
+        .set({
+          name: tag.name.trim(),
+          category: tag.category,
+          color: tag.color,
+          description: tag.description || '',
+          isArchived: !!tag.isArchived,
+          updatedAt: new Date(),
+        })
+        .where(eq(customTags.id, tag.id));
+    } else {
+      await db.insert(customTags).values({
+        id: tag.id || `tag-${Date.now()}`,
+        userId,
+        name: tag.name.trim(),
+        category: tag.category,
+        color: tag.color,
+        description: tag.description || '',
+        isArchived: !!tag.isArchived,
+      });
+    }
+
+    return tag;
+  } catch (error) {
+    console.error('saveCustomTag error:', error);
+    throw error;
+  }
+}
+
+export async function deleteCustomTag(userId: string, tagId: string): Promise<boolean> {
+  await ensureLoungeTables();
+  try {
+    const existing = await db.select().from(customTags).where(eq(customTags.id, tagId)).limit(1);
+    if (existing.length === 0) return true;
+    if (existing[0].userId !== userId) {
+      throw new Error('Forbidden: Tag belongs to another user');
+    }
+    await db.delete(customTags).where(eq(customTags.id, tagId));
+    return true;
+  } catch (error) {
+    console.error('deleteCustomTag error:', error);
+    throw error;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// IMPORT HISTORY REPOSITORY
+// ---------------------------------------------------------------------------
+export async function getImportHistory(userId: string): Promise<ImportHistoryItem[]> {
+  await ensureLoungeTables();
+  try {
+    const rows = await db
+      .select()
+      .from(importHistory)
+      .where(eq(importHistory.userId, userId))
+      .orderBy(desc(importHistory.createdAt));
+
+    return rows.map(r => ({
+      id: r.id,
+      source: (r.source as any) || 'CSV',
+      fileName: r.fileName,
+      tradesProcessed: r.tradesProcessed,
+      tradesAdded: r.tradesAdded,
+      duplicatesCount: r.duplicatesCount,
+      errorsCount: r.errorsCount,
+      status: (r.status as any) || 'COMPLETED',
+      details: (r.details as any) || {},
+      createdAt: r.createdAt ? r.createdAt.toISOString() : new Date().toISOString(),
+    }));
+  } catch (error) {
+    console.warn('getImportHistory error:', error);
+    return [];
+  }
+}
+
+export async function recordImportHistory(userId: string, item: ImportHistoryItem): Promise<ImportHistoryItem> {
+  await ensureLoungeTables();
+  try {
+    await db.insert(importHistory).values({
+      id: item.id || `imp-${Date.now()}`,
+      userId,
+      source: item.source || 'CSV',
+      fileName: item.fileName,
+      tradesProcessed: item.tradesProcessed || 0,
+      tradesAdded: item.tradesAdded || 0,
+      duplicatesCount: item.duplicatesCount || 0,
+      errorsCount: item.errorsCount || 0,
+      status: item.status || 'COMPLETED',
+      details: item.details || {},
+    });
+    return item;
+  } catch (error) {
+    console.error('recordImportHistory error:', error);
+    throw error;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// ACTIVITY / AUDIT LOGS REPOSITORY
+// ---------------------------------------------------------------------------
+export async function getActivityLogs(userId: string, limit = 100): Promise<ActivityLogItem[]> {
+  await ensureLoungeTables();
+  try {
+    const rows = await db
+      .select()
+      .from(activityLogs)
+      .where(eq(activityLogs.userId, userId))
+      .orderBy(desc(activityLogs.createdAt))
+      .limit(limit);
+
+    return rows.map(r => ({
+      id: r.id,
+      action: r.action,
+      category: (r.category as any) || 'SYSTEM',
+      object: r.object,
+      status: (r.status as any) || 'SUCCESS',
+      source: r.source || 'Web Client',
+      details: (r.details as any) || {},
+      createdAt: r.createdAt ? r.createdAt.toISOString() : new Date().toISOString(),
+    }));
+  } catch (error) {
+    console.warn('getActivityLogs error:', error);
+    return [];
+  }
+}
+
+export async function recordActivityLog(userId: string, item: Omit<ActivityLogItem, 'id' | 'createdAt'> & { id?: string }): Promise<ActivityLogItem> {
+  await ensureLoungeTables();
+  try {
+    const id = item.id || `act-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+    const fullItem: ActivityLogItem = {
+      id,
+      action: item.action,
+      category: item.category,
+      object: item.object,
+      status: item.status,
+      source: item.source || 'Web Client',
+      details: item.details || {},
+      createdAt: new Date().toISOString(),
+    };
+
+    await db.insert(activityLogs).values({
+      id,
+      userId,
+      action: fullItem.action,
+      category: fullItem.category,
+      object: fullItem.object,
+      status: fullItem.status,
+      source: fullItem.source,
+      details: fullItem.details,
+    });
+
+    return fullItem;
+  } catch (error) {
+    console.warn('recordActivityLog warning:', error);
+    return {
+      id: `act-${Date.now()}`,
+      ...item,
+      createdAt: new Date().toISOString(),
+    };
+  }
+}
+
+// ---------------------------------------------------------------------------
+// USER BACKUPS REPOSITORY
+// ---------------------------------------------------------------------------
+export async function getUserBackups(userId: string): Promise<UserBackup[]> {
+  await ensureLoungeTables();
+  try {
+    const rows = await db
+      .select()
+      .from(userBackups)
+      .where(eq(userBackups.userId, userId))
+      .orderBy(desc(userBackups.createdAt));
+
+    return rows.map(r => ({
+      id: r.id,
+      name: r.name,
+      sizeBytes: r.sizeBytes,
+      tradeCount: r.tradeCount,
+      notesCount: r.notesCount,
+      backupData: r.backupData,
+      createdAt: r.createdAt ? r.createdAt.toISOString() : new Date().toISOString(),
+    }));
+  } catch (error) {
+    console.warn('getUserBackups error:', error);
+    return [];
+  }
+}
+
+export async function saveUserBackup(userId: string, backup: UserBackup): Promise<UserBackup> {
+  await ensureLoungeTables();
+  try {
+    await db.insert(userBackups).values({
+      id: backup.id || `bak-${Date.now()}`,
+      userId,
+      name: backup.name,
+      sizeBytes: backup.sizeBytes,
+      tradeCount: backup.tradeCount,
+      notesCount: backup.notesCount,
+      backupData: backup.backupData || {},
+    });
+    return backup;
+  } catch (error) {
+    console.error('saveUserBackup error:', error);
+    throw error;
+  }
+}
+
+export async function deleteUserBackup(userId: string, backupId: string): Promise<boolean> {
+  await ensureLoungeTables();
+  try {
+    const existing = await db.select().from(userBackups).where(eq(userBackups.id, backupId)).limit(1);
+    if (existing.length === 0) return true;
+    if (existing[0].userId !== userId) {
+      throw new Error('Forbidden: Backup belongs to another user');
+    }
+    await db.delete(userBackups).where(eq(userBackups.id, backupId));
+    return true;
+  } catch (error) {
+    console.error('deleteUserBackup error:', error);
+    throw error;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// DATA RESET REPOSITORY (STRICT CONFIRMATION GUARD)
+// ---------------------------------------------------------------------------
+export async function resetUserData(
+  userId: string,
+  options: {
+    deleteTrades?: boolean;
+    deleteJournal?: boolean;
+    resetSettings?: boolean;
+    wipeAll?: boolean;
+  }
+): Promise<{ success: boolean; message: string }> {
+  await ensureLoungeTables();
+  try {
+    if (options.wipeAll) {
+      await db.delete(trades).where(eq(trades.userId, userId));
+      await db.delete(journalNotes).where(eq(journalNotes.userId, userId));
+      await db.delete(journalFolders).where(eq(journalFolders.userId, userId));
+      await db.delete(playbooks).where(eq(playbooks.userId, userId));
+      await db.delete(strategies).where(eq(strategies.userId, userId));
+      await db.delete(userSettings).where(eq(userSettings.userId, userId));
+      await db.delete(customTags).where(eq(customTags.userId, userId));
+      await db.delete(importHistory).where(eq(importHistory.userId, userId));
+      await db.delete(userBackups).where(eq(userBackups.userId, userId));
+
+      await recordActivityLog(userId, {
+        action: 'Wipe All Workspace Data',
+        category: 'DATA',
+        object: 'Workspace Data',
+        status: 'WARNING',
+        source: 'Web Client',
+        details: { resetType: 'FULL_WIPE' },
+      });
+
+      return { success: true, message: 'All workspace data wiped successfully' };
+    }
+
+    if (options.deleteTrades) {
+      await db.delete(trades).where(eq(trades.userId, userId));
+      await recordActivityLog(userId, {
+        action: 'Delete All Trades',
+        category: 'TRADE',
+        object: 'All Trades',
+        status: 'WARNING',
+        source: 'Web Client',
+      });
+    }
+
+    if (options.deleteJournal) {
+      await db.delete(journalNotes).where(eq(journalNotes.userId, userId));
+      await recordActivityLog(userId, {
+        action: 'Delete All Journal Notes',
+        category: 'JOURNAL',
+        object: 'All Notes',
+        status: 'WARNING',
+        source: 'Web Client',
+      });
+    }
+
+    if (options.resetSettings) {
+      await db.delete(userSettings).where(eq(userSettings.userId, userId));
+      await recordActivityLog(userId, {
+        action: 'Reset Settings to Defaults',
+        category: 'SETTINGS',
+        object: 'Platform Settings',
+        status: 'INFO',
+        source: 'Web Client',
+      });
+    }
+
+    return { success: true, message: 'Data reset operation completed' };
+  } catch (error) {
+    console.error('resetUserData error:', error);
+    throw error;
+  }
+}
+
+
 
 
 

@@ -263,7 +263,7 @@ export const TradingToolsView: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="pb-4 border-b border-slate-800">
+      <div className="pb-4 border-b border-[#1C232E]">
         <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
           <Calculator className="w-6 h-6 text-indigo-400" />
           Institutional Trading Mathematics & Sizing Tools
@@ -274,7 +274,7 @@ export const TradingToolsView: React.FC = () => {
       </div>
 
       {/* Search & Navigation Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-slate-900/60 p-4 rounded-2xl border border-slate-800/80">
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-[#12161D] p-4 rounded-2xl border border-[#1C232E]">
         {/* Search */}
         <div className="relative w-full sm:w-80">
           <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
@@ -283,7 +283,7 @@ export const TradingToolsView: React.FC = () => {
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search calculators... (e.g. position, kelly)"
-            className="w-full rounded-xl bg-slate-950 border border-slate-800 p-2.5 pl-10 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            className="w-full rounded-xl bg-[#0A0D14] border border-[#1C232E] p-2.5 pl-10 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
           />
         </div>
 
@@ -299,10 +299,10 @@ export const TradingToolsView: React.FC = () => {
           <button
             key={cat.id}
             onClick={() => setActiveCategory(cat.id)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
               activeCategory === cat.id
-                ? 'bg-indigo-600 border-indigo-500 text-white shadow-lg shadow-indigo-600/25'
-                : 'bg-slate-900 border-slate-800/80 text-slate-400 hover:text-slate-200 hover:border-slate-700'
+                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/25'
+                : 'bg-[#12161D] border-[#1C232E] text-slate-400 hover:text-white hover:border-[#273141] hover:bg-[#1A1F27]'
             }`}
           >
             {cat.label}
@@ -316,7 +316,7 @@ export const TradingToolsView: React.FC = () => {
           <div
             key={tool.id}
             onClick={() => setActiveToolId(tool.id)}
-            className="group rounded-2xl border border-slate-800/90 bg-slate-900/40 p-5 shadow-sm hover:border-indigo-500/40 hover:bg-slate-900/80 transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-4"
+            className="group rounded-2xl border border-[#1C232E] bg-[#0E121A] p-5 shadow-sm hover:border-indigo-500/40 hover:bg-[#12161D] transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-4"
           >
             <div className="space-y-3">
               {/* Top info and badge */}
@@ -337,7 +337,7 @@ export const TradingToolsView: React.FC = () => {
 
               {/* Title & icon */}
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-slate-950 rounded-xl border border-slate-800 group-hover:border-indigo-500/20 transition-colors">
+                <div className="p-2 bg-[#0A0D14] rounded-xl border border-[#1C232E] group-hover:border-indigo-500/20 transition-colors">
                   {tool.icon}
                 </div>
                 <div>
@@ -368,15 +368,15 @@ export const TradingToolsView: React.FC = () => {
           {/* Backdrop */}
           <div 
             onClick={() => setActiveToolId(null)}
-            className="absolute inset-0 bg-slate-950/80 backdrop-blur-md"
+            className="absolute inset-0 bg-[#0A0D14] backdrop-blur-md"
           />
 
           {/* Modal Container */}
-          <div className="relative bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+          <div className="relative bg-[#12161D] border border-[#1C232E] rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
             {/* Header */}
-            <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-slate-950/40">
+            <div className="p-5 border-b border-[#1C232E] flex items-center justify-between bg-[#0A0D14]/40">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-slate-950 rounded-xl border border-slate-800 text-indigo-400">
+                <div className="p-2.5 bg-[#0A0D14] rounded-xl border border-[#1C232E] text-indigo-400">
                   {activeToolMetadata.icon}
                 </div>
                 <div>
@@ -387,7 +387,7 @@ export const TradingToolsView: React.FC = () => {
 
               <button
                 onClick={() => setActiveToolId(null)}
-                className="p-1.5 rounded-lg bg-slate-850 hover:bg-slate-800 text-slate-400 hover:text-slate-200 transition"
+                className="p-1.5 rounded-lg bg-slate-850 hover:bg-[#1A1F27] text-slate-400 hover:text-slate-200 transition"
               >
                 <X className="w-4 h-4" />
               </button>

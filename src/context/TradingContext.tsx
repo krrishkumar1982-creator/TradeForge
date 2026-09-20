@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo, useRef, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, useMemo, useCallback, useRef, ReactNode } from 'react';
 import confetti from 'canvas-confetti';
 import {
   Trade,
@@ -19,45 +19,14 @@ import {
   PropFirmViolation,
   PropFirmPayoutRecord,
   TradingAccountConnection,
-  SelfHabit,
-  HabitCompletion,
-  DailyTask,
-  DailyCheckin,
-  MorningCheckin,
-  NightlyReview,
-  DailyRoutine,
-  RoutineCompletion,
-  SleepLog,
-  ExerciseLog,
-  LearningLog,
-  DeepWorkSession,
-  DistractionLog,
-  DisciplineStreakRecord,
-  PersonalGoal,
-  PersonalRule,
-  GrowthScoreBreakdown,
-  GrowthAchievement,
-  UserGrowthLevel,
+  UserSettings,
+  CustomTag,
+  ImportHistoryItem,
+  ActivityLogItem,
+  UserBackup,
 } from '../types';
 import { calculatePlaybookMetrics } from '../lib/metrics';
-import {
-  calculateDailyGrowthScore,
-  calculateGrowthLevelAndXp,
-  DEFAULT_ACHIEVEMENTS,
-} from '../lib/selfImprovementEngine';
-import {
-  INITIAL_HABITS,
-  INITIAL_TASKS,
-  INITIAL_ROUTINES,
-  INITIAL_DISCIPLINE_STREAK,
-  INITIAL_GOALS,
-  INITIAL_RULES,
-  INITIAL_SLEEP_LOGS,
-  INITIAL_EXERCISE_LOGS,
-  INITIAL_LEARNING_LOGS,
-  INITIAL_DEEP_WORK_SESSIONS,
-  INITIAL_CHECKINS,
-} from '../data/selfImprovementData';
+import { createDefaultUserSettings, DEFAULT_TAGS_FALLBACK } from '../utils/defaultSettings';
 import {
   INITIAL_ACCOUNTS,
   INITIAL_PLAYBOOKS,
@@ -86,9 +55,18 @@ import {
   saveStrategyApi,
   saveNoteApi,
   deleteNoteApi,
+  softDeleteNoteApi,
+  restoreNoteApi,
+  permanentDeleteNoteApi,
   saveFolderApi,
   deleteFolderApi,
+  softDeleteFolderApi,
+  restoreFolderApi,
+  permanentDeleteFolderApi,
+  purgeExpiredTrashApi,
   saveRiskGoalsApi,
+  fetchRiskGoalsApi,
+  unlockRiskAccountApi,
   saveNotificationApi,
   fetchCommunityPostsApi,
   saveCommunityPostApi,
@@ -107,11 +85,28 @@ import {
   updateUserPointsAdminApi,
   updateUserRoleAdminApi,
   fetchUserProfileApi,
-  updateUserProfileApi
+  updateUserProfileApi,
+  savePropFirmAccountApi,
+  deletePropFirmAccountApi,
+  getUserSettingsApi,
+  saveUserSettingsApi,
+  getCustomTagsApi,
+  saveCustomTagApi,
+  deleteCustomTagApi,
+  getImportHistoryApi,
+  recordImportHistoryApi,
+  getActivityLogsApi,
+  recordActivityLogApi,
+  getUserBackupsApi,
+  createUserBackupApi,
+  deleteUserBackupApi,
+  executeDataResetApi,
 } from '../services/apiClient';
+import { formatTimezoneDate, formatTimezoneTime, formatTradeTimestamp as utilsFormatTradeTimestamp } from '../utils/dateUtils';
 import { io } from 'socket.io-client';
-import { onAuthStateChange, signOutUser, getSession, getUser } from '../services/supabaseAuth';
+import { onAuthStateChange, signOutUser, getSession, getUser, handleAuthRedirect, resendVerificationEmail } from '../services/supabaseAuth';
 import { User, Session } from '@supabase/supabase-js';
+import { SupabaseStorageService } from '../services/supabaseStorage.ts';
 
 export type ActiveView = 
   | 'dashboard'
@@ -128,7 +123,6 @@ export type ActiveView =
   | 'news'
   | 'ai-coach'
   | 'tools'
-  | 'self-improvement'
   | 'lounge'
   | 'integrations'
   | 'settings'
@@ -213,16 +207,27 @@ interface TradingContextType {
   setSelectedNote: (note: JournalNote | null) => void;
   selectedFolderId: string;
   setSelectedFolderId: (id: string) => void;
-  addNote: (note: Omit<JournalNote, 'id'>) => JournalNote;
-  updateNote: (note: JournalNote) => void;
-  deleteNote: (id: string) => void;
-  addFolder: (name: string, icon?: string) => void;
-  updateFolder: (id: string, name: string, icon?: string) => void;
-  deleteFolder: (id: string) => void;
+  addNote: (note: Omit<JournalNote, 'id'>) => Promise<JournalNote | null>;
+  updateNote: (note: JournalNote, options?: { silent?: boolean }) => Promise<boolean>;
+  deleteNote: (id: string) => Promise<boolean>;
+  softDeleteNote: (id: string) => Promise<boolean>;
+  restoreNote: (id: string, originalFolderId?: string) => Promise<boolean>;
+  permanentDeleteNote: (id: string) => Promise<boolean>;
+  addFolder: (name: string, icon?: string) => Promise<JournalFolder | null>;
+  updateFolder: (id: string, name: string, icon?: string) => Promise<boolean>;
+  deleteFolder: (id: string) => Promise<boolean>;
+  softDeleteFolder: (id: string) => Promise<boolean>;
+  restoreFolder: (id: string) => Promise<boolean>;
+  permanentDeleteFolder: (id: string) => Promise<boolean>;
+  emptyTrash: () => Promise<void>;
+  purgeExpiredTrash: () => Promise<void>;
   
   // Risk & Goals
   riskGoals: RiskGoalSettings;
-  updateRiskGoals: (goals: Partial<RiskGoalSettings>) => void;
+  accountRiskProfiles: Record<string, RiskGoalSettings>;
+  updateRiskGoals: (goals: Partial<RiskGoalSettings>, accountId?: string) => Promise<void>;
+  getAccountRiskGoals: (accountId?: string) => RiskGoalSettings;
+  unlockRiskAccount: (accountId: string, unlockReason: string, unlockedBy?: string) => Promise<boolean>;
   
   // Economic Calendar
   calendarEvents: EconomicEvent[];
@@ -253,58 +258,7 @@ interface TradingContextType {
   dispatchMentorDirective: (studentCode: string, content: string, type?: string) => Promise<void>;
   acknowledgeMentorDirective: (id: string) => Promise<void>;
   
-  // Self Improvement System
-  habits: SelfHabit[];
-  habitCompletions: HabitCompletion[];
-  tasks: DailyTask[];
-  checkins: DailyCheckin[];
-  morningCheckin: MorningCheckin | null;
-  nightlyReview: NightlyReview | null;
-  routines: DailyRoutine[];
-  routineCompletions: RoutineCompletion[];
-  sleepLogs: SleepLog[];
-  exerciseLogs: ExerciseLog[];
-  learningLogs: LearningLog[];
-  deepWorkSessions: DeepWorkSession[];
-  distractionLogs: DistractionLog[];
-  disciplineStreak: DisciplineStreakRecord;
-  goals: PersonalGoal[];
-  rules: PersonalRule[];
-  achievements: GrowthAchievement[];
-  userGrowthLevel: UserGrowthLevel;
-  selectedImprovementDate: string;
-  setSelectedImprovementDate: (date: string) => void;
-  currentGrowthScore: GrowthScoreBreakdown;
-  toggleHabit: (habitId: string, date?: string) => void;
-  addHabit: (habit: Omit<SelfHabit, 'id' | 'createdAt' | 'userId'>) => void;
-  updateHabit: (habit: SelfHabit) => void;
-  deleteHabit: (id: string) => void;
-  toggleTask: (taskId: string) => void;
-  addTask: (task: Omit<DailyTask, 'id' | 'createdAt' | 'userId'>) => void;
-  updateTask: (task: DailyTask) => void;
-  deleteTask: (id: string) => void;
-  saveDailyCheckin: (checkin: Omit<DailyCheckin, 'id' | 'createdAt' | 'userId'>) => void;
-  saveMorningCheckin: (checkin: Omit<MorningCheckin, 'id' | 'createdAt' | 'userId'>) => void;
-  saveNightlyReview: (review: Omit<NightlyReview, 'id' | 'createdAt' | 'userId'>) => void;
-  toggleRoutineItem: (routineId: string, itemId: string, date?: string) => void;
-  addRoutine: (routine: Omit<DailyRoutine, 'id' | 'createdAt' | 'userId'>) => void;
-  updateRoutine: (routine: DailyRoutine) => void;
-  deleteRoutine: (id: string) => void;
-  logSleep: (log: Omit<SleepLog, 'id' | 'userId'>) => void;
-  logExercise: (log: Omit<ExerciseLog, 'id' | 'userId'>) => void;
-  logLearning: (log: Omit<LearningLog, 'id' | 'userId'>) => void;
-  logDeepWorkSession: (session: Omit<DeepWorkSession, 'id' | 'userId'>) => void;
-  logDistraction: (log: Omit<DistractionLog, 'id' | 'userId'>) => void;
-  updateDisciplineStreak: (status: 'CLEAN' | 'RELAPSE', note?: string) => void;
-  addGoal: (goal: Omit<PersonalGoal, 'id' | 'createdAt' | 'userId'>) => void;
-  updateGoal: (goal: PersonalGoal) => void;
-  deleteGoal: (id: string) => void;
-  toggleGoalMilestone: (goalId: string, milestoneId: string) => void;
-  addRule: (rule: { text: string; category: 'TRADING' | 'LIFESTYLE' | 'DISCIPLINE' | 'HEALTH' }) => void;
-  toggleRuleVerification: (ruleId: string, date?: string) => void;
-  deleteRule: (id: string) => void;
-
-  // Community Lounge (Preserved for compatibility)
+  // Community Lounge
   communityPosts: CommunityPost[];
   currentUserId: string;
   toggleLikePost: (id: string) => Promise<void>;
@@ -325,6 +279,10 @@ interface TradingContextType {
   // Formatters
   formatCurrency: (value: number, customMode?: CurrencyDisplayMode) => string;
   formatRMultiple: (r: number) => string;
+  currentTimezone: string;
+  formatDate: (date: string | number | Date | null | undefined, options?: Intl.DateTimeFormatOptions) => string;
+  formatTime: (date: string | number | Date | null | undefined, options?: Intl.DateTimeFormatOptions) => string;
+  formatTradeTimestamp: (date: string | number | Date | null | undefined) => { date: string; time: string; full: string };
   
   // Quick Actions & Data Reset
   resetToSampleData: () => void;
@@ -334,9 +292,31 @@ interface TradingContextType {
   authUser: User | null;
   isAuthenticated: boolean;
   setIsAuthenticated: (auth: boolean) => void;
+  isAuthLoading: boolean;
+  isSyncingData: boolean;
+  refreshInitialState: () => Promise<void>;
+  resendEmailVerification: (email: string) => Promise<{ success: boolean; message: string }>;
   isAuthModalOpen: boolean;
   setIsAuthModalOpen: (open: boolean) => void;
   logout: () => Promise<void>;
+
+  // Institutional Settings Center
+  userSettings: UserSettings;
+  updateUserSettings: (newSettings: Partial<UserSettings> | ((prev: UserSettings) => UserSettings)) => Promise<void>;
+  saveUserSettingsToServer: (settingsToSave?: UserSettings, accountId?: string) => Promise<UserSettings>;
+  customTags: CustomTag[];
+  addCustomTag: (tag: Omit<CustomTag, 'id' | 'createdAt'>) => Promise<CustomTag>;
+  updateCustomTag: (tag: CustomTag) => Promise<CustomTag>;
+  deleteCustomTag: (id: string) => Promise<void>;
+  importHistory: ImportHistoryItem[];
+  addImportHistoryRecord: (item: ImportHistoryItem) => Promise<void>;
+  activityLogs: ActivityLogItem[];
+  addActivityLog: (item: Omit<ActivityLogItem, 'id' | 'createdAt'>) => Promise<void>;
+  userBackups: UserBackup[];
+  createBackup: (name?: string, backupData?: any) => Promise<UserBackup>;
+  deleteBackup: (id: string) => Promise<void>;
+  restoreBackup: (backup: UserBackup) => Promise<void>;
+  executeDataReset: (resetType: 'wipeAll' | 'trades' | 'journal' | 'settings', confirmationPhrase: string) => Promise<void>;
 }
 
 const TradingContext = createContext<TradingContextType | undefined>(undefined);
@@ -361,13 +341,32 @@ const getViewFromUrl = (): ActiveView => {
     if (path.includes('/news') || hash.includes('news')) return 'news';
     if (path.includes('/coach') || hash.includes('coach')) return 'ai-coach';
     if (path.includes('/tools') || hash.includes('tools')) return 'tools';
-    if (path.includes('/self-improvement') || hash.includes('self-improvement') || path.includes('/improvement') || hash.includes('improvement')) return 'self-improvement';
-    if (path.includes('/lounge') || hash.includes('lounge')) return 'self-improvement';
+    if (path.includes('/lounge') || hash.includes('lounge')) return 'lounge';
     if (path.includes('/settings') || hash.includes('settings')) return 'settings';
   } catch {
     // ignore
   }
   return 'dashboard';
+};
+
+const getInitialStoredData = <T,>(cacheKey: string, fallback: T): T => {
+  try {
+    if (typeof window === 'undefined') return fallback;
+    const uid = localStorage.getItem('tradeforge_user_id');
+    if (uid) {
+      const scoped = localStorage.getItem(`tf_cache_${cacheKey}_${uid}`);
+      if (scoped) {
+        const parsed = JSON.parse(scoped);
+        if (parsed !== undefined && parsed !== null) return parsed;
+      }
+    }
+    const general = localStorage.getItem(`tf_cache_${cacheKey}`);
+    if (general) {
+      const parsed = JSON.parse(general);
+      if (parsed !== undefined && parsed !== null) return parsed;
+    }
+  } catch {}
+  return fallback;
 };
 
 export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
@@ -383,15 +382,60 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
     return 'dark';
   });
 
-  const [accounts, setAccounts] = useState<TradingAccount[]>([]);
+  const [accounts, setAccounts] = useState<TradingAccount[]>(() => getInitialStoredData('accounts', []));
   const [selectedAccountId, setSelectedAccountId] = useState<string>('all');
   const [connections, setConnections] = useState<TradingAccountConnection[]>([]);
   
-  // Prop Firm Accounts state scoped per user
-  const [propFirmAccounts, setPropFirmAccounts] = useState<PropFirmAccount[]>([]);
-  const [selectedPropFirmAccountId, setSelectedPropFirmAccountId] = useState<string>('');
+  // Prop Firm Accounts state scoped per user with fallback cache
+  const [propFirmAccounts, setPropFirmAccounts] = useState<PropFirmAccount[]>(() => {
+    try {
+      const keys = Object.keys(localStorage).filter((k) => k.startsWith('tf_prop_firm_accounts'));
+      for (const k of keys) {
+        const item = localStorage.getItem(k);
+        if (item) {
+          const parsed = JSON.parse(item);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    return [];
+  });
+  const [selectedPropFirmAccountId, setSelectedPropFirmAccountId] = useState<string>(() => {
+    try {
+      const keys = Object.keys(localStorage).filter((k) => k.startsWith('tf_prop_firm_accounts'));
+      for (const k of keys) {
+        const item = localStorage.getItem(k);
+        if (item) {
+          const parsed = JSON.parse(item);
+          if (Array.isArray(parsed) && parsed.length > 0) return parsed[0].id;
+        }
+      }
+    } catch {}
+    return '';
+  });
 
-  // Prop Firm Accounts helpers (user-scoped)
+  // Settings & Customization States
+  const [userSettings, setUserSettings] = useState<UserSettings>(() => createDefaultUserSettings());
+  const [customTags, setCustomTags] = useState<CustomTag[]>(DEFAULT_TAGS_FALLBACK);
+  const [importHistory, setImportHistory] = useState<ImportHistoryItem[]>([]);
+  const [activityLogs, setActivityLogs] = useState<ActivityLogItem[]>([]);
+  const [userBackups, setUserBackups] = useState<UserBackup[]>([]);
+
+  const persistPropFirmAccounts = (next: PropFirmAccount[]) => {
+    try {
+      localStorage.setItem('tf_prop_firm_accounts_cache', JSON.stringify(next));
+      const authUid = authUser?.id || (authUser as any)?.uid;
+      if (authUid) {
+        localStorage.setItem(`tf_prop_firm_accounts_${authUid}`, JSON.stringify(next));
+      }
+    } catch {
+      // ignore
+    }
+  };
+
+  // Prop Firm Accounts helpers (user-scoped with PostgreSQL cloud persistence)
   const addPropFirmAccount = (newAcc: Omit<PropFirmAccount, 'id' | 'createdAt'> | PropFirmAccount) => {
     const created: PropFirmAccount = {
       ...newAcc,
@@ -400,49 +444,36 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
     };
     setPropFirmAccounts((prev) => {
       const next = [created, ...prev.filter((a) => a.id !== created.id)];
-      if (authUser?.uid) {
-        try {
-          localStorage.setItem(`tf_prop_firm_accounts_${authUser.uid}`, JSON.stringify(next));
-        } catch {
-          // ignore
-        }
-      }
+      persistPropFirmAccounts(next);
       return next;
     });
     setSelectedPropFirmAccountId(created.id);
+    savePropFirmAccountApi(created).catch((err) => console.error('Failed to save prop firm account to DB:', err));
   };
 
   const updatePropFirmAccount = (updated: PropFirmAccount) => {
+    const withUpdate: PropFirmAccount = { ...updated, updatedAt: new Date().toISOString() };
     setPropFirmAccounts((prev) => {
-      const next = prev.map((acc) => (acc.id === updated.id ? { ...updated, updatedAt: new Date().toISOString() } : acc));
-      if (authUser?.uid) {
-        try {
-          localStorage.setItem(`tf_prop_firm_accounts_${authUser.uid}`, JSON.stringify(next));
-        } catch {
-          // ignore
-        }
-      }
+      const next = prev.map((acc) => (acc.id === updated.id ? withUpdate : acc));
+      persistPropFirmAccounts(next);
       return next;
     });
+    savePropFirmAccountApi(withUpdate).catch((err) => console.error('Failed to update prop firm account in DB:', err));
   };
 
   const deletePropFirmAccount = (id: string) => {
     setPropFirmAccounts((prev) => {
       const next = prev.filter((acc) => acc.id !== id);
-      if (selectedPropFirmAccountId === id && next.length > 0) {
-        setSelectedPropFirmAccountId(next[0].id);
-      } else if (selectedPropFirmAccountId === id) {
-        setSelectedPropFirmAccountId('');
-      }
-      if (authUser?.uid) {
-        try {
-          localStorage.setItem(`tf_prop_firm_accounts_${authUser.uid}`, JSON.stringify(next));
-        } catch {
-          // ignore
+      persistPropFirmAccounts(next);
+      setSelectedPropFirmAccountId((prevSelectedId) => {
+        if (prevSelectedId === id || !prevSelectedId || !next.some((a) => a.id === prevSelectedId)) {
+          return next.length > 0 ? next[0].id : '';
         }
-      }
+        return prevSelectedId;
+      });
       return next;
     });
+    deletePropFirmAccountApi(id).catch((err) => console.error('Failed to delete prop firm account from DB:', err));
   };
 
   const addPropFirmViolation = (
@@ -455,17 +486,21 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
       timestamp: new Date().toISOString(),
     };
     setPropFirmAccounts((prev) => {
-      const next = prev.map((acc) =>
-        acc.id === accountId
-          ? { ...acc, violations: [newViol, ...acc.violations], riskState: newViol.severity === 'BREACH' ? 'BREACHED' : 'CRITICAL' }
-          : acc
-      );
-      if (authUser?.uid) {
-        try {
-          localStorage.setItem(`tf_prop_firm_accounts_${authUser.uid}`, JSON.stringify(next));
-        } catch {
-          // ignore
+      let changedAcc: PropFirmAccount | null = null;
+      const next = prev.map((acc) => {
+        if (acc.id === accountId) {
+          changedAcc = {
+            ...acc,
+            violations: [newViol, ...acc.violations],
+            riskState: newViol.severity === 'BREACH' ? 'BREACHED' : 'CRITICAL',
+          };
+          return changedAcc;
         }
+        return acc;
+      });
+      persistPropFirmAccounts(next);
+      if (changedAcc) {
+        savePropFirmAccountApi(changedAcc).catch((err) => console.error('Failed to persist violation to DB:', err));
       }
       return next;
     });
@@ -480,6 +515,7 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
       id: `pay-${Date.now()}`,
     };
     setPropFirmAccounts((prev) => {
+      let changedAcc: PropFirmAccount | null = null;
       const next = prev.map((acc) => {
         if (acc.id !== accountId) return acc;
         const currentPayoutInfo = acc.payoutInfo || {
@@ -490,41 +526,58 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
           payoutAmount: 0,
           payoutHistory: [],
         };
-        return {
+        changedAcc = {
           ...acc,
           payoutInfo: {
             ...currentPayoutInfo,
             payoutHistory: [record, ...currentPayoutInfo.payoutHistory],
           },
         };
+        return changedAcc;
       });
-      if (authUser?.uid) {
-        try {
-          localStorage.setItem(`tf_prop_firm_accounts_${authUser.uid}`, JSON.stringify(next));
-        } catch {
-          // ignore
-        }
+      persistPropFirmAccounts(next);
+      if (changedAcc) {
+        savePropFirmAccountApi(changedAcc).catch((err) => console.error('Failed to persist payout to DB:', err));
       }
       return next;
     });
   };
-  const [trades, setTrades] = useState<Trade[]>([]);
+  const [trades, setTrades] = useState<Trade[]>(() => getInitialStoredData('trades', []));
   const [deletedTradesStack, setDeletedTradesStack] = useState<Trade[]>([]);
-  const [playbooks, setPlaybooks] = useState<Playbook[]>([]);
-  const [strategies, setStrategies] = useState<Strategy[]>([]);
-  const [notes, setNotes] = useState<JournalNote[]>([]);
-  const [folders, setFolders] = useState<JournalFolder[]>([]);
-  const [selectedNote, setSelectedNote] = useState<JournalNote | null>(null);
+  const [playbooks, setPlaybooks] = useState<Playbook[]>(() => getInitialStoredData('playbooks', []));
+  const [strategies, setStrategies] = useState<Strategy[]>(() => getInitialStoredData('strategies', []));
+  const [notes, setNotes] = useState<JournalNote[]>(() => getInitialStoredData('notes', []));
+  const [folders, setFolders] = useState<JournalFolder[]>(() => getInitialStoredData('folders', []));
+  const [selectedNote, setSelectedNoteState] = useState<JournalNote | null>(null);
+  const setSelectedNote = (note: JournalNote | null) => {
+    setSelectedNoteState(note);
+    try {
+      if (note?.id) {
+        localStorage.setItem('tradeforge_active_note_id', note.id);
+      }
+    } catch {}
+  };
+  const activeUserIdRef = useRef<string | null>(null);
+  const toastCacheRef = useRef<Map<string, number>>(new Map());
   const [selectedFolderId, setSelectedFolderId] = useState<string>('f-all');
-  const [riskGoals, setRiskGoals] = useState<RiskGoalSettings>({});
+  const [riskGoals, setRiskGoals] = useState<RiskGoalSettings>(() => getInitialStoredData('risk_goals', {}));
+  const [accountRiskProfiles, setAccountRiskProfiles] = useState<Record<string, RiskGoalSettings>>({});
   
-  const [userProfile, setUserProfile] = useState<UserProfile>({
-    id: '',
-    name: 'Trader',
-    email: '',
-    accountCode: '',
-    experienceLevel: 'Futures & Equities Trader',
-  });
+  const [userProfile, setUserProfile] = useState<UserProfile>(() => 
+    getInitialStoredData('profile', {
+      id: '',
+      name: 'Trader',
+      email: '',
+      accountCode: '',
+      experienceLevel: '5+ Years (Full-Time Funded)',
+      professionalTitle: 'Senior Quantitative Futures Trader',
+      country: 'United States',
+      timezone: 'America/New_York',
+      preferredCurrency: 'USD',
+      bio: '',
+      avatarUrl: '',
+    })
+  );
 
   const [mentorStudents, setMentorStudents] = useState<MentorStudent[]>([]);
   const [mentorDirectivesSent, setMentorDirectivesSent] = useState<any[]>([]);
@@ -554,597 +607,9 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
       return false;
     }
   });
+  const [isAuthLoading, setIsAuthLoading] = useState<boolean>(true);
   const [apiAuthToken, setApiAuthTokenState] = useState<string | null>(null);
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-
-  // ==========================================
-  // SELF IMPROVEMENT STATE
-  // ==========================================
-  const [habits, setHabits] = useState<SelfHabit[]>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_habits');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return INITIAL_HABITS;
-  });
-
-  const [habitCompletions, setHabitCompletions] = useState<HabitCompletion[]>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_habit_completions');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [
-      { id: 'hc-1', habitId: 'h-1', userId: 'default', date: new Date().toISOString().split('T')[0], completed: true },
-      { id: 'hc-2', habitId: 'h-2', userId: 'default', date: new Date().toISOString().split('T')[0], completed: true },
-      { id: 'hc-3', habitId: 'h-3', userId: 'default', date: new Date().toISOString().split('T')[0], completed: true },
-      { id: 'hc-4', habitId: 'h-4', userId: 'default', date: new Date().toISOString().split('T')[0], completed: true },
-    ];
-  });
-
-  const [tasks, setTasks] = useState<DailyTask[]>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_tasks');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return INITIAL_TASKS;
-  });
-
-  const [checkins, setCheckins] = useState<DailyCheckin[]>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_checkins');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return INITIAL_CHECKINS;
-  });
-
-  const [morningCheckin, setMorningCheckin] = useState<MorningCheckin | null>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_morning_checkin');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return {
-      id: 'mc-today',
-      userId: 'default',
-      date: new Date().toISOString().split('T')[0],
-      sleepQuality: 9,
-      energyLevel: 9,
-      mainGoal: 'Flawless execution on E-mini setups and full adherence to risk limits.',
-      topPriorities: [
-        'Wait for liquidity sweep before taking any order',
-        'Stop after 3 trades max',
-        'Complete afternoon upper body workout',
-      ],
-      workoutPlanned: true,
-      tradingPlanned: true,
-      personalGoal: 'Remain completely calm in any market volatility.',
-      avoidToday: 'Revenge trading, over-leveraging, and social media distraction.',
-      generatedMission: 'Execute with supreme patience, manage risk like an institutional fund manager, and maintain physical power.',
-      createdAt: new Date().toISOString(),
-    };
-  });
-
-  const [nightlyReview, setNightlyReview] = useState<NightlyReview | null>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_nightly_review');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return null;
-  });
-
-  const [routines, setRoutines] = useState<DailyRoutine[]>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_routines');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return INITIAL_ROUTINES;
-  });
-
-  const [routineCompletions, setRoutineCompletions] = useState<RoutineCompletion[]>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_routine_completions');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    const today = new Date().toISOString().split('T')[0];
-    return [
-      { id: 'rc-1', userId: 'default', routineId: 'rt-morning', itemId: 'rmi-1', date: today, completed: true },
-      { id: 'rc-2', userId: 'default', routineId: 'rt-morning', itemId: 'rmi-2', date: today, completed: true },
-      { id: 'rc-3', userId: 'default', routineId: 'rt-morning', itemId: 'rmi-3', date: today, completed: true },
-      { id: 'rc-4', userId: 'default', routineId: 'rt-morning', itemId: 'rmi-4', date: today, completed: true },
-      { id: 'rc-5', userId: 'default', routineId: 'rt-morning', itemId: 'rmi-5', date: today, completed: true },
-      { id: 'rc-6', userId: 'default', routineId: 'rt-trading', itemId: 'rti-1', date: today, completed: true },
-      { id: 'rc-7', userId: 'default', routineId: 'rt-trading', itemId: 'rti-2', date: today, completed: true },
-    ];
-  });
-
-  const [sleepLogs, setSleepLogs] = useState<SleepLog[]>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_sleep_logs');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return INITIAL_SLEEP_LOGS;
-  });
-
-  const [exerciseLogs, setExerciseLogs] = useState<ExerciseLog[]>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_exercise_logs');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return INITIAL_EXERCISE_LOGS;
-  });
-
-  const [learningLogs, setLearningLogs] = useState<LearningLog[]>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_learning_logs');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return INITIAL_LEARNING_LOGS;
-  });
-
-  const [deepWorkSessions, setDeepWorkSessions] = useState<DeepWorkSession[]>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_deep_work');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return INITIAL_DEEP_WORK_SESSIONS;
-  });
-
-  const [distractionLogs, setDistractionLogs] = useState<DistractionLog[]>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_distraction');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return [
-      { id: 'dl-1', userId: 'default', date: new Date().toISOString().split('T')[0], socialMediaMins: 15, youtubeMins: 20, gamingMins: 0, entertainmentMins: 0, randomBrowsingMins: 10 },
-    ];
-  });
-
-  const [disciplineStreak, setDisciplineStreak] = useState<DisciplineStreakRecord>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_discipline_streak');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return INITIAL_DISCIPLINE_STREAK;
-  });
-
-  const [goals, setGoals] = useState<PersonalGoal[]>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_goals');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return INITIAL_GOALS;
-  });
-
-  const [rules, setRules] = useState<PersonalRule[]>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_rules');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return INITIAL_RULES;
-  });
-
-  const [achievements, setAchievements] = useState<GrowthAchievement[]>(() => {
-    try {
-      const saved = localStorage.getItem('tf_self_achievements');
-      if (saved) return JSON.parse(saved);
-    } catch {}
-    return DEFAULT_ACHIEVEMENTS;
-  });
-
-  const [selectedImprovementDate, setSelectedImprovementDate] = useState<string>(() => {
-    return new Date().toISOString().split('T')[0];
-  });
-
-  // Persist Self Improvement state to localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('tf_self_habits', JSON.stringify(habits));
-      localStorage.setItem('tf_self_habit_completions', JSON.stringify(habitCompletions));
-      localStorage.setItem('tf_self_tasks', JSON.stringify(tasks));
-      localStorage.setItem('tf_self_checkins', JSON.stringify(checkins));
-      localStorage.setItem('tf_self_routines', JSON.stringify(routines));
-      localStorage.setItem('tf_self_routine_completions', JSON.stringify(routineCompletions));
-      localStorage.setItem('tf_self_sleep_logs', JSON.stringify(sleepLogs));
-      localStorage.setItem('tf_self_exercise_logs', JSON.stringify(exerciseLogs));
-      localStorage.setItem('tf_self_learning_logs', JSON.stringify(learningLogs));
-      localStorage.setItem('tf_self_deep_work', JSON.stringify(deepWorkSessions));
-      localStorage.setItem('tf_self_distraction', JSON.stringify(distractionLogs));
-      localStorage.setItem('tf_self_discipline_streak', JSON.stringify(disciplineStreak));
-      localStorage.setItem('tf_self_goals', JSON.stringify(goals));
-      localStorage.setItem('tf_self_rules', JSON.stringify(rules));
-      localStorage.setItem('tf_self_achievements', JSON.stringify(achievements));
-      if (morningCheckin) localStorage.setItem('tf_self_morning_checkin', JSON.stringify(morningCheckin));
-      if (nightlyReview) localStorage.setItem('tf_self_nightly_review', JSON.stringify(nightlyReview));
-    } catch {}
-  }, [
-    habits, habitCompletions, tasks, checkins, routines, routineCompletions,
-    sleepLogs, exerciseLogs, learningLogs, deepWorkSessions, distractionLogs,
-    disciplineStreak, goals, rules, achievements, morningCheckin, nightlyReview,
-  ]);
-
-  // Dynamic Growth Score calculation for selected date
-  const currentGrowthScore = useMemo(() => {
-    const todayCheckin = checkins.find(c => c.date === selectedImprovementDate);
-    const todaySleep = sleepLogs.find(s => s.date === selectedImprovementDate);
-    const todayExercise = exerciseLogs.find(e => e.date === selectedImprovementDate);
-    const todayLearning = learningLogs.find(l => l.date === selectedImprovementDate);
-    const todayDistraction = distractionLogs.find(d => d.date === selectedImprovementDate);
-
-    const breakdown = calculateDailyGrowthScore({
-      date: selectedImprovementDate,
-      habits,
-      habitCompletions,
-      tasks,
-      checkin: todayCheckin,
-      morningCheckin: morningCheckin?.date === selectedImprovementDate ? morningCheckin : undefined,
-      nightlyReview: nightlyReview?.date === selectedImprovementDate ? nightlyReview : undefined,
-      routines,
-      routineCompletions,
-      sleepLog: todaySleep,
-      exerciseLog: todayExercise,
-      learningLog: todayLearning,
-      deepWorkSessions,
-      distractionLog: todayDistraction,
-      disciplineStreak,
-      trades,
-      rules,
-    });
-
-    // Calculate streak days (count consecutive days with activity/score)
-    breakdown.streakDays = disciplineStreak.currentStreakDays || 7;
-    return breakdown;
-  }, [
-    selectedImprovementDate, habits, habitCompletions, tasks, checkins,
-    morningCheckin, nightlyReview, routines, routineCompletions,
-    sleepLogs, exerciseLogs, learningLogs, deepWorkSessions, distractionLogs,
-    disciplineStreak, trades, rules,
-  ]);
-
-  // Dynamic User XP & Growth Level calculation
-  const userGrowthLevel = useMemo(() => {
-    const totalDeepWorkHours = deepWorkSessions.reduce((acc, s) => acc + s.durationMins, 0) / 60;
-    const completedHabits = habitCompletions.filter(c => c.completed).length;
-    const completedTasks = tasks.filter(t => t.status === 'Completed').length;
-    const completedRoutines = routineCompletions.filter(c => c.completed).length;
-    const disciplinedTrades = trades.filter(t => t.rulesFollowed).length;
-
-    return calculateGrowthLevelAndXp({
-      completedHabitsCount: completedHabits,
-      completedTasksCount: completedTasks,
-      completedRoutinesCount: completedRoutines,
-      checkinsCount: checkins.length,
-      sleepLogsCount: sleepLogs.length,
-      exerciseLogsCount: exerciseLogs.length,
-      learningLogsCount: learningLogs.length,
-      deepWorkHoursTotal: totalDeepWorkHours,
-      disciplinedTradesCount: disciplinedTrades,
-    });
-  }, [habitCompletions, tasks, routineCompletions, checkins, sleepLogs, exerciseLogs, learningLogs, deepWorkSessions, trades]);
-
-  // SELF IMPROVEMENT HANDLERS
-  const toggleHabit = (habitId: string, targetDate?: string) => {
-    const date = targetDate || selectedImprovementDate;
-    setHabitCompletions(prev => {
-      const existingIdx = prev.findIndex(c => c.habitId === habitId && c.date === date);
-      if (existingIdx >= 0) {
-        const next = [...prev];
-        const wasCompleted = next[existingIdx].completed;
-        next[existingIdx] = {
-          ...next[existingIdx],
-          completed: !wasCompleted,
-          completedAt: !wasCompleted ? new Date().toISOString() : undefined,
-        };
-        return next;
-      } else {
-        return [
-          ...prev,
-          {
-            id: `hc-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-            habitId,
-            userId: authUser?.id || 'default',
-            date,
-            completed: true,
-            completedAt: new Date().toISOString(),
-          },
-        ];
-      }
-    });
-  };
-
-  const addHabit = (newHabit: Omit<SelfHabit, 'id' | 'createdAt' | 'userId'>) => {
-    const habit: SelfHabit = {
-      ...newHabit,
-      id: `h-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-      userId: authUser?.id || 'default',
-      createdAt: new Date().toISOString(),
-    };
-    setHabits(prev => [...prev, habit]);
-    addToast('Habit Created', `"${habit.name}" added to daily routine`, 'success');
-  };
-
-  const updateHabit = (updated: SelfHabit) => {
-    setHabits(prev => prev.map(h => (h.id === updated.id ? updated : h)));
-    addToast('Habit Updated', `Updated "${updated.name}"`, 'info');
-  };
-
-  const deleteHabit = (id: string) => {
-    setHabits(prev => prev.filter(h => h.id !== id));
-    setHabitCompletions(prev => prev.filter(c => c.habitId !== id));
-    addToast('Habit Deleted', 'Habit removed', 'info');
-  };
-
-  const toggleTask = (taskId: string) => {
-    setTasks(prev =>
-      prev.map(t => {
-        if (t.id === taskId) {
-          const nextStatus = t.status === 'Completed' ? 'Pending' : 'Completed';
-          if (nextStatus === 'Completed') {
-            try {
-              confetti({ particleCount: 40, spread: 60, origin: { y: 0.85 } });
-            } catch {}
-          }
-          return {
-            ...t,
-            status: nextStatus,
-            completedAt: nextStatus === 'Completed' ? new Date().toISOString() : undefined,
-          };
-        }
-        return t;
-      })
-    );
-  };
-
-  const addTask = (newTask: Omit<DailyTask, 'id' | 'createdAt' | 'userId'>) => {
-    const task: DailyTask = {
-      ...newTask,
-      id: `t-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-      userId: authUser?.id || 'default',
-      createdAt: new Date().toISOString(),
-    };
-    setTasks(prev => [task, ...prev]);
-    addToast('Task Scheduled', `"${task.title}" added to planner`, 'success');
-  };
-
-  const updateTask = (updated: DailyTask) => {
-    setTasks(prev => prev.map(t => (t.id === updated.id ? updated : t)));
-    addToast('Task Updated', `Updated "${updated.title}"`, 'info');
-  };
-
-  const deleteTask = (id: string) => {
-    setTasks(prev => prev.filter(t => t.id !== id));
-    addToast('Task Removed', 'Task deleted', 'info');
-  };
-
-  const saveDailyCheckin = (checkinData: Omit<DailyCheckin, 'id' | 'createdAt' | 'userId'>) => {
-    const checkin: DailyCheckin = {
-      ...checkinData,
-      id: `ci-${Date.now()}`,
-      userId: authUser?.id || 'default',
-      createdAt: new Date().toISOString(),
-    };
-    setCheckins(prev => [checkin, ...prev.filter(c => c.date !== checkin.date)]);
-    addToast('Check-in Saved', 'Mind & Wellbeing assessment recorded', 'success');
-  };
-
-  const saveMorningCheckin = (morningData: Omit<MorningCheckin, 'id' | 'createdAt' | 'userId'>) => {
-    const morning: MorningCheckin = {
-      ...morningData,
-      id: `mc-${Date.now()}`,
-      userId: authUser?.id || 'default',
-      createdAt: new Date().toISOString(),
-    };
-    setMorningCheckin(morning);
-    addToast('Morning Mission Locked', 'Daily priorities and focus set', 'success');
-  };
-
-  const saveNightlyReview = (reviewData: Omit<NightlyReview, 'id' | 'createdAt' | 'userId'>) => {
-    const review: NightlyReview = {
-      ...reviewData,
-      id: `nr-${Date.now()}`,
-      userId: authUser?.id || 'default',
-      createdAt: new Date().toISOString(),
-    };
-    setNightlyReview(review);
-    addToast('Nightly Review Saved', 'Daily reflection recorded', 'success');
-  };
-
-  const toggleRoutineItem = (routineId: string, itemId: string, targetDate?: string) => {
-    const date = targetDate || selectedImprovementDate;
-    setRoutineCompletions(prev => {
-      const idx = prev.findIndex(c => c.routineId === routineId && c.itemId === itemId && c.date === date);
-      if (idx >= 0) {
-        const next = [...prev];
-        next[idx] = { ...next[idx], completed: !next[idx].completed };
-        return next;
-      } else {
-        return [
-          ...prev,
-          {
-            id: `rc-${Date.now()}-${Math.random().toString(36).substr(2, 4)}`,
-            userId: authUser?.id || 'default',
-            routineId,
-            itemId,
-            date,
-            completed: true,
-          },
-        ];
-      }
-    });
-  };
-
-  const addRoutine = (newRoutine: Omit<DailyRoutine, 'id' | 'createdAt' | 'userId'>) => {
-    const routine: DailyRoutine = {
-      ...newRoutine,
-      id: `rt-${Date.now()}`,
-      userId: authUser?.id || 'default',
-      createdAt: new Date().toISOString(),
-    };
-    setRoutines(prev => [...prev, routine]);
-    addToast('Routine Created', `"${routine.name}" configured`, 'success');
-  };
-
-  const updateRoutine = (updated: DailyRoutine) => {
-    setRoutines(prev => prev.map(r => (r.id === updated.id ? updated : r)));
-    addToast('Routine Updated', `Updated "${updated.name}"`, 'info');
-  };
-
-  const deleteRoutine = (id: string) => {
-    setRoutines(prev => prev.filter(r => r.id !== id));
-    setRoutineCompletions(prev => prev.filter(c => c.routineId !== id));
-    addToast('Routine Removed', 'Routine deleted', 'info');
-  };
-
-  const logSleep = (logData: Omit<SleepLog, 'id' | 'userId'>) => {
-    const log: SleepLog = {
-      ...logData,
-      id: `sl-${Date.now()}`,
-      userId: authUser?.id || 'default',
-    };
-    setSleepLogs(prev => [log, ...prev.filter(s => s.date !== log.date)]);
-    addToast('Sleep Logged', `${log.durationHours}h of sleep recorded (${log.quality}/10 quality)`, 'success');
-  };
-
-  const logExercise = (logData: Omit<ExerciseLog, 'id' | 'userId'>) => {
-    const log: ExerciseLog = {
-      ...logData,
-      id: `el-${Date.now()}`,
-      userId: authUser?.id || 'default',
-    };
-    setExerciseLogs(prev => [log, ...prev.filter(e => e.date !== log.date)]);
-    addToast('Workout Logged', `${log.durationMins}m ${log.type} session recorded`, 'success');
-  };
-
-  const logLearning = (logData: Omit<LearningLog, 'id' | 'userId'>) => {
-    const log: LearningLog = {
-      ...logData,
-      id: `ll-${Date.now()}`,
-      userId: authUser?.id || 'default',
-    };
-    setLearningLogs(prev => [log, ...prev.filter(l => l.date !== log.date)]);
-    addToast('Learning Logged', `Recorded "${log.title}"`, 'success');
-  };
-
-  const logDeepWorkSession = (sessionData: Omit<DeepWorkSession, 'id' | 'userId'>) => {
-    const session: DeepWorkSession = {
-      ...sessionData,
-      id: `dw-${Date.now()}`,
-      userId: authUser?.id || 'default',
-    };
-    setDeepWorkSessions(prev => [session, ...prev]);
-    addToast('Deep Work Completed', `${session.durationMins}m uninterrupted session logged`, 'success');
-  };
-
-  const logDistraction = (logData: Omit<DistractionLog, 'id' | 'userId'>) => {
-    const log: DistractionLog = {
-      ...logData,
-      id: `dl-${Date.now()}`,
-      userId: authUser?.id || 'default',
-    };
-    setDistractionLogs(prev => [log, ...prev.filter(d => d.date !== log.date)]);
-    addToast('Distraction Logged', 'Digital screen usage updated', 'info');
-  };
-
-  const updateDisciplineStreak = (status: 'CLEAN' | 'RELAPSE', note?: string) => {
-    const today = new Date().toISOString().split('T')[0];
-    setDisciplineStreak(prev => {
-      const nextDays = status === 'CLEAN' ? prev.currentStreakDays + 1 : 0;
-      const nextBest = Math.max(prev.bestStreakDays, nextDays);
-      const nextTotal = status === 'CLEAN' ? prev.totalSuccessfulDays + 1 : prev.totalSuccessfulDays;
-      const newLog = { date: today, status, note, streakAtTime: nextDays };
-      const updatedLogs = [newLog, ...prev.historyLogs.filter(h => h.date !== today)];
-
-      return {
-        ...prev,
-        currentStreakDays: nextDays,
-        bestStreakDays: nextBest,
-        totalSuccessfulDays: nextTotal,
-        lastCheckinDate: today,
-        historyLogs: updatedLogs,
-      };
-    });
-
-    if (status === 'CLEAN') {
-      addToast('Discipline Streak Extended', 'Clean day confirmed. Unbreakable focus maintained.', 'success');
-    } else {
-      addToast('Streak Reset', 'Discipline reset. Acknowledge the trigger, learn, and rebuild instantly.', 'warning');
-    }
-  };
-
-  const addGoal = (newGoal: Omit<PersonalGoal, 'id' | 'createdAt' | 'userId'>) => {
-    const goal: PersonalGoal = {
-      ...newGoal,
-      id: `g-${Date.now()}`,
-      userId: authUser?.id || 'default',
-      createdAt: new Date().toISOString(),
-    };
-    setGoals(prev => [...prev, goal]);
-    addToast('Goal Created', `"${goal.title}" added to milestones`, 'success');
-  };
-
-  const updateGoal = (updated: PersonalGoal) => {
-    setGoals(prev => prev.map(g => (g.id === updated.id ? updated : g)));
-    addToast('Goal Updated', `Updated "${updated.title}"`, 'info');
-  };
-
-  const deleteGoal = (id: string) => {
-    setGoals(prev => prev.filter(g => g.id !== id));
-    addToast('Goal Deleted', 'Goal removed', 'info');
-  };
-
-  const toggleGoalMilestone = (goalId: string, milestoneId: string) => {
-    setGoals(prev =>
-      prev.map(g => {
-        if (g.id === goalId) {
-          const milestones = g.milestones.map(m =>
-            m.id === milestoneId ? { ...m, completed: !m.completed } : m
-          );
-          const completedCount = milestones.filter(m => m.completed).length;
-          const pct = milestones.length > 0 ? (completedCount / milestones.length) * 100 : g.currentValue;
-          return {
-            ...g,
-            milestones,
-            currentValue: Math.round(pct),
-            status: pct >= 100 ? 'COMPLETED' : 'IN_PROGRESS',
-          };
-        }
-        return g;
-      })
-    );
-  };
-
-  const addRule = (newRule: { text: string; category: 'TRADING' | 'LIFESTYLE' | 'DISCIPLINE' | 'HEALTH' }) => {
-    const rule: PersonalRule = {
-      id: `rule-${Date.now()}`,
-      userId: authUser?.id || 'default',
-      text: newRule.text,
-      category: newRule.category,
-      active: true,
-      order: rules.length + 1,
-      verifiedDates: [selectedImprovementDate],
-    };
-    setRules(prev => [...prev, rule]);
-    addToast('Personal Rule Added', 'Rule enshrined in personal code', 'success');
-  };
-
-  const toggleRuleVerification = (ruleId: string, targetDate?: string) => {
-    const date = targetDate || selectedImprovementDate;
-    setRules(prev =>
-      prev.map(r => {
-        if (r.id === ruleId) {
-          const verified = r.verifiedDates || [];
-          const nextDates = verified.includes(date)
-            ? verified.filter(d => d !== date)
-            : [...verified, date];
-          return { ...r, verifiedDates: nextDates };
-        }
-        return r;
-      })
-    );
-  };
-
-  const deleteRule = (id: string) => {
-    setRules(prev => prev.filter(r => r.id !== id));
-    addToast('Rule Removed', 'Personal rule deleted', 'info');
-  };
 
   const currentUserId = authUser?.id || (authUser as any)?.uid || 'default_user_1';
   const currentUserIdRef = useRef(currentUserId);
@@ -1337,28 +802,235 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
     addToast('Signed Out', 'You have been signed out', 'info');
   };
 
+  // Tracking refs to eliminate redundant database calls
+  const isFetchingStateRef = useRef<boolean>(false);
+  const lastFetchedUserIdRef = useRef<string | null>(null);
+  const [isSyncingData, setIsSyncingData] = useState<boolean>(false);
+
+  const applyFetchedState = useCallback((data: any, user: User, initialName: string, realAuthEmail: string) => {
+    if (!data || !data.success) return;
+
+    if (data.profile) {
+      setUserProfile((prev) => ({
+        ...prev,
+        id: data.profile.id || user.id,
+        name: data.profile.name || initialName,
+        email: realAuthEmail || data.profile.email || '',
+        accountCode: data.profile.accountCode || prev.accountCode,
+        experienceLevel: data.profile.experienceLevel || prev.experienceLevel,
+        professionalTitle: data.profile.professionalTitle || prev.professionalTitle,
+        avatarUrl: data.profile.avatarUrl || prev.avatarUrl,
+        country: data.profile.country || prev.country,
+        timezone: data.profile.timezone || prev.timezone,
+        preferredCurrency: data.profile.preferredCurrency || prev.preferredCurrency,
+        bio: data.profile.bio || prev.bio,
+        tradingStyle: data.profile.tradingStyle || prev.tradingStyle,
+        phone: data.profile.phone || prev.phone,
+      }));
+    }
+
+    if (Array.isArray(data.accounts)) setAccounts(data.accounts);
+    if (Array.isArray(data.connections)) setConnections(data.connections);
+    if (Array.isArray(data.trades)) setTrades(data.trades);
+    if (Array.isArray(data.playbooks)) setPlaybooks(data.playbooks);
+    if (Array.isArray(data.strategies)) setStrategies(data.strategies);
+    if (Array.isArray(data.notes)) {
+      setNotes(data.notes);
+      let targetNote: JournalNote | null = null;
+      const activeNotes = data.notes.filter((n: JournalNote) => !n.isDeleted);
+      try {
+        const savedId = localStorage.getItem('tradeforge_active_note_id');
+        if (savedId) {
+          targetNote = activeNotes.find((n: JournalNote) => n.id === savedId) || null;
+        }
+      } catch {}
+      if (!targetNote && activeNotes.length > 0) {
+        targetNote = activeNotes[0];
+      }
+      if (targetNote) {
+        setSelectedNote(targetNote);
+      }
+    }
+    if (Array.isArray(data.folders)) setFolders(data.folders);
+    if (data.riskGoals && typeof data.riskGoals === 'object') {
+      setRiskGoals((prev) => ({ ...prev, ...data.riskGoals }));
+    }
+    if (Array.isArray(data.notifications)) setNotifications(data.notifications);
+    if (Array.isArray(data.communityPosts)) setCommunityPosts(data.communityPosts);
+    if (Array.isArray(data.mentorStudents)) setMentorStudents(data.mentorStudents);
+    if (Array.isArray(data.mentorDirectivesSent)) setMentorDirectivesSent(data.mentorDirectivesSent);
+    if (Array.isArray(data.mentorDirectivesReceived)) setMentorDirectivesReceived(data.mentorDirectivesReceived);
+    if (Array.isArray(data.propFirmAccounts)) {
+      if (data.propFirmAccounts.length > 0) {
+        setPropFirmAccounts(data.propFirmAccounts);
+        persistPropFirmAccounts(data.propFirmAccounts);
+        setSelectedPropFirmAccountId((curr) =>
+          curr && data.propFirmAccounts.some((a: PropFirmAccount) => a.id === curr)
+            ? curr
+            : data.propFirmAccounts[0].id
+        );
+      }
+    }
+
+    if (data.userSettings || data.settings) {
+      const sett = data.userSettings || data.settings;
+      setUserSettings(sett);
+      if (sett.general?.currencyMode) {
+        setCurrencyMode(sett.general.currencyMode);
+      }
+      if (sett.general?.theme) {
+        const resolvedTheme =
+          sett.general.theme === 'system'
+            ? typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches
+              ? 'dark'
+              : 'light'
+            : sett.general.theme;
+        setTheme(resolvedTheme);
+      }
+    }
+    if (Array.isArray(data.customTags) && data.customTags.length > 0) {
+      setCustomTags(data.customTags);
+    }
+    if (Array.isArray(data.importHistory)) {
+      setImportHistory(data.importHistory);
+    }
+    if (Array.isArray(data.activityLogs)) {
+      setActivityLogs(data.activityLogs);
+    }
+    if (Array.isArray(data.userBackups)) {
+      setUserBackups(data.userBackups);
+    }
+
+    fetchLeaderboard();
+  }, []);
+
+  const syncUserData = useCallback(async (user: User, token?: string, force = false) => {
+    if (!user?.id) return;
+    if (!force && isFetchingStateRef.current) return;
+    if (!force && lastFetchedUserIdRef.current === user.id) return;
+
+    isFetchingStateRef.current = true;
+    setIsSyncingData(true);
+
+    const realAuthEmail = user.email && !user.email.includes('duskflow.io') ? user.email : '';
+    const initialName =
+      user.user_metadata?.full_name ||
+      user.user_metadata?.name ||
+      (realAuthEmail ? realAuthEmail.split('@')[0] : 'Trader');
+
+    try {
+      const data = await fetchInitialState(user.id);
+      applyFetchedState(data, user, initialName, realAuthEmail);
+      lastFetchedUserIdRef.current = user.id;
+    } catch (err) {
+      console.warn('[TradingContext] Sync notice:', err);
+    } finally {
+      isFetchingStateRef.current = false;
+      setIsSyncingData(false);
+    }
+  }, [applyFetchedState]);
+
+  const refreshInitialState = useCallback(async () => {
+    if (authUser) {
+      await syncUserData(authUser, apiAuthToken || undefined, true);
+    }
+  }, [authUser, apiAuthToken, syncUserData]);
+
+  const resendEmailVerification = useCallback(async (email: string) => {
+    return await resendVerificationEmail(email);
+  }, []);
+
   // Listen to Supabase Auth state changes and load user-isolated data
   useEffect(() => {
     let isMounted = true;
 
-    const { data: { subscription } } = onAuthStateChange(async (event, session) => {
+    // 1. Process any incoming redirect parameters (e.g. Email verification PKCE code, token_hash, or error)
+    (async () => {
+      try {
+        const redirectResult = await handleAuthRedirect();
+        if (!isMounted) return;
+        if (redirectResult.error) {
+          addToast('Verification Notice', redirectResult.error.message, 'warning');
+        } else if (redirectResult.handled && redirectResult.type === 'signup_confirmation') {
+          addToast('Email Verified', 'Your email has been confirmed! Welcome to TradeForge.', 'success');
+        }
+      } catch (err) {
+        console.warn('[AuthRedirect] Notice:', err);
+      }
+
+      // 2. Immediately check session to unblock UI on refresh with zero lag
+      try {
+        const session = await getSession();
+        if (!isMounted) return;
+        if (session?.user) {
+          activeUserIdRef.current = session.user.id;
+          setApiAuthToken(session.access_token);
+          setApiAuthTokenState(session.access_token);
+          setAuthUser(session.user);
+          setIsAuthenticated(true);
+          // UNBLOCK UI IMMEDIATELY
+          setIsAuthLoading(false);
+
+          try {
+            localStorage.setItem('tradeforge_authenticated', 'true');
+            localStorage.setItem('tradeforge_user_id', session.user.id);
+            const userPropKey = `tf_prop_firm_accounts_${session.user.id}`;
+            const savedProps = localStorage.getItem(userPropKey);
+            if (savedProps) {
+              const parsed = JSON.parse(savedProps);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                setPropFirmAccounts(parsed);
+                setSelectedPropFirmAccountId(parsed[0].id);
+              }
+            }
+          } catch {}
+
+          // Background sync from Supabase
+          syncUserData(session.user, session.access_token);
+        } else {
+          setIsAuthLoading(false);
+        }
+      } catch {
+        if (isMounted) setIsAuthLoading(false);
+      }
+    })();
+
+    // 3. Keep state synchronized with auth change events
+    const {
+      data: { subscription },
+    } = onAuthStateChange(async (event, session) => {
       if (!isMounted) return;
 
-      // Reset state completely for clean user switching / logout
-      setAccounts([]);
-      setConnections([]);
-      setTrades([]);
-      setPlaybooks([]);
-      setStrategies([]);
-      setNotes([]);
-      setFolders([]);
-      setSelectedNote(null);
-      setPropFirmAccounts([]);
-      setSelectedPropFirmAccountId('');
-      setMentorStudents([]);
-      setMentorDirectivesSent([]);
-      setMentorDirectivesReceived([]);
-      setRiskGoals({});
+      if (event === 'TOKEN_REFRESHED') {
+        if (session?.access_token) {
+          setApiAuthToken(session.access_token);
+          setApiAuthTokenState(session.access_token);
+        }
+        return;
+      }
+
+      const previousUserId = activeUserIdRef.current;
+      const newUserId = session?.user?.id || null;
+
+      // Only reset state if switching to a different user or explicitly logging out
+      if (previousUserId && previousUserId !== newUserId) {
+        setAccounts([]);
+        setConnections([]);
+        setTrades([]);
+        setPlaybooks([]);
+        setStrategies([]);
+        setNotes([]);
+        setFolders([]);
+        setSelectedNote(null);
+        setPropFirmAccounts([]);
+        setSelectedPropFirmAccountId('');
+        setMentorStudents([]);
+        setMentorDirectivesSent([]);
+        setMentorDirectivesReceived([]);
+        setRiskGoals({});
+        lastFetchedUserIdRef.current = null;
+      }
+      activeUserIdRef.current = newUserId;
 
       if (session?.user) {
         const user = session.user;
@@ -1367,78 +1039,29 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
         setApiAuthTokenState(token);
         setAuthUser(user);
         setIsAuthenticated(true);
+        setIsAuthLoading(false);
 
         try {
           localStorage.setItem('tradeforge_authenticated', 'true');
-          // Load user-scoped prop firm accounts
+          localStorage.setItem('tradeforge_user_id', user.id);
           const userPropKey = `tf_prop_firm_accounts_${user.id}`;
           const savedProps = localStorage.getItem(userPropKey);
           if (savedProps) {
             const parsed = JSON.parse(savedProps);
-            if (Array.isArray(parsed)) {
+            if (Array.isArray(parsed) && parsed.length > 0) {
               setPropFirmAccounts(parsed);
-              if (parsed.length > 0) setSelectedPropFirmAccountId(parsed[0].id);
+              setSelectedPropFirmAccountId(parsed[0].id);
             }
           }
-        } catch {
-          // ignore
-        }
+        } catch {}
 
-        const initialName =
-          user.user_metadata?.full_name ||
-          user.user_metadata?.name ||
-          user.email?.split('@')[0] ||
-          'Trader';
-
-        setUserProfile({
-          id: user.id,
-          name: initialName,
-          email: user.email || '',
-          accountCode: '',
-          experienceLevel: 'Intermediate',
-        });
-
-        const data = await fetchInitialState();
-        if (!isMounted || !data || !data.success) return;
-
-        if (data.profile) {
-          setUserProfile((prev) => ({
-            ...prev,
-            id: data.profile.id || user.id,
-            name: data.profile.name || initialName,
-            email: data.profile.email || user.email || '',
-            accountCode: data.profile.accountCode || '',
-            experienceLevel: data.profile.experienceLevel || prev.experienceLevel,
-            avatarUrl: data.profile.avatarUrl,
-          }));
-        }
-
-        if (Array.isArray(data.accounts)) setAccounts(data.accounts);
-        if (Array.isArray(data.connections)) setConnections(data.connections);
-        if (Array.isArray(data.trades)) setTrades(data.trades);
-        if (Array.isArray(data.playbooks)) setPlaybooks(data.playbooks);
-        if (Array.isArray(data.strategies)) setStrategies(data.strategies);
-        if (Array.isArray(data.notes)) {
-          setNotes(data.notes);
-          if (data.notes.length > 0) setSelectedNote(data.notes[0]);
-        }
-        if (Array.isArray(data.folders)) setFolders(data.folders);
-        if (data.riskGoals && typeof data.riskGoals === 'object') {
-          setRiskGoals((prev) => ({ ...prev, ...data.riskGoals }));
-        }
-        if (Array.isArray(data.notifications)) setNotifications(data.notifications);
-        if (Array.isArray(data.communityPosts)) setCommunityPosts(data.communityPosts);
-        if (Array.isArray(data.mentorStudents)) setMentorStudents(data.mentorStudents);
-        if (Array.isArray(data.mentorDirectivesSent)) setMentorDirectivesSent(data.mentorDirectivesSent);
-        if (Array.isArray(data.mentorDirectivesReceived)) setMentorDirectivesReceived(data.mentorDirectivesReceived);
-        
-        // Load leaderboard from real persistent database
-        fetchLeaderboard();
+        syncUserData(user, token);
       } else {
         setApiAuthToken(null);
         setApiAuthTokenState(null);
         setAuthUser(null);
         setIsAuthenticated(false);
+        setIsAuthLoading(false);
         setUserProfile({
           id: '',
           name: 'Trader',
@@ -1451,9 +1074,9 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
 
     return () => {
       isMounted = false;
-      subscription?.unsubscribe?.();
+      subscription.unsubscribe();
     };
-  }, []);
+  }, [syncUserData]);
 
   // Theme effect
   useEffect(() => {
@@ -1511,8 +1134,17 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
   }, []);
 
   const addToast = (title: string, message: string, type: 'success' | 'error' | 'warning' | 'info' = 'info') => {
-    const id = 't-' + Date.now() + Math.random().toString(36).substring(2, 5);
-    setToasts(prev => [...prev, { id, title, message, type }]);
+    // Deduplicate rapid identical toasts (2s debounce)
+    const toastKey = `${title}:::${message || ''}:::${type}`;
+    const now = Date.now();
+    const lastTime = toastCacheRef.current.get(toastKey);
+    if (lastTime && now - lastTime < 2000) {
+      return;
+    }
+    toastCacheRef.current.set(toastKey, now);
+
+    const id = 't-' + now + Math.random().toString(36).substring(2, 5);
+    setToasts(prev => [...prev, { id, title, message, type }].slice(-3));
     setTimeout(() => {
       removeToast(id);
     }, 4000);
@@ -1535,20 +1167,65 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const updateUserProfile = async (profile: Partial<UserProfile>) => {
-    setUserProfile(prev => {
-      const merged = { ...prev, ...profile };
-      updateUserProfileApi({
-        fullName: merged.name,
-        name: merged.name,
-        email: merged.email,
-        accountCode: merged.accountCode || undefined,
-        experienceLevel: merged.experienceLevel,
-        avatarUrl: merged.avatarUrl,
-      }).catch(e => console.warn('Failed to sync profile update to database:', e));
-      return merged;
-    });
-    addToast('Profile Updated', 'User profile settings saved', 'success');
+  const updateUserProfile = async (profileUpdate: Partial<UserProfile>) => {
+    try {
+      setUserProfile(prev => {
+        const merged = { ...prev, ...profileUpdate };
+        
+        // Immediately sync related fields into userSettings so global preferences update instantly
+        setUserSettings(prevSettings => ({
+          ...prevSettings,
+          general: {
+            ...prevSettings.general,
+            ...(profileUpdate.timezone ? { timezone: profileUpdate.timezone } : {}),
+            ...(profileUpdate.preferredCurrency ? { currency: profileUpdate.preferredCurrency } : {}),
+          },
+          profile: {
+            ...prevSettings.profile,
+            ...(profileUpdate.bio !== undefined ? { bio: profileUpdate.bio } : {}),
+            ...(profileUpdate.country !== undefined ? { country: profileUpdate.country } : {}),
+            ...(profileUpdate.professionalTitle !== undefined ? { professionalTitle: profileUpdate.professionalTitle } : {}),
+            ...(profileUpdate.tradingStyle !== undefined ? { tradingStyle: profileUpdate.tradingStyle } : {}),
+            ...(profileUpdate.phone !== undefined ? { phone: profileUpdate.phone } : {}),
+          },
+        }));
+
+        updateUserProfileApi({
+          fullName: merged.name,
+          name: merged.name,
+          email: merged.email,
+          accountCode: merged.accountCode || undefined,
+          experienceLevel: merged.experienceLevel,
+          avatarUrl: merged.avatarUrl,
+          country: merged.country,
+          timezone: merged.timezone,
+          preferredCurrency: merged.preferredCurrency,
+          professionalTitle: merged.professionalTitle,
+          bio: merged.bio,
+          tradingStyle: merged.tradingStyle,
+          phone: merged.phone,
+        })
+          .then(res => {
+            if (res?.profile) {
+              setUserProfile(curr => ({
+                ...curr,
+                ...res.profile,
+                name: res.profile.fullName || res.profile.name || curr.name,
+              }));
+            }
+            if (res?.settings) {
+              setUserSettings(res.settings);
+            }
+          })
+          .catch(e => console.warn('Failed to sync profile update to database:', e));
+
+        return merged;
+      });
+      addToast('Profile Updated', 'Your identity, credentials and preferences have been saved.', 'success');
+    } catch (err: any) {
+      console.error('updateUserProfile error:', err);
+      addToast('Update Failed', err?.message || 'Failed to update profile', 'error');
+    }
   };
 
   const regenerateAccountCode = (): string => {
@@ -1694,7 +1371,19 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
   const filteredTrades = useMemo(() => {
     let result = trades;
     if (selectedAccountId !== 'all') {
-      result = result.filter(t => t.accountId === selectedAccountId);
+      const isPropFirm = propFirmAccounts.some(pf => pf.id === selectedAccountId);
+      if (isPropFirm) {
+        const pf = propFirmAccounts.find(p => p.id === selectedAccountId);
+        result = result.filter(t => {
+          if (t.propFirmAccountId === selectedAccountId) return true;
+          if (pf?.tradingAccountLink && pf.tradingAccountLink !== 'all' && t.accountId === pf.tradingAccountLink) {
+            return !t.propFirmAccountId || t.propFirmAccountId === selectedAccountId;
+          }
+          return false;
+        });
+      } else {
+        result = result.filter(t => t.accountId === selectedAccountId);
+      }
     }
     if (dateRange.startDate) {
       const start = new Date(dateRange.startDate + 'T00:00:00');
@@ -1713,7 +1402,7 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
       });
     }
     return result;
-  }, [trades, selectedAccountId, dateRange]);
+  }, [trades, selectedAccountId, dateRange, propFirmAccounts]);
 
   const computedPlaybooks = useMemo(() => {
     return playbooks.map(pb => {
@@ -1860,6 +1549,16 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
     setAccounts(prev => prev.filter(a => a.id !== id));
     deleteAccountApi(id);
     if (selectedAccountId === id) setSelectedAccountId('all');
+    if (
+      userSettings.tradeDefaults?.defaultAccountId === id ||
+      userSettings.general?.defaultAccountId === id
+    ) {
+      updateUserSettings(prev => ({
+        ...prev,
+        tradeDefaults: prev.tradeDefaults ? { ...prev.tradeDefaults, defaultAccountId: '' } : undefined,
+        general: prev.general ? { ...prev.general, defaultAccountId: '' } : undefined,
+      }));
+    }
     addToast('Account Removed', 'Account deleted', 'warning');
   };
 
@@ -1925,73 +1624,326 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   // Notes CRUD
-  const addNote = (noteData: Omit<JournalNote, 'id'>): JournalNote => {
+  const addNote = async (noteData: Omit<JournalNote, 'id'>): Promise<JournalNote | null> => {
     const newNote: JournalNote = { ...noteData, id: 'note-' + Date.now() };
+    const success = await saveNoteApi(newNote);
+    if (!success) {
+      addToast('Error', 'Failed to save note to database', 'error');
+      return null;
+    }
     setNotes(prev => [newNote, ...prev]);
     setSelectedNote(newNote);
-    saveNoteApi(newNote);
     addToast('Note Created', newNote.title, 'success');
     return newNote;
   };
 
-  const updateNote = (note: JournalNote) => {
+  const updateNote = async (note: JournalNote, options?: { silent?: boolean }): Promise<boolean> => {
+    const success = await saveNoteApi(note);
+    if (!success) {
+      addToast('Error', 'Failed to update note in database', 'error');
+      return false;
+    }
     setNotes(prev => prev.map(n => n.id === note.id ? note : n));
     if (selectedNote?.id === note.id) setSelectedNote(note);
-    saveNoteApi(note);
-  };
-
-  const deleteNote = (id: string) => {
-    setNotes(prev => prev.filter(n => n.id !== id));
-    deleteNoteApi(id);
-    if (selectedNote?.id === id) {
-      setSelectedNote(notes.find(n => n.id !== id) || null);
+    if (!options?.silent) {
+      addToast('Note Updated', note.title, 'success');
     }
-    addToast('Note Deleted', '', 'info');
+    return true;
   };
 
-  const addFolder = (name: string, icon = 'Folder') => {
+  const deleteNote = async (id: string): Promise<boolean> => {
+    return await softDeleteNote(id);
+  };
+
+  const softDeleteNote = async (id: string): Promise<boolean> => {
+    const targetNote = notes.find(n => n.id === id);
+    const origFolder = targetNote?.folderId || '';
+    const nowIso = new Date().toISOString();
+
+    const success = await softDeleteNoteApi(id, origFolder);
+    if (!success) {
+      addToast('Error', 'Failed to move note to Trash in database', 'error');
+      return false;
+    }
+
+    setNotes(prev => prev.map(n => n.id === id ? {
+      ...n,
+      isDeleted: true,
+      deletedAt: nowIso,
+      deletedBy: currentUserId,
+      originalFolderId: origFolder,
+    } : n));
+
+    if (selectedNote?.id === id) {
+      const remainingActive = notes.filter(n => n.id !== id && !n.isDeleted);
+      setSelectedNote(remainingActive.length > 0 ? remainingActive[0] : null);
+    }
+
+    addToast('Moved to Trash', 'Note moved to Trash. Permanently deleted in 2 days.', 'info');
+    return true;
+  };
+
+  const restoreNote = async (id: string, originalFolderId?: string): Promise<boolean> => {
+    const target = notes.find(n => n.id === id);
+    const restoredFolderId = originalFolderId !== undefined ? originalFolderId : (target?.originalFolderId || target?.folderId || '');
+
+    const success = await restoreNoteApi(id, restoredFolderId);
+    if (!success) {
+      addToast('Error', 'Failed to restore note from database', 'error');
+      return false;
+    }
+
+    const restoredNote: JournalNote | undefined = target ? {
+      ...target,
+      isDeleted: false,
+      deletedAt: undefined,
+      deletedBy: undefined,
+      folderId: restoredFolderId,
+    } : undefined;
+
+    setNotes(prev => prev.map(n => n.id === id ? (restoredNote || { ...n, isDeleted: false, deletedAt: undefined, deletedBy: undefined, folderId: restoredFolderId }) : n));
+
+    if (restoredNote) {
+      setSelectedNote(restoredNote);
+    }
+    addToast('Note Restored', 'Note has been restored to your journal', 'success');
+    return true;
+  };
+
+  const permanentDeleteNote = async (id: string): Promise<boolean> => {
+    const targetNote = notes.find(n => n.id === id);
+
+    // Delete attachments and screenshots from Supabase Storage
+    if (targetNote) {
+      const urlsToDelete: string[] = [
+        ...(targetNote.screenshots || []),
+        ...(targetNote.attachments?.map(a => a.url) || []),
+      ].filter(Boolean);
+      if (urlsToDelete.length > 0) {
+        SupabaseStorageService.deleteMultipleJournalAttachments(urlsToDelete).catch(e =>
+          console.warn('[Storage] Error deleting note attachments:', e)
+        );
+      }
+    }
+
+    const success = await permanentDeleteNoteApi(id);
+    if (!success) {
+      addToast('Error', 'Failed to permanently delete note from database', 'error');
+      return false;
+    }
+
+    setNotes(prev => prev.filter(n => n.id !== id));
+    if (selectedNote?.id === id) {
+      const remainingActive = notes.filter(n => n.id !== id && !n.isDeleted);
+      setSelectedNote(remainingActive.length > 0 ? remainingActive[0] : null);
+    }
+
+    addToast('Permanently Deleted', 'Note and attachments deleted forever', 'info');
+    return true;
+  };
+
+  const addFolder = async (name: string, icon = 'Folder'): Promise<JournalFolder | null> => {
     const trimmed = name.trim();
-    if (!trimmed) return;
+    if (!trimmed) return null;
     const newFolder: JournalFolder = {
       id: 'f-' + Date.now(),
       name: trimmed,
       icon,
       count: 0,
+      isDeleted: false,
     };
+    const success = await saveFolderApi(newFolder);
+    if (!success) {
+      addToast('Error', 'Failed to save folder to database', 'error');
+      return null;
+    }
     setFolders(prev => [...prev, newFolder]);
     setSelectedFolderId(newFolder.id);
-    saveFolderApi(newFolder);
     addToast('Folder Created', `Folder "${trimmed}" ready`, 'success');
+    return newFolder;
   };
 
-  const updateFolder = (id: string, name: string, icon?: string) => {
+  const updateFolder = async (id: string, name: string, icon?: string): Promise<boolean> => {
     const trimmed = name.trim();
-    if (!trimmed) return;
+    if (!trimmed) return false;
     const folder = folders.find(f => f.id === id);
-    const updated = { ...(folder || { id, name: trimmed, icon: icon || 'Folder', count: 0 }), name: trimmed, icon: icon || folder?.icon };
+    const updated: JournalFolder = {
+      ...(folder || { id, name: trimmed, icon: icon || 'Folder', count: 0 }),
+      name: trimmed,
+      icon: icon || folder?.icon || 'Folder',
+    };
+    const success = await saveFolderApi(updated);
+    if (!success) {
+      addToast('Error', 'Failed to update folder in database', 'error');
+      return false;
+    }
     setFolders(prev => prev.map(f => f.id === id ? updated : f));
-    saveFolderApi(updated);
     addToast('Folder Saved', trimmed, 'success');
+    return true;
   };
 
-  const deleteFolder = (id: string) => {
+  const deleteFolder = async (id: string): Promise<boolean> => {
+    return await softDeleteFolder(id);
+  };
+
+  const softDeleteFolder = async (id: string): Promise<boolean> => {
     if (['f-all', 'f-trade', 'f-daily', 'f-sessions', 'f-goals', 'f-plan', 'f-templates'].includes(id)) {
       addToast('System Folder', 'Default system folders cannot be deleted', 'warning');
-      return;
+      return false;
     }
-    setNotes(prev => prev.map(n => n.folderId === id ? { ...n, folderId: 'f-daily' } : n));
-    setFolders(prev => prev.filter(f => f.id !== id));
-    deleteFolderApi(id);
+    const success = await softDeleteFolderApi(id);
+    if (!success) {
+      addToast('Error', 'Failed to delete folder from database', 'error');
+      return false;
+    }
+    const nowIso = new Date().toISOString();
+    // Soft delete folder and notes in state
+    setFolders(prev => prev.map(f => f.id === id ? { ...f, isDeleted: true, deletedAt: nowIso, deletedBy: currentUserId } : f));
+    setNotes(prev => prev.map(n => n.folderId === id ? { ...n, isDeleted: true, deletedAt: nowIso, deletedBy: currentUserId, originalFolderId: id } : n));
+
     if (selectedFolderId === id) setSelectedFolderId('f-all');
-    addToast('Folder Removed', 'Notes moved to Daily Journal', 'info');
+    if (selectedNote && selectedNote.folderId === id) {
+      const remainingActive = notes.filter(n => n.folderId !== id && !n.isDeleted);
+      setSelectedNote(remainingActive.length > 0 ? remainingActive[0] : null);
+    }
+    addToast('Folder Moved to Trash', 'Folder and its notes moved to Trash (auto-deleted in 2 days)', 'info');
+    return true;
   };
 
-  // Goals
-  const updateRiskGoals = (goals: Partial<RiskGoalSettings>) => {
-    const updated = { ...riskGoals, ...goals };
-    setRiskGoals(updated);
-    saveRiskGoalsApi(updated);
+  const restoreFolder = async (id: string): Promise<boolean> => {
+    const success = await restoreFolderApi(id);
+    if (!success) {
+      addToast('Error', 'Failed to restore folder from database', 'error');
+      return false;
+    }
+    setFolders(prev => prev.map(f => f.id === id ? { ...f, isDeleted: false, deletedAt: undefined, deletedBy: undefined } : f));
+    setNotes(prev => prev.map(n => (n.folderId === id || n.originalFolderId === id) ? { ...n, isDeleted: false, deletedAt: undefined, deletedBy: undefined, folderId: id } : n));
+    addToast('Folder Restored', 'Folder and its notes have been restored', 'success');
+    return true;
+  };
+
+  const permanentDeleteFolder = async (id: string): Promise<boolean> => {
+    // Delete attachments of all child notes
+    const childNotes = notes.filter(n => n.folderId === id || n.originalFolderId === id);
+    const urlsToDelete = childNotes.flatMap(n => [
+      ...(n.screenshots || []),
+      ...(n.attachments?.map(a => a.url) || []),
+    ]).filter(Boolean);
+
+    if (urlsToDelete.length > 0) {
+      SupabaseStorageService.deleteMultipleJournalAttachments(urlsToDelete).catch(e =>
+        console.warn('[Storage] Error deleting folder attachments:', e)
+      );
+    }
+
+    const success = await permanentDeleteFolderApi(id);
+    if (!success) {
+      addToast('Error', 'Failed to permanently delete folder from database', 'error');
+      return false;
+    }
+
+    setFolders(prev => prev.filter(f => f.id !== id));
+    setNotes(prev => prev.filter(n => n.folderId !== id && n.originalFolderId !== id));
+
+    if (selectedFolderId === id) setSelectedFolderId('f-all');
+    addToast('Folder Permanently Deleted', 'Folder and its notes permanently removed', 'info');
+    return true;
+  };
+
+  const emptyTrash = async (): Promise<void> => {
+    const deletedNotes = notes.filter(n => n.isDeleted);
+    const deletedFolders = folders.filter(f => f.isDeleted);
+
+    // Delete all attachments
+    const urlsToDelete = deletedNotes.flatMap(n => [
+      ...(n.screenshots || []),
+      ...(n.attachments?.map(a => a.url) || []),
+    ]).filter(Boolean);
+
+    if (urlsToDelete.length > 0) {
+      SupabaseStorageService.deleteMultipleJournalAttachments(urlsToDelete).catch(console.warn);
+    }
+
+    // Call permanent delete for each note & folder
+    await Promise.allSettled([
+      ...deletedNotes.map(n => permanentDeleteNoteApi(n.id)),
+      ...deletedFolders.map(f => permanentDeleteFolderApi(f.id)),
+    ]);
+
+    setNotes(prev => prev.filter(n => !n.isDeleted));
+    setFolders(prev => prev.filter(f => !f.isDeleted));
+    addToast('Trash Emptied', 'All items in trash permanently deleted', 'info');
+  };
+
+  const purgeExpiredTrash = async (): Promise<void> => {
+    const twoDaysAgo = Date.now() - 2 * 24 * 60 * 60 * 1000;
+    const expiredNotes = notes.filter(n => n.isDeleted && n.deletedAt && new Date(n.deletedAt).getTime() <= twoDaysAgo);
+
+    if (expiredNotes.length > 0) {
+      const urlsToDelete = expiredNotes.flatMap(n => [
+        ...(n.screenshots || []),
+        ...(n.attachments?.map(a => a.url) || []),
+      ]).filter(Boolean);
+      if (urlsToDelete.length > 0) {
+        SupabaseStorageService.deleteMultipleJournalAttachments(urlsToDelete).catch(console.warn);
+      }
+    }
+
+    await purgeExpiredTrashApi();
+
+    setNotes(prev => prev.filter(n => !(n.isDeleted && n.deletedAt && new Date(n.deletedAt).getTime() <= twoDaysAgo)));
+    setFolders(prev => prev.filter(f => !(f.isDeleted && f.deletedAt && new Date(f.deletedAt).getTime() <= twoDaysAgo)));
+  };
+
+  // Goals & Risk Engine
+  const getAccountRiskGoals = useCallback((accountId?: string): RiskGoalSettings => {
+    if (accountId && accountId !== 'all' && accountRiskProfiles[accountId]) {
+      return { ...riskGoals, ...accountRiskProfiles[accountId] };
+    }
+    return riskGoals;
+  }, [riskGoals, accountRiskProfiles]);
+
+  const updateRiskGoals = async (goals: Partial<RiskGoalSettings>, accountId?: string) => {
+    const isSpecific = accountId && accountId !== 'all';
+    if (isSpecific) {
+      const existing = accountRiskProfiles[accountId] || riskGoals;
+      const updated: RiskGoalSettings = { ...existing, ...goals, tradingAccountId: accountId };
+      setAccountRiskProfiles(prev => ({ ...prev, [accountId]: updated }));
+      await saveRiskGoalsApi(updated, accountId);
+    } else {
+      const updated: RiskGoalSettings = { ...riskGoals, ...goals };
+      setRiskGoals(updated);
+      await saveRiskGoalsApi(updated);
+    }
     addToast('Risk Rules Updated', 'New targets and limit parameters saved', 'success');
+  };
+
+  const unlockRiskAccount = async (accountId: string, unlockReason: string, unlockedBy: string = 'Trader'): Promise<boolean> => {
+    try {
+      const res = await unlockRiskAccountApi(accountId, unlockReason, unlockedBy);
+      if (res) {
+        if (accountId && accountId !== 'all') {
+          setAccountRiskProfiles(prev => ({ ...prev, [accountId]: res }));
+        } else {
+          setRiskGoals(res);
+        }
+      } else {
+        const fallbackGoals: Partial<RiskGoalSettings> = {
+          circuitBreakerTriggered: false,
+          circuitBreakerState: 'ARMED',
+          hardLockEnabled: false,
+          unlockedAt: new Date().toISOString(),
+          unlockedBy,
+          unlockReason,
+        };
+        await updateRiskGoals(fallbackGoals, accountId);
+      }
+      addToast('Account Unlocked', 'Circuit Breaker reset. Trading authorization restored.', 'success');
+      return true;
+    } catch (e) {
+      addToast('Unlock Error', 'Failed to unlock account', 'error');
+      return false;
+    }
   };
 
   // Calendar
@@ -2124,17 +2076,21 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   // Formatters
   const formatCurrency = (val: number, customMode?: CurrencyDisplayMode) => {
-    const mode = customMode || currencyMode;
+    const mode = customMode || currencyMode || userSettings.general?.currencyMode || 'USD';
     if (mode === 'PRIVACY') {
       return '••••••';
     }
     if (mode === 'PERCENT') {
-      const base = 50000;
+      const activeAccount = accounts.find(a => a.id === selectedAccountId);
+      const base = activeAccount?.startingBalance || 50000;
       const pct = (val / base) * 100;
-      return `${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%`;
+      const precision = typeof userSettings.general?.percentagePrecision === 'number'
+        ? userSettings.general.percentagePrecision
+        : 2;
+      return `${pct >= 0 ? '+' : ''}${pct.toFixed(precision)}%`;
     }
     if (mode === 'R_MULTIPLE') {
-      const riskPerR = 400;
+      const riskPerR = userSettings.tradeDefaults?.maxPlannedRisk || 400;
       const r = val / riskPerR;
       return `${r >= 0 ? '+' : ''}${r.toFixed(2)}R`;
     }
@@ -2142,17 +2098,68 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
       const ticks = Math.round(val / 12.5);
       return `${ticks >= 0 ? '+' : ''}${ticks} ticks`;
     }
-    const formatted = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 2,
-    }).format(Math.abs(val));
+
+    const activeCurrency = userProfile.preferredCurrency || userSettings.general?.currency || 'USD';
+    const numberFormatLocale = userSettings.general?.numberFormat || 'en-US';
+    const decimalPrecision = typeof userSettings.general?.decimalPrecision === 'number'
+      ? userSettings.general.decimalPrecision
+      : 2;
+
+    let formatted = '';
+    try {
+      formatted = new Intl.NumberFormat(numberFormatLocale, {
+        style: 'currency',
+        currency: activeCurrency,
+        minimumFractionDigits: decimalPrecision,
+        maximumFractionDigits: decimalPrecision,
+      }).format(Math.abs(val));
+    } catch {
+      try {
+        formatted = new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: activeCurrency,
+          minimumFractionDigits: decimalPrecision,
+          maximumFractionDigits: decimalPrecision,
+        }).format(Math.abs(val));
+      } catch {
+        formatted = new Intl.NumberFormat('en-US', {
+          style: 'currency',
+          currency: 'USD',
+          minimumFractionDigits: decimalPrecision,
+          maximumFractionDigits: decimalPrecision,
+        }).format(Math.abs(val));
+      }
+    }
 
     return val < 0 ? `-${formatted}` : formatted;
   };
 
   const formatRMultiple = (r: number) => {
     return `${r >= 0 ? '+' : ''}${r.toFixed(2)}R`;
+  };
+
+  const currentTimezone = userProfile.timezone || userSettings.general?.timezone || 'America/New_York';
+  const currentDateFormat = userSettings.general?.dateFormat || 'YYYY-MM-DD';
+  const currentTimeFormat = userSettings.general?.timeFormat || '12h';
+
+  const formatDate = (
+    dateInput: string | number | Date | null | undefined,
+    options?: Intl.DateTimeFormatOptions
+  ) => {
+    return formatTimezoneDate(dateInput, currentTimezone, options, currentDateFormat);
+  };
+
+  const formatTime = (
+    dateInput: string | number | Date | null | undefined,
+    options?: Intl.DateTimeFormatOptions
+  ) => {
+    return formatTimezoneTime(dateInput, currentTimezone, options, currentTimeFormat);
+  };
+
+  const formatTradeTimestamp = (
+    dateInput: string | number | Date | null | undefined
+  ) => {
+    return utilsFormatTradeTimestamp(dateInput, currentTimezone, currentDateFormat, currentTimeFormat);
   };
 
   const resetToSampleData = () => {
@@ -2169,6 +2176,196 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
     addToast('Cleared All Trades', 'Trade history wiped clean', 'warning');
   };
 
+  // Institutional Settings Handlers
+  const updateUserSettings = async (
+    newSettings: Partial<UserSettings> | ((prev: UserSettings) => UserSettings)
+  ) => {
+    setUserSettings((prev) => {
+      const updated = typeof newSettings === 'function' ? newSettings(prev) : { ...prev, ...newSettings };
+      if (updated.general?.theme) {
+        const resolvedTheme = updated.general.theme === 'system'
+          ? (typeof window !== 'undefined' && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+          : updated.general.theme;
+        if (resolvedTheme !== theme) {
+          setTheme(resolvedTheme);
+        }
+      }
+      if (updated.general?.currencyMode && updated.general.currencyMode !== currencyMode) {
+        setCurrencyMode(updated.general.currencyMode);
+      }
+      saveUserSettingsApi(updated, updated.accountId).catch((err) =>
+        console.warn('Failed to persist user settings:', err)
+      );
+      return updated;
+    });
+  };
+
+  const saveUserSettingsToServer = async (settingsToSave?: UserSettings, accountId?: string): Promise<UserSettings> => {
+    const target = settingsToSave || userSettings;
+    try {
+      const saved = await saveUserSettingsApi(target, accountId);
+      setUserSettings(saved);
+      addToast('Settings Saved', 'All preferences and rules persisted successfully', 'success');
+      return saved;
+    } catch (err: any) {
+      addToast('Save Failed', err?.message || 'Could not persist settings', 'error');
+      throw err;
+    }
+  };
+
+  const addCustomTag = async (tag: Omit<CustomTag, 'id' | 'createdAt'>): Promise<CustomTag> => {
+    const newTag: CustomTag = {
+      ...tag,
+      id: `tag-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: new Date().toISOString(),
+    };
+    setCustomTags((prev) => [newTag, ...prev]);
+    try {
+      const saved = await saveCustomTagApi(newTag);
+      addToast('Tag Created', `Tag "${saved.name}" added to library`, 'success');
+      return saved;
+    } catch (err) {
+      console.warn('Failed to save tag to server:', err);
+      return newTag;
+    }
+  };
+
+  const updateCustomTag = async (tag: CustomTag): Promise<CustomTag> => {
+    setCustomTags((prev) => prev.map((t) => (t.id === tag.id ? tag : t)));
+    try {
+      const saved = await saveCustomTagApi(tag);
+      addToast('Tag Updated', `Tag "${saved.name}" updated`, 'success');
+      return saved;
+    } catch (err) {
+      console.warn('Failed to update tag:', err);
+      return tag;
+    }
+  };
+
+  const deleteCustomTag = async (id: string): Promise<void> => {
+    setCustomTags((prev) => prev.filter((t) => t.id !== id));
+    try {
+      await deleteCustomTagApi(id);
+      addToast('Tag Deleted', 'Tag removed from library', 'info');
+    } catch (err) {
+      console.warn('Failed to delete tag:', err);
+    }
+  };
+
+  const addImportHistoryRecord = async (item: ImportHistoryItem): Promise<void> => {
+    setImportHistory((prev) => [item, ...prev]);
+    try {
+      await recordImportHistoryApi(item);
+    } catch (err) {
+      console.warn('Failed to save import history:', err);
+    }
+  };
+
+  const addActivityLog = async (item: Omit<ActivityLogItem, 'id' | 'createdAt'>): Promise<void> => {
+    const logItem: ActivityLogItem = {
+      ...item,
+      id: `act-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+      createdAt: new Date().toISOString(),
+    };
+    setActivityLogs((prev) => [logItem, ...prev]);
+    try {
+      await recordActivityLogApi(item);
+    } catch (err) {
+      console.warn('Failed to record activity log:', err);
+    }
+  };
+
+  const createBackup = async (name?: string, backupData?: any): Promise<UserBackup> => {
+    const dataToStore = backupData || {
+      trades,
+      notes,
+      folders,
+      playbooks,
+      strategies,
+      riskGoals,
+      settings: userSettings,
+      tags: customTags,
+      exportDate: new Date().toISOString(),
+    };
+    try {
+      const backup = await createUserBackupApi(name, dataToStore);
+      setUserBackups((prev) => [backup, ...prev]);
+      addToast('Backup Created', `Snapshot "${backup.name}" created successfully`, 'success');
+      return backup;
+    } catch (err: any) {
+      addToast('Backup Failed', err?.message || 'Could not create backup', 'error');
+      throw err;
+    }
+  };
+
+  const deleteBackup = async (id: string): Promise<void> => {
+    setUserBackups((prev) => prev.filter((b) => b.id !== id));
+    try {
+      await deleteUserBackupApi(id);
+      addToast('Backup Deleted', 'Backup snapshot removed', 'info');
+    } catch (err) {
+      console.warn('Failed to delete backup:', err);
+    }
+  };
+
+  const restoreBackup = async (backup: UserBackup): Promise<void> => {
+    try {
+      const data = backup.backupData;
+      if (!data) throw new Error('Backup data is empty');
+      if (Array.isArray(data.trades)) {
+        setTrades(data.trades);
+      }
+      if (Array.isArray(data.notes)) {
+        setNotes(data.notes);
+      }
+      if (Array.isArray(data.folders)) {
+        setFolders(data.folders);
+      }
+      if (Array.isArray(data.playbooks)) {
+        setPlaybooks(data.playbooks);
+      }
+      if (Array.isArray(data.strategies)) {
+        setStrategies(data.strategies);
+      }
+      if (data.settings) {
+        setUserSettings(data.settings);
+      }
+      if (Array.isArray(data.tags)) {
+        setCustomTags(data.tags);
+      }
+      addToast('Backup Restored', `Restored data from snapshot "${backup.name}"`, 'success');
+    } catch (err: any) {
+      addToast('Restore Failed', err?.message || 'Failed to restore snapshot', 'error');
+      throw err;
+    }
+  };
+
+  const executeDataReset = async (
+    resetType: 'wipeAll' | 'trades' | 'journal' | 'settings',
+    confirmationPhrase: string
+  ): Promise<void> => {
+    try {
+      const result = await executeDataResetApi(resetType, confirmationPhrase);
+      if (resetType === 'trades') {
+        setTrades([]);
+      } else if (resetType === 'journal') {
+        setNotes([]);
+        setFolders([]);
+      } else if (resetType === 'settings') {
+        setUserSettings(createDefaultUserSettings());
+      } else if (resetType === 'wipeAll') {
+        setTrades([]);
+        setNotes([]);
+        setFolders([]);
+        setUserSettings(createDefaultUserSettings());
+      }
+      addToast('Data Reset Complete', result.message || 'Operation executed successfully', 'warning');
+    } catch (err: any) {
+      addToast('Reset Failed', err?.message || 'Operation rejected', 'error');
+      throw err;
+    }
+  };
+
   const refreshState = async () => {
     try {
       const data = await fetchInitialState();
@@ -2178,6 +2375,17 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
         if (Array.isArray(data.trades)) setTrades(data.trades);
         if (Array.isArray(data.playbooks)) setPlaybooks(data.playbooks);
         if (Array.isArray(data.strategies)) setStrategies(data.strategies);
+        if (Array.isArray(data.propFirmAccounts)) {
+          setPropFirmAccounts(data.propFirmAccounts);
+          persistPropFirmAccounts(data.propFirmAccounts);
+          if (data.propFirmAccounts.length > 0) {
+            setSelectedPropFirmAccountId((curr) =>
+              curr && data.propFirmAccounts.some((a: PropFirmAccount) => a.id === curr)
+                ? curr
+                : data.propFirmAccounts[0].id
+            );
+          }
+        }
       }
     } catch (e) {
       console.warn('refreshState failed:', e);
@@ -2246,11 +2454,22 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
         addNote,
         updateNote,
         deleteNote,
+        softDeleteNote,
+        restoreNote,
+        permanentDeleteNote,
         addFolder,
         updateFolder,
         deleteFolder,
+        softDeleteFolder,
+        restoreFolder,
+        permanentDeleteFolder,
+        emptyTrash,
+        purgeExpiredTrash,
         riskGoals,
+        accountRiskProfiles,
+        getAccountRiskGoals,
         updateRiskGoals,
+        unlockRiskAccount,
         calendarEvents,
         toggleEventFavorite,
         toggleEventReminder,
@@ -2283,70 +2502,43 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
         fetchLeaderboard,
         updateUserPointsAdmin,
         updateUserRoleAdmin,
-        // Self Improvement System
-        habits,
-        habitCompletions,
-        tasks,
-        checkins,
-        morningCheckin,
-        nightlyReview,
-        routines,
-        routineCompletions,
-        sleepLogs,
-        exerciseLogs,
-        learningLogs,
-        deepWorkSessions,
-        distractionLogs,
-        disciplineStreak,
-        goals,
-        rules,
-        achievements,
-        userGrowthLevel,
-        selectedImprovementDate,
-        setSelectedImprovementDate,
-        currentGrowthScore,
-        toggleHabit,
-        addHabit,
-        updateHabit,
-        deleteHabit,
-        toggleTask,
-        addTask,
-        updateTask,
-        deleteTask,
-        saveDailyCheckin,
-        saveMorningCheckin,
-        saveNightlyReview,
-        toggleRoutineItem,
-        addRoutine,
-        updateRoutine,
-        deleteRoutine,
-        logSleep,
-        logExercise,
-        logLearning,
-        logDeepWorkSession,
-        logDistraction,
-        updateDisciplineStreak,
-        addGoal,
-        updateGoal,
-        deleteGoal,
-        toggleGoalMilestone,
-        addRule,
-        toggleRuleVerification,
-        deleteRule,
-
         toasts,
         addToast,
         removeToast,
         formatCurrency,
         formatRMultiple,
+        currentTimezone,
+        formatDate,
+        formatTime,
+        formatTradeTimestamp,
         resetToSampleData,
         clearAllTradesData,
         authUser,
         isAuthenticated,
         setIsAuthenticated,
+        isAuthLoading,
+        isSyncingData,
+        refreshInitialState,
+        resendEmailVerification,
         isAuthModalOpen,
         setIsAuthModalOpen,
         logout,
+        userSettings,
+        updateUserSettings,
+        saveUserSettingsToServer,
+        customTags,
+        addCustomTag,
+        updateCustomTag,
+        deleteCustomTag,
+        importHistory,
+        addImportHistoryRecord,
+        activityLogs,
+        addActivityLog,
+        userBackups,
+        createBackup,
+        deleteBackup,
+        restoreBackup,
+        executeDataReset,
       }}
     >
       {children}

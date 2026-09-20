@@ -3,6 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, BookOpen, ExternalLink, ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { Trade, JournalNote } from '../../types';
 import { useTrading } from '../../context/TradingContext';
+import { safeFormatDate, toISODateKey, parseSafeDate } from '../../utils/dateUtils';
 
 interface CalendarDayDetailsModalProps {
   dateStr: string; // e.g. "Wed, Jun 05, 2024" or ISO string
@@ -58,24 +59,20 @@ export const CalendarDayDetailsModal: React.FC<CalendarDayDetailsModalProps> = (
 
   // Format date header matching reference design: "Wed, Jun 05, 2024"
   const formattedHeaderDate = useMemo(() => {
-    try {
-      return dateObj.toLocaleDateString('en-US', {
-        weekday: 'short',
-        month: 'short',
-        day: '2-digit',
-        year: 'numeric',
-      });
-    } catch {
-      return dateStr;
-    }
+    return safeFormatDate(dateObj, dateStr, {
+      weekday: 'short',
+      month: 'short',
+      day: '2-digit',
+      year: 'numeric',
+    });
   }, [dateObj, dateStr]);
 
   // Find associated note for this day
-  const dateIsoString = dateObj.toISOString().split('T')[0];
+  const dateIsoString = toISODateKey(dateObj);
   const dayNote = useMemo(() => {
     return notes.find(n => {
       if (!n.date) return false;
-      const nDate = n.date.split('T')[0];
+      const nDate = toISODateKey(n.date);
       return nDate === dateIsoString;
     });
   }, [notes, dateIsoString]);
@@ -84,7 +81,11 @@ export const CalendarDayDetailsModal: React.FC<CalendarDayDetailsModalProps> = (
   const closedTrades = useMemo(() => {
     return trades
       .filter(t => t.status === 'CLOSED')
-      .sort((a, b) => new Date(a.entryDate).getTime() - new Date(b.entryDate).getTime());
+      .sort((a, b) => {
+        const timeA = parseSafeDate(a.entryDate)?.getTime() || 0;
+        const timeB = parseSafeDate(b.entryDate)?.getTime() || 0;
+        return timeA - timeB;
+      });
   }, [trades]);
 
   // Summary Metrics calculations
@@ -152,8 +153,8 @@ export const CalendarDayDetailsModal: React.FC<CalendarDayDetailsModalProps> = (
     const rawPoints: { time: string; pnl: number }[] = [];
 
     // Starting baseline point
-    const firstTradeTime = new Date(closedTrades[0].entryDate);
-    const startHour = Math.max(9, firstTradeTime.getHours() - 1);
+    const firstTradeDate = parseSafeDate(closedTrades[0].entryDate) || new Date();
+    const startHour = Math.max(9, firstTradeDate.getHours() - 1);
     rawPoints.push({
       time: `${String(startHour).padStart(2, '0')}:00`,
       pnl: 0,
@@ -161,12 +162,10 @@ export const CalendarDayDetailsModal: React.FC<CalendarDayDetailsModalProps> = (
 
     closedTrades.forEach(t => {
       running += t.netPnl;
-      const d = new Date(t.exitDate || t.entryDate);
-      const timeStr = d.toLocaleTimeString('en-US', {
-        hour: '2-digit',
-        minute: '2-digit',
-        hour12: false,
-      });
+      const d = parseSafeDate(t.exitDate || t.entryDate);
+      const timeStr = d
+        ? `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+        : '12:00';
       rawPoints.push({
         time: timeStr,
         pnl: running,
@@ -501,7 +500,7 @@ export const CalendarDayDetailsModal: React.FC<CalendarDayDetailsModalProps> = (
           </div>
 
           {/* Right: Summary Metrics 4-Col Grid with Divider Lines */}
-          <div className="lg:col-span-7 grid grid-cols-4 gap-y-4 gap-x-2 sm:gap-x-4 pl-0 lg:pl-4">
+          <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-4 gap-y-4 gap-x-2 sm:gap-x-4 pl-0 lg:pl-4">
             {/* Column 1: Total trades & Winrate */}
             <div className={`space-y-4 border-r pr-2 sm:pr-4 ${isLight ? 'border-[#E5E7EB]' : 'border-[#20283A]'}`}>
               <div>
@@ -519,7 +518,7 @@ export const CalendarDayDetailsModal: React.FC<CalendarDayDetailsModalProps> = (
             </div>
 
             {/* Column 2: Winners & Losers */}
-            <div className={`space-y-4 border-r pr-2 sm:pr-4 ${isLight ? 'border-[#E5E7EB]' : 'border-[#20283A]'}`}>
+            <div className={`space-y-4 sm:border-r pr-2 sm:pr-4 ${isLight ? 'border-[#E5E7EB]' : 'border-[#20283A]'}`}>
               <div>
                 <span className={`block text-xs ${isLight ? 'text-[#6B7280]' : 'text-[#8C97AB]'}`}>Winners</span>
                 <span className={`text-sm sm:text-base font-bold font-mono ${isLight ? 'text-[#059669]' : 'text-[#00D6A3]'}`}>
@@ -575,8 +574,8 @@ export const CalendarDayDetailsModal: React.FC<CalendarDayDetailsModalProps> = (
         </div>
 
         {/* LOWER SECTION: Trades Table */}
-        <div className={`px-6 py-4 flex-1 overflow-x-auto custom-scrollbar ${isLight ? 'bg-white' : 'bg-[#0D111B]'}`}>
-          <table className="w-full text-left text-xs border-collapse min-w-[700px]">
+        <div className={`px-4 sm:px-6 py-4 flex-1 overflow-x-auto custom-scrollbar ${isLight ? 'bg-white' : 'bg-[#0D111B]'}`}>
+          <table className="w-full text-left text-xs border-collapse min-w-[640px]">
             <thead>
               <tr className={`rounded-lg font-bold border-b ${
                 isLight
@@ -602,15 +601,10 @@ export const CalendarDayDetailsModal: React.FC<CalendarDayDetailsModalProps> = (
                 </tr>
               ) : (
                 trades.map(t => {
-                  const entryDateObj = t.entryDate ? new Date(t.entryDate) : null;
+                  const entryDateObj = parseSafeDate(t.entryDate);
                   const openTimeStr = entryDateObj
-                    ? entryDateObj.toLocaleTimeString('en-US', {
-                        hour12: false,
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit',
-                      })
-                    : '09:09:00';
+                    ? `${String(entryDateObj.getHours()).padStart(2, '0')}:${String(entryDateObj.getMinutes()).padStart(2, '0')}:${String(entryDateObj.getSeconds()).padStart(2, '0')}`
+                    : '—';
 
                   const sideStr = t.direction === 'BUY' ? 'LONG' : 'SHORT';
                   const playbookName =
@@ -665,7 +659,7 @@ export const CalendarDayDetailsModal: React.FC<CalendarDayDetailsModalProps> = (
 
                       {/* Instrument */}
                       <td className={`py-3 px-3 font-medium ${isLight ? 'text-[#374151]' : 'text-[#C5CEE0]'}`}>
-                        {t.symbol} {entryDateObj ? entryDateObj.toISOString().slice(5, 10) : ''}
+                        {t.symbol} {entryDateObj ? safeFormatDate(entryDateObj, '', { month: '2-digit', day: '2-digit' }) : ''}
                       </td>
 
                       {/* Net P&L */}

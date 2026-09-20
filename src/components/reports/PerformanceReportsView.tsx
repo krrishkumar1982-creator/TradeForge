@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { useTrading } from '../../context/TradingContext';
 import { DynamicChartCard } from './DynamicChartCard';
+import { PerformanceCalendar } from '../dashboard/PerformanceCalendar';
 import { Trade } from '../../types';
 import {
   DimensionGrouping,
@@ -62,7 +63,7 @@ const InfoTooltip: React.FC<{ content: string; isLight: boolean }> = ({ content,
           className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-48 sm:w-56 p-2 rounded-xl border shadow-xl text-[11px] font-normal leading-tight z-50 pointer-events-none animate-in fade-in ${
             isLight
               ? 'bg-zinc-900 text-zinc-100 border-zinc-700 shadow-zinc-900/40'
-              : 'bg-slate-950 text-slate-100 border-slate-700 shadow-black'
+              : 'bg-[#0A0D14] text-slate-100 border-[#273141] shadow-black'
           }`}
         >
           {content}
@@ -82,7 +83,7 @@ const SummaryItem: React.FC<{
 }> = ({ label, tooltip, isLight, children }) => {
   return (
     <div className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${
-      isLight ? 'bg-zinc-50/80 border-zinc-200/80 hover:border-zinc-300' : 'bg-slate-950/80 border-slate-800/80 hover:border-slate-700'
+      isLight ? 'bg-zinc-50/80 border-zinc-200/80 hover:border-zinc-300' : 'bg-[#0A0D14] border-[#1C232E] hover:border-[#273141]'
     }`}>
       <div className="flex items-center justify-between gap-1 mb-1">
         <span className={`text-[11px] font-medium truncate ${isLight ? 'text-zinc-600' : 'text-slate-400'}`}>
@@ -359,7 +360,7 @@ export const PerformanceReportsView: React.FC = () => {
   return (
     <div className={`p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto min-h-screen ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}>
       {/* Header Bar */}
-      <div className={`flex flex-wrap items-center justify-between gap-4 pb-3 border-b ${isLight ? 'border-zinc-200' : 'border-slate-800'}`}>
+      <div className={`flex flex-wrap items-center justify-between gap-4 pb-3 border-b ${isLight ? 'border-zinc-200' : 'border-[#1C232E]'}`}>
         <div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2.5">
             <BarChart3 className="w-6 h-6 text-blue-500" />
@@ -376,14 +377,14 @@ export const PerformanceReportsView: React.FC = () => {
 
       {/* Main Navigation Tabs Bar */}
       <div className={`flex flex-wrap items-center gap-2 p-1.5 rounded-2xl border ${
-        isLight ? 'bg-zinc-100 border-zinc-200' : 'bg-slate-900/90 border-slate-800'
+        isLight ? 'bg-zinc-100 border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
       }`}>
         <button
           onClick={() => setMainTab('performance')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
             mainTab === 'performance'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-              : isLight ? 'text-zinc-600 hover:text-zinc-900' : 'text-slate-400 hover:text-white'
+              ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
+              : isLight ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60' : 'text-slate-400 hover:text-white hover:bg-[#1A1F27]'
           }`}
         >
           Performance
@@ -391,10 +392,10 @@ export const PerformanceReportsView: React.FC = () => {
 
         <button
           onClick={() => setMainTab('overview')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
             mainTab === 'overview'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-              : isLight ? 'text-zinc-600 hover:text-zinc-900' : 'text-slate-400 hover:text-white'
+              ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
+              : isLight ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60' : 'text-slate-400 hover:text-white hover:bg-[#1A1F27]'
           }`}
         >
           Overview
@@ -407,10 +408,10 @@ export const PerformanceReportsView: React.FC = () => {
               setMainTab('reports');
               setIsCategoryDropdownOpen(prev => !prev);
             }}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition ${
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
               mainTab === 'reports'
-                ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-                : isLight ? 'text-zinc-600 hover:text-zinc-900' : 'text-slate-400 hover:text-white'
+                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
+                : isLight ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60' : 'text-slate-400 hover:text-white hover:bg-[#1A1F27]'
             }`}
           >
             <span>Reports: {categoryLabels[reportCategory]}</span>
@@ -419,7 +420,7 @@ export const PerformanceReportsView: React.FC = () => {
 
           {isCategoryDropdownOpen && (
             <div className={`absolute left-0 top-full mt-2 w-64 rounded-2xl border p-2 shadow-2xl z-30 animate-in fade-in ${
-              isLight ? 'bg-white border-zinc-200 text-zinc-800' : 'bg-slate-950 border-slate-800 text-slate-100'
+              isLight ? 'bg-white border-zinc-200 text-zinc-800' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
             }`}>
               {(Object.keys(categoryLabels) as ReportCategory[]).map(catKey => (
                 <button
@@ -429,14 +430,14 @@ export const PerformanceReportsView: React.FC = () => {
                     setMainTab('reports');
                     setIsCategoryDropdownOpen(false);
                   }}
-                  className={`flex w-full items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                  className={`flex w-full items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
                     reportCategory === catKey
-                      ? 'bg-blue-600/15 text-blue-400 font-bold'
-                      : isLight ? 'hover:bg-zinc-100' : 'hover:bg-slate-900'
+                      ? 'bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-purple-600/20 text-white border border-blue-500/35 font-bold shadow-xs'
+                      : isLight ? 'hover:bg-zinc-100 text-zinc-700' : 'hover:bg-[#12161D] text-slate-300'
                   }`}
                 >
                   <span>{categoryLabels[catKey]}</span>
-                  {reportCategory === catKey && <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />}
+                  {reportCategory === catKey && <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />}
                 </button>
               ))}
             </div>
@@ -445,10 +446,10 @@ export const PerformanceReportsView: React.FC = () => {
 
         <button
           onClick={() => setMainTab('compare')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
             mainTab === 'compare'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-              : isLight ? 'text-zinc-600 hover:text-zinc-900' : 'text-slate-400 hover:text-white'
+              ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
+              : isLight ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60' : 'text-slate-400 hover:text-white hover:bg-[#1A1F27]'
           }`}
         >
           Compare
@@ -456,10 +457,10 @@ export const PerformanceReportsView: React.FC = () => {
 
         <button
           onClick={() => setMainTab('calendar')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition ${
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
             mainTab === 'calendar'
-              ? 'bg-blue-600 text-white shadow-md shadow-blue-600/20'
-              : isLight ? 'text-zinc-600 hover:text-zinc-900' : 'text-slate-400 hover:text-white'
+              ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
+              : isLight ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60' : 'text-slate-400 hover:text-white hover:bg-[#1A1F27]'
           }`}
         >
           Calendar
@@ -493,10 +494,10 @@ export const PerformanceReportsView: React.FC = () => {
 
           {/* COMPLETE SUMMARY SECTION UNDER PERFORMANCE */}
           <div className={`p-6 rounded-2xl border space-y-6 shadow-xl ${
-            isLight ? 'bg-white border-zinc-200 text-zinc-900 shadow-zinc-200/50' : 'bg-slate-900/90 border-slate-800 text-slate-100 shadow-black/60'
+            isLight ? 'bg-white border-zinc-200 text-zinc-900 shadow-zinc-200/50' : 'bg-[#12161D] border-[#1C232E] text-slate-100 shadow-black/60'
           }`}>
             {/* Title Bar */}
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-slate-800">
+            <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-[#1C232E]">
               <div className="flex items-center gap-2">
                 <h2 className="text-base sm:text-lg font-black tracking-tight text-zinc-900 dark:text-slate-100 uppercase">
                   Summary
@@ -508,7 +509,7 @@ export const PerformanceReportsView: React.FC = () => {
                 className={`p-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition ${
                   isLight
                     ? 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100 text-zinc-700'
-                    : 'bg-slate-950 border-slate-800 hover:bg-slate-800 text-slate-300'
+                    : 'bg-[#0A0D14] border-[#1C232E] hover:bg-[#1A1F27] text-slate-300'
                 }`}
               >
                 <Settings className="w-3.5 h-3.5 text-blue-500" />
@@ -520,7 +521,7 @@ export const PerformanceReportsView: React.FC = () => {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {/* Column 1: Core Performance */}
               <div className="space-y-3">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-blue-500 border-b pb-1 border-zinc-200 dark:border-slate-800">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-blue-500 border-b pb-1 border-zinc-200 dark:border-[#1C232E]">
                   Core Performance
                 </div>
 
@@ -565,7 +566,7 @@ export const PerformanceReportsView: React.FC = () => {
 
               {/* Column 2: Expectancy & Win/Loss */}
               <div className="space-y-3">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-blue-500 border-b pb-1 border-zinc-200 dark:border-slate-800">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-blue-500 border-b pb-1 border-zinc-200 dark:border-[#1C232E]">
                   Expectancy & Win/Loss
                 </div>
 
@@ -616,7 +617,7 @@ export const PerformanceReportsView: React.FC = () => {
 
               {/* Column 3: Daily & R-Multiple */}
               <div className="space-y-3">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-blue-500 border-b pb-1 border-zinc-200 dark:border-slate-800">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-blue-500 border-b pb-1 border-zinc-200 dark:border-[#1C232E]">
                   Daily & R-Multiple
                 </div>
 
@@ -663,7 +664,7 @@ export const PerformanceReportsView: React.FC = () => {
 
               {/* Column 4: Activity & Drawdown */}
               <div className="space-y-3">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-blue-500 border-b pb-1 border-zinc-200 dark:border-slate-800">
+                <div className="text-[11px] font-bold uppercase tracking-wider text-blue-500 border-b pb-1 border-zinc-200 dark:border-[#1C232E]">
                   Activity & Drawdown
                 </div>
 
@@ -716,7 +717,7 @@ export const PerformanceReportsView: React.FC = () => {
       {mainTab === 'overview' && (
         <div className="space-y-6">
           <div className={`p-6 rounded-2xl border space-y-4 ${
-            isLight ? 'bg-white border-zinc-200' : 'bg-slate-900/90 border-slate-800'
+            isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
           }`}>
             <h2 className="text-base font-black uppercase tracking-wider text-blue-500">
               YOUR STATS
@@ -750,79 +751,79 @@ export const PerformanceReportsView: React.FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
               {/* Column 1 */}
               <div className="space-y-2 text-xs font-medium">
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Total P&L</span>
                   <strong className={`font-mono font-bold ${summaryStats.netPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {formatCurrency(summaryStats.netPnl)}
                   </strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average daily volume</span>
                   <strong className="font-mono">{summaryStats.avgDailyVolume} contracts</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average winning trade</span>
                   <strong className="font-mono text-emerald-400">{formatCurrency(summaryStats.avgWinningTrade)}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average losing trade</span>
                   <strong className="font-mono text-rose-400">{formatCurrency(-summaryStats.avgLosingTrade)}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Total number of trades</span>
                   <strong className="font-mono">{closedTrades.length}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Number of winning trades</span>
                   <strong className="font-mono text-emerald-400">{summaryStats.winningTradesCount}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Number of losing trades</span>
                   <strong className="font-mono text-rose-400">{summaryStats.losingTradesCount}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Number of break even trades</span>
                   <strong className="font-mono">{summaryStats.breakevenTradesCount}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Total commissions</span>
                   <strong className="font-mono">${(summaryStats.totalCommissions ?? 0).toFixed(2)}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Total fees</span>
                   <strong className="font-mono">${(summaryStats.totalFees ?? 0).toFixed(2)}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Total swap</span>
                   <strong className="font-mono">${(summaryStats.totalSwap ?? 0).toFixed(2)}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Largest profit</span>
                   <strong className="font-mono text-emerald-400">{formatCurrency(summaryStats.largestProfit)}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Largest loss</span>
                   <strong className="font-mono text-rose-400">{formatCurrency(-summaryStats.largestLoss)}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average hold time (All trades)</span>
                   <strong className="font-mono">{formatMinutes(summaryStats.avgHoldTimeMinutes)}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average trade P&L</span>
                   <strong className={`font-mono ${summaryStats.avgTradePnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {formatCurrency(summaryStats.avgTradePnl)}
@@ -832,54 +833,54 @@ export const PerformanceReportsView: React.FC = () => {
 
               {/* Column 2 */}
               <div className="space-y-2 text-xs font-medium">
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Open trades</span>
                   <strong className="font-mono">{summaryStats.openTrades}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Total trading days</span>
                   <strong className="font-mono">{summaryStats.totalTradingDays}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Logged days</span>
                   <strong className="font-mono">{summaryStats.loggedDays}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average daily P&L</span>
                   <strong className={`font-mono ${summaryStats.avgDailyPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {formatCurrency(summaryStats.avgDailyPnl)}
                   </strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average planned R-Multiple</span>
                   <strong className="font-mono text-blue-400">{formatRMultiple(summaryStats.avgPlannedR)}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average realized R-Multiple</span>
                   <strong className="font-mono text-emerald-400">{formatRMultiple(summaryStats.avgRealizedR)}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Trade expectancy</span>
                   <strong className="font-mono text-emerald-400">{formatCurrency(summaryStats.tradeExpectancy)}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Max drawdown</span>
                   <strong className="font-mono text-rose-400">{formatCurrency(-summaryStats.maxDrawdown)}</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Max drawdown %</span>
                   <strong className="font-mono text-rose-400">{(summaryStats.maxDrawdownPercent ?? 0).toFixed(2)}%</strong>
                 </div>
 
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-slate-950'}`}>
+                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
                   <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average drawdown</span>
                   <strong className="font-mono text-amber-400">{formatCurrency(-summaryStats.avgDrawdown)}</strong>
                 </div>
@@ -896,7 +897,7 @@ export const PerformanceReportsView: React.FC = () => {
           {reportCategory === 'day_time' && (
             <div className="space-y-6">
               {/* Subtabs for Day & Time */}
-              <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+              <div className="flex items-center gap-2 border-b border-[#1C232E] pb-2">
                 {[
                   { id: 'days', label: 'Days' },
                   { id: 'months', label: 'Months' },
@@ -906,10 +907,10 @@ export const PerformanceReportsView: React.FC = () => {
                   <button
                     key={sub.id}
                     onClick={() => setDayTimeSubTab(sub.id as any)}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                       dayTimeSubTab === sub.id
-                        ? 'bg-blue-600 text-white'
-                        : isLight ? 'text-zinc-600 hover:bg-zinc-100' : 'text-slate-400 hover:bg-slate-900'
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
+                        : isLight ? 'text-zinc-600 hover:bg-zinc-100' : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
                     }`}
                   >
                     {sub.label}
@@ -919,7 +920,7 @@ export const PerformanceReportsView: React.FC = () => {
 
               {/* Dynamic KPI Summary Cards for Active Subtab */}
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-slate-900 border-slate-800'}`}>
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
                   <span className="text-[10px] text-slate-500 uppercase tracking-wider">
                     Best Performing {activeDayTimeLabel}
                   </span>
@@ -928,7 +929,7 @@ export const PerformanceReportsView: React.FC = () => {
                   </div>
                 </div>
 
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-slate-900 border-slate-800'}`}>
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
                   <span className="text-[10px] text-slate-500 uppercase tracking-wider">
                     Least Performing {activeDayTimeLabel}
                   </span>
@@ -937,7 +938,7 @@ export const PerformanceReportsView: React.FC = () => {
                   </div>
                 </div>
 
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-slate-900 border-slate-800'}`}>
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
                   <span className="text-[10px] text-slate-500 uppercase tracking-wider">
                     Most Active {activeDayTimeLabel}
                   </span>
@@ -946,7 +947,7 @@ export const PerformanceReportsView: React.FC = () => {
                   </div>
                 </div>
 
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-slate-900 border-slate-800'}`}>
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
                   <span className="text-[10px] text-slate-500 uppercase tracking-wider">
                     Best Win Rate {activeDayTimeLabel}
                   </span>
@@ -968,7 +969,7 @@ export const PerformanceReportsView: React.FC = () => {
           {/* RISK CATEGORY */}
           {reportCategory === 'risk' && (
             <div className="space-y-6">
-              <div className="flex items-center gap-2 border-b border-slate-800 pb-2">
+              <div className="flex items-center gap-2 border-b border-[#1C232E] pb-2">
                 {[
                   { id: 'volumes', label: 'Volumes' },
                   { id: 'position_sizes', label: 'Position sizes' },
@@ -977,10 +978,10 @@ export const PerformanceReportsView: React.FC = () => {
                   <button
                     key={sub.id}
                     onClick={() => setRiskSubTab(sub.id as any)}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition ${
+                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                       riskSubTab === sub.id
-                        ? 'bg-blue-600 text-white'
-                        : isLight ? 'text-zinc-600 hover:bg-zinc-100' : 'text-slate-400 hover:bg-slate-900'
+                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
+                        : isLight ? 'text-zinc-600 hover:bg-zinc-100' : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
                     }`}
                   >
                     {sub.label}
@@ -989,22 +990,22 @@ export const PerformanceReportsView: React.FC = () => {
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-slate-900 border-slate-800'}`}>
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
                   <span className="text-[10px] text-slate-500 uppercase tracking-wider">Best Performing Volume</span>
                   <div className="text-sm font-bold text-emerald-400 mt-1">{riskInsightCards.best}</div>
                 </div>
 
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-slate-900 border-slate-800'}`}>
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
                   <span className="text-[10px] text-slate-500 uppercase tracking-wider">Least Performing Volume</span>
                   <div className="text-sm font-bold text-rose-400 mt-1">{riskInsightCards.least}</div>
                 </div>
 
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-slate-900 border-slate-800'}`}>
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
                   <span className="text-[10px] text-slate-500 uppercase tracking-wider">Most Active Volume</span>
                   <div className={`text-sm font-bold mt-1 ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}>{riskInsightCards.mostActive}</div>
                 </div>
 
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-slate-900 border-slate-800'}`}>
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
                   <span className="text-[10px] text-slate-500 uppercase tracking-wider">Best Win Rate Volume</span>
                   <div className="text-sm font-bold text-blue-400 mt-1">{riskInsightCards.bestWinRate}</div>
                 </div>
@@ -1078,17 +1079,17 @@ export const PerformanceReportsView: React.FC = () => {
       {mainTab === 'compare' && (
         <div className="space-y-6">
           <div className={`p-6 rounded-2xl border space-y-4 ${
-            isLight ? 'bg-white border-zinc-200' : 'bg-slate-900 border-slate-800'
+            isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
           }`}>
             <h2 className="text-base font-bold text-blue-400">Account & Strategy Side-by-Side Comparison</h2>
             <p className="text-xs text-slate-400">Compare metrics across different connected prop firm accounts or playbook setup types.</p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-              <div className="p-4 rounded-xl border border-slate-800 bg-slate-950 space-y-2">
+              <div className="p-4 rounded-xl border border-[#1C232E] bg-[#0A0D14] space-y-2">
                 <span className="text-xs font-bold text-slate-200">Apex Trader Funding 50k</span>
                 <div className="text-lg font-black font-mono text-emerald-400">+$8,420.00</div>
                 <div className="text-xs text-slate-400">Win Rate: 62.5% • Profit Factor: 2.14</div>
               </div>
-              <div className="p-4 rounded-xl border border-slate-800 bg-slate-950 space-y-2">
+              <div className="p-4 rounded-xl border border-[#1C232E] bg-[#0A0D14] space-y-2">
                 <span className="text-xs font-bold text-slate-200">FTMO Master Account</span>
                 <div className="text-lg font-black font-mono text-emerald-400">+$12,100.00</div>
                 <div className="text-xs text-slate-400">Win Rate: 68.0% • Profit Factor: 2.85</div>
@@ -1101,46 +1102,10 @@ export const PerformanceReportsView: React.FC = () => {
       {/* TAB 5: CALENDAR */}
       {mainTab === 'calendar' && (
         <div className="space-y-6">
-          <div className={`p-6 rounded-2xl border space-y-4 ${
-            isLight ? 'bg-white border-zinc-200' : 'bg-slate-900 border-slate-800'
-          }`}>
-            <h2 className="text-base font-bold text-blue-400">P&L Calendar Heatmap</h2>
-            <p className="text-xs text-slate-400">Visual calendar representation of daily gains and losses across the trading month.</p>
-            <div className="grid grid-cols-7 gap-2 pt-2 text-center text-xs">
-              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => (
-                <div key={day} className="font-bold text-slate-500 py-1">{day}</div>
-              ))}
-              {Array.from({ length: 31 }).map((_, idx) => {
-                const dayNum = idx + 1;
-                const dailyPnl = closedTrades.reduce((sum, t) => {
-                  if (t.entryDate) {
-                    const d = new Date(t.entryDate);
-                    if (!isNaN(d.getTime()) && d.getDate() === dayNum) {
-                      return sum + (t.netPnl || 0);
-                    }
-                  }
-                  return sum;
-                }, 0);
-                return (
-                  <div
-                    key={dayNum}
-                    className={`p-3 rounded-xl border flex flex-col justify-between h-20 ${
-                      dailyPnl > 0
-                        ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
-                        : dailyPnl < 0
-                          ? 'bg-rose-500/15 border-rose-500/30 text-rose-400'
-                          : 'bg-slate-950 border-slate-800 text-slate-500'
-                    }`}
-                  >
-                    <span className="text-[10px] font-bold text-slate-400 text-left">{dayNum}</span>
-                    <span className="font-mono text-xs font-black">
-                      {dailyPnl !== 0 ? formatCurrency(dailyPnl) : '-'}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
+          <PerformanceCalendar
+            trades={filteredTrades}
+            formatCurrency={formatCurrency}
+          />
         </div>
       )}
     </div>

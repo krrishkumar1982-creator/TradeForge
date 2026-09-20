@@ -95,6 +95,7 @@ export const trades = pgTable('trades', {
   afterScreenshotUrl: text('after_screenshot_url'),
   durationMinutes: integer('duration_minutes').notNull().default(0),
   emotionalState: text('emotional_state'),
+  propFirmAccountId: text('prop_firm_account_id'),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -145,7 +146,7 @@ export const journalNotes = pgTable('journal_notes', {
   accountId: text('account_id').notNull(),
   date: text('date').notNull(),
   title: text('title').notNull(),
-  folderId: text('folder_id').notNull(),
+  folderId: text('folder_id'),
   tags: jsonb('tags').notNull().default([]),
   content: text('content').notNull().default(''),
   preMarketPlan: jsonb('pre_market_plan').notNull().default({}),
@@ -157,6 +158,10 @@ export const journalNotes = pgTable('journal_notes', {
   screenshots: jsonb('screenshots').notNull().default([]),
   templateUsed: text('template_used'),
   isFavorite: boolean('is_favorite').default(false),
+  isDeleted: boolean('is_deleted').default(false),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  deletedBy: text('deleted_by'),
+  originalFolderId: text('original_folder_id'),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -167,6 +172,9 @@ export const journalFolders = pgTable('journal_folders', {
   name: text('name').notNull(),
   icon: text('icon'),
   count: integer('count').default(0),
+  isDeleted: boolean('is_deleted').default(false),
+  deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  deletedBy: text('deleted_by'),
   createdAt: timestamp('created_at').defaultNow(),
 });
 
@@ -181,10 +189,13 @@ export const riskGoals = pgTable('risk_goals', {
   maxDailyLoss: doublePrecision('max_daily_loss'),
   dailyMaxLoss: doublePrecision('daily_max_loss'),
   maxWeeklyLoss: doublePrecision('max_weekly_loss'),
+  weeklyLossLimit: doublePrecision('weekly_loss_limit'),
   maxDrawdown: doublePrecision('max_drawdown'),
   maxDrawdownLimit: doublePrecision('max_drawdown_limit'),
+  trailingDrawdownLimit: doublePrecision('trailing_drawdown_limit'),
   maxRiskPerTradePercent: doublePrecision('max_risk_per_trade_percent'),
   maxRiskPerTradeAmount: doublePrecision('max_risk_per_trade_amount'),
+  riskMode: text('risk_mode').default('LOWER_OF_BOTH'),
   maxTradesPerDay: integer('max_trades_per_day'),
   maxConsecutiveLosses: integer('max_consecutive_losses'),
   maxContractsPerTrade: integer('max_contracts_per_trade'),
@@ -195,7 +206,42 @@ export const riskGoals = pgTable('risk_goals', {
   enforceCircuitBreaker: boolean('enforce_circuit_breaker').default(false),
   circuitBreakerTriggered: boolean('circuit_breaker_triggered').default(false),
   circuitBreakerState: text('circuit_breaker_state').default('DISARMED'),
+  hardLockEnabled: boolean('hard_lock_enabled').default(false),
+  warningThresholdPercent: doublePrecision('warning_threshold_percent').default(75),
+  criticalThresholdPercent: doublePrecision('critical_threshold_percent').default(90),
+  timezone: text('timezone').default('America/New_York'),
+  dailyResetTime: text('daily_reset_time').default('17:00'),
+  includeFloatingPnl: boolean('include_floating_pnl').default(false),
+  includeFees: boolean('include_fees').default(true),
+  includeCommissions: boolean('include_commissions').default(true),
+  drawdownMethodology: text('drawdown_methodology').default('EQUITY_BASED'),
+  weeklyTargetAction: text('weekly_target_action').default('CONTINUE'),
+  requireManualUnlock: boolean('require_manual_unlock').default(true),
+  lockReason: text('lock_reason'),
+  lockedAt: text('locked_at'),
+  unlockedAt: text('unlocked_at'),
+  unlockedBy: text('unlocked_by'),
+  unlockReason: text('unlock_reason'),
   updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Risk Events Audit Trail
+export const riskEvents = pgTable('risk_events', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  accountId: text('account_id'),
+  accountName: text('account_name'),
+  eventType: text('event_type').notNull(),
+  rule: text('rule').notNull(),
+  currentValue: text('current_value'),
+  limitValue: text('limit_value'),
+  severity: text('severity').notNull(),
+  actionTaken: text('action_taken').notNull(),
+  notes: text('notes'),
+  unlockedBy: text('unlocked_by'),
+  unlockReason: text('unlock_reason'),
+  metadata: jsonb('metadata'),
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
 // Backtesting Sessions table
@@ -477,264 +523,152 @@ export const connectionSyncLogs = pgTable('connection_sync_logs', {
   createdAt: timestamp('created_at').defaultNow(),
 });
 
-// ========================================================
-// SELF IMPROVEMENT SYSTEM TABLES
-// ========================================================
-
-export const selfHabits = pgTable('self_habits', {
+// Prop Firm Accounts table (Multi-account institutional rules & evaluation tracking)
+export const propFirmAccounts = pgTable('prop_firm_accounts', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull(),
   name: text('name').notNull(),
-  category: text('category').notNull(),
-  target: text('target').notNull(),
-  frequency: text('frequency').notNull().default('daily'),
-  reminderTime: text('reminder_time'),
-  difficulty: text('difficulty').notNull().default('medium'),
-  weight: integer('weight').notNull().default(1),
-  active: boolean('active').notNull().default(true),
-  icon: text('icon'),
-  color: text('color'),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfHabitCompletions = pgTable('self_habit_completions', {
-  id: text('id').primaryKey(),
-  habitId: text('habit_id').notNull(),
-  userId: text('user_id').notNull(),
-  date: text('date').notNull(), // YYYY-MM-DD
-  completed: boolean('completed').notNull().default(false),
-  value: doublePrecision('value'),
+  firmName: text('firm_name').notNull(),
+  tradingBrand: text('trading_brand'),
+  legalEntity: text('legal_entity'),
+  registrationNumber: text('registration_number'),
+  jurisdiction: text('jurisdiction'),
+  termsEffectiveDate: text('terms_effective_date'),
+  rulesVersion: text('rules_version'),
+  accountNumber: text('account_number'),
+  accountSize: doublePrecision('account_size'),
+  startingBalance: doublePrecision('starting_balance').notNull(),
+  currentBalance: doublePrecision('current_balance').notNull(),
+  equity: doublePrecision('equity').notNull(),
+  highWaterMark: doublePrecision('high_water_mark'),
+  currency: text('currency').notNull().default('USD'),
+  programModel: text('program_model').notNull().default('TWO_STEP'),
+  phases: jsonb('phases').notNull().default([]),
+  activePhaseIndex: integer('active_phase_index').default(0),
+  phase: text('phase').notNull().default('PHASE_1'),
+  phaseName: text('phase_name'),
+  status: text('status').notNull().default('ACTIVE'),
+  riskState: text('risk_state').notNull().default('SAFE'),
+  enforcementMode: text('enforcement_mode').default('MONITOR'),
+  drawdownModel: text('drawdown_model').notNull().default('STATIC'),
+  dailyDrawdownModel: text('daily_drawdown_model').notNull().default('START_OF_DAY_BALANCE'),
+  dailyLossMethod: text('daily_loss_method').default('REALIZED_ONLY'),
+  maxRiskPerSymbolPercent: doublePrecision('max_risk_per_symbol_percent'),
+  minTradeDurationSec: integer('min_trade_duration_sec'),
+  avgTradeDurationSec: integer('avg_trade_duration_sec'),
+  minTradingDays: integer('min_trading_days').default(0),
+  maxTradingDays: integer('max_trading_days').default(0),
+  startDate: text('start_date'),
+  deadline: text('deadline'),
+  qualifyingDayProfitPercent: doublePrecision('qualifying_day_profit_percent'),
+  profitTargetPercent: doublePrecision('profit_target_percent'),
+  dailyLossPercent: doublePrecision('daily_loss_percent'),
+  totalLossPercent: doublePrecision('total_loss_percent'),
+  profitTargetAmount: doublePrecision('profit_target_amount'),
+  dailyLossAmount: doublePrecision('daily_loss_amount'),
+  totalLossAmount: doublePrecision('total_loss_amount'),
+  consistencyMaxDayPercent: doublePrecision('consistency_max_day_percent'),
+  maxProfitConcentrationPercent: doublePrecision('max_profit_concentration_percent'),
+  newsTradingAllowed: text('news_trading_allowed').default('ALLOWED'),
+  weekendHoldingAllowed: boolean('weekend_holding_allowed').default(true),
+  overnightHoldingAllowed: boolean('overnight_holding_allowed').default(true),
+  eaAllowed: text('ea_allowed').default('ALLOWED'),
+  copyTradingAllowed: text('copy_trading_allowed').default('ALLOWED'),
+  hedgingAllowed: text('hedging_allowed').default('ALLOWED'),
+  maxLotSize: doublePrecision('max_lot_size'),
+  minLotSize: doublePrecision('min_lot_size'),
+  maxPositions: integer('max_positions'),
+  maxLeverage: integer('max_leverage').default(100),
+  ipRestrictions: jsonb('ip_restrictions').default({}),
+  prohibitedStrategies: jsonb('prohibited_strategies').default([]),
+  rewardBufferPercent: doublePrecision('reward_buffer_percent'),
+  rewardSplitPercent: doublePrecision('reward_split_percent').default(80),
+  profitSplitTraderPercent: doublePrecision('profit_split_trader_percent').default(80),
+  profitSplitFirmPercent: doublePrecision('profit_split_firm_percent').default(20),
+  minRewardRequest: doublePrecision('min_reward_request'),
+  payoutFrequency: text('payout_frequency').default('BIWEEKLY'),
+  activationFee: doublePrecision('activation_fee'),
+  inactivityMaxDays: integer('inactivity_max_days').default(30),
+  newsWindowMinutes: integer('news_window_minutes').default(5),
+  sessionTimezone: text('session_timezone').default('America/New_York'),
+  scalingRules: jsonb('scaling_rules').default({}),
+  rules: jsonb('rules').notNull().default([]),
+  violations: jsonb('violations').notNull().default([]),
+  timeline: jsonb('timeline').default([]),
+  payoutInfo: jsonb('payout_info').default({}),
+  tradingAccountLink: text('trading_account_link'),
   notes: text('notes'),
-  completedAt: text('completed_at'),
   createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-export const selfTasks = pgTable('self_tasks', {
+// User Settings table (persists global and account-specific settings)
+export const userSettings = pgTable('user_settings', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull(),
-  title: text('title').notNull(),
-  description: text('description').default(''),
-  category: text('category').notNull().default('General'),
-  priority: text('priority').notNull().default('Medium'),
-  dueDate: text('due_date').notNull(),
-  dueTime: text('due_time'),
-  estimatedDurationMins: integer('estimated_duration_mins').default(30),
-  status: text('status').notNull().default('Pending'),
-  scoreContribution: integer('score_contribution').default(10),
-  completedAt: text('completed_at'),
+  accountId: text('account_id'),
+  scope: text('scope').notNull().default('GLOBAL'),
+  general: jsonb('general').notNull().default({}),
+  notifications: jsonb('notifications').notNull().default({}),
+  aiSettings: jsonb('ai_settings').notNull().default({}),
+  tradeDefaults: jsonb('trade_defaults').notNull().default({}),
+  commissionRules: jsonb('commission_rules').notNull().default([]),
+  profile: jsonb('profile').notNull().default({}),
   createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-export const selfCheckins = pgTable('self_checkins', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
-  date: text('date').notNull(), // YYYY-MM-DD
-  mood: integer('mood').notNull().default(7),
-  energy: integer('energy').notNull().default(7),
-  focus: integer('focus').notNull().default(7),
-  stress: integer('stress').notNull().default(3),
-  motivation: integer('motivation').notNull().default(7),
-  productivity: integer('productivity').notNull().default(7),
-  notes: text('notes').default(''),
-  gratitudes: jsonb('gratitudes').notNull().default([]),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfMorningCheckins = pgTable('self_morning_checkins', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
-  date: text('date').notNull(),
-  sleepQuality: integer('sleep_quality').notNull().default(8),
-  energyLevel: integer('energy_level').notNull().default(8),
-  mainGoal: text('main_goal').notNull().default(''),
-  topPriorities: jsonb('top_priorities').notNull().default([]),
-  workoutPlanned: boolean('workout_planned').default(true),
-  tradingPlanned: boolean('trading_planned').default(true),
-  personalGoal: text('personal_goal').default(''),
-  avoidToday: text('avoid_today').default(''),
-  generatedMission: text('generated_mission').default(''),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfNightlyReviews = pgTable('self_nightly_reviews', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
-  date: text('date').notNull(),
-  wentWell: text('went_well').default(''),
-  wentWrong: text('went_wrong').default(''),
-  learned: text('learned').default(''),
-  improveTomorrow: text('improve_tomorrow').default(''),
-  followedPlan: boolean('followed_plan').default(true),
-  wastedTime: boolean('wasted_time').default(false),
-  maintainedDiscipline: boolean('maintained_discipline').default(true),
-  reflectionScore: integer('reflection_score').default(85),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfRoutines = pgTable('self_routines', {
+// Custom Tags Management table
+export const customTags = pgTable('custom_tags', {
   id: text('id').primaryKey(),
   userId: text('user_id').notNull(),
   name: text('name').notNull(),
-  category: text('category').notNull().default('Morning'),
-  active: boolean('active').notNull().default(true),
-  items: jsonb('items').notNull().default([]),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfRoutineCompletions = pgTable('self_routine_completions', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
-  routineId: text('routine_id').notNull(),
-  itemId: text('item_id').notNull(),
-  date: text('date').notNull(),
-  completed: boolean('completed').notNull().default(false),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfSleepLogs = pgTable('self_sleep_logs', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
-  date: text('date').notNull(),
-  bedtime: text('bedtime').notNull().default('22:30'),
-  wakeTime: text('wake_time').notNull().default('06:30'),
-  durationHours: doublePrecision('duration_hours').notNull().default(8.0),
-  quality: integer('quality').notNull().default(8),
-  targetHours: doublePrecision('target_hours').notNull().default(8.0),
-  notes: text('notes').default(''),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfExerciseLogs = pgTable('self_exercise_logs', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
-  date: text('date').notNull(),
-  type: text('type').notNull().default('Strength'),
-  durationMins: integer('duration_mins').notNull().default(45),
-  steps: integer('steps').default(8000),
-  completed: boolean('completed').notNull().default(true),
-  intensity: text('intensity').default('Moderate'),
-  notes: text('notes').default(''),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfLearningLogs = pgTable('self_learning_logs', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
-  date: text('date').notNull(),
-  title: text('title').notNull(),
-  category: text('category').notNull().default('Trading'),
-  durationMins: integer('duration_mins').notNull().default(30),
-  pagesRead: integer('pages_read').default(15),
-  notes: text('notes').default(''),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfDeepWorkSessions = pgTable('self_deep_work_sessions', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
-  date: text('date').notNull(),
-  startTime: text('start_time').notNull(),
-  endTime: text('end_time'),
-  durationMins: integer('duration_mins').notNull().default(60),
-  category: text('category').notNull().default('Deep Work'),
-  taskName: text('task_name').notNull().default('Focus Session'),
-  distractionCount: integer('distraction_count').notNull().default(0),
-  focusRating: integer('focus_rating').notNull().default(8),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfDistractionLogs = pgTable('self_distraction_logs', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
-  date: text('date').notNull(),
-  socialMediaMins: integer('social_media_mins').default(0),
-  youtubeMins: integer('youtube_mins').default(0),
-  gamingMins: integer('gaming_mins').default(0),
-  entertainmentMins: integer('entertainment_mins').default(0),
-  randomBrowsingMins: integer('random_browsing_mins').default(0),
-  notes: text('notes').default(''),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfDisciplineStreaks = pgTable('self_discipline_streaks', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
-  trackerName: text('tracker_name').notNull().default('Digital & Purity Discipline'),
-  currentStreakDays: integer('current_streak_days').notNull().default(0),
-  bestStreakDays: integer('best_streak_days').notNull().default(0),
-  totalSuccessfulDays: integer('total_successful_days').notNull().default(0),
-  startDate: text('start_date').notNull(),
-  lastCheckinDate: text('last_checkin_date').notNull(),
-  historyLogs: jsonb('history_logs').notNull().default([]),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfGoals = pgTable('self_goals', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
-  title: text('title').notNull(),
+  category: text('category').notNull().default('Custom'),
+  color: text('color').notNull().default('#6366F1'),
   description: text('description').default(''),
-  category: text('category').notNull().default('Discipline'),
-  timeframe: text('timeframe').notNull().default('SHORT_TERM'),
-  targetValue: doublePrecision('target_value').notNull().default(100),
-  currentValue: doublePrecision('current_value').notNull().default(0),
-  unit: text('unit').notNull().default('%'),
-  deadline: text('deadline').notNull(),
-  status: text('status').notNull().default('IN_PROGRESS'),
-  milestones: jsonb('milestones').notNull().default([]),
+  isArchived: boolean('is_archived').notNull().default(false),
   createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfRules = pgTable('self_rules', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
-  text: text('text').notNull(),
-  category: text('category').notNull().default('TRADING'),
-  active: boolean('active').notNull().default(true),
-  order: integer('order').notNull().default(0),
-  verifiedDates: jsonb('verified_dates').notNull().default([]),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfGrowthScores = pgTable('self_growth_scores', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
-  date: text('date').notNull(),
-  score: integer('score').notNull().default(0),
-  discipline: integer('discipline').notNull().default(0),
-  productivity: integer('productivity').notNull().default(0),
-  physical: integer('physical').notNull().default(0),
-  mental: integer('mental').notNull().default(0),
-  recovery: integer('recovery').notNull().default(0),
-  learning: integer('learning').notNull().default(0),
-  trading: integer('trading').notNull().default(0),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfAchievements = pgTable('self_achievements', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull(),
-  achievementId: text('achievement_id').notNull(),
-  title: text('title').notNull(),
-  description: text('description').notNull(),
-  icon: text('icon').notNull(),
-  category: text('category').notNull(),
-  xpReward: integer('xp_reward').notNull().default(50),
-  unlocked: boolean('unlocked').notNull().default(false),
-  unlockedAt: text('unlocked_at'),
-  progress: integer('progress').notNull().default(0),
-  maxProgress: integer('max_progress').notNull().default(1),
-  createdAt: timestamp('created_at').defaultNow(),
-});
-
-export const selfUserXp = pgTable('self_user_xp', {
-  id: text('id').primaryKey(),
-  userId: text('user_id').notNull().unique(),
-  level: integer('level').notNull().default(1),
-  currentXp: integer('current_xp').notNull().default(0),
-  nextLevelXp: integer('next_level_xp').notNull().default(500),
-  title: text('title').notNull().default('Initiate Trader'),
   updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Import History table
+export const importHistory = pgTable('import_history', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  source: text('source').notNull().default('CSV'),
+  fileName: text('file_name').notNull(),
+  tradesProcessed: integer('trades_processed').notNull().default(0),
+  tradesAdded: integer('trades_added').notNull().default(0),
+  duplicatesCount: integer('duplicates_count').notNull().default(0),
+  errorsCount: integer('errors_count').notNull().default(0),
+  status: text('status').notNull().default('COMPLETED'),
+  details: jsonb('details').default({}),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// Activity / Audit Logs table
+export const activityLogs = pgTable('activity_logs', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  action: text('action').notNull(),
+  category: text('category').notNull().default('SYSTEM'),
+  object: text('object').notNull(),
+  status: text('status').notNull().default('SUCCESS'),
+  source: text('source').default('Web Client'),
+  details: jsonb('details').default({}),
+  createdAt: timestamp('created_at').defaultNow(),
+});
+
+// User Backups table
+export const userBackups = pgTable('user_backups', {
+  id: text('id').primaryKey(),
+  userId: text('user_id').notNull(),
+  name: text('name').notNull(),
+  sizeBytes: integer('size_bytes').notNull().default(0),
+  tradeCount: integer('trade_count').notNull().default(0),
+  notesCount: integer('notes_count').notNull().default(0),
+  backupData: jsonb('backup_data').notNull().default({}),
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
 

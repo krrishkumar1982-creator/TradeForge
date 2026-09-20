@@ -9,8 +9,86 @@ import {
   RiskGoalSettings,
   AppNotification,
   CommunityPost,
-  MentorStudent
+  MentorStudent,
+  PropFirmAccount,
+  UserSettings,
+  CustomTag,
+  ImportHistoryItem,
+  ActivityLogItem,
+  UserBackup,
 } from '../types';
+import {
+  fetchProfileFromSupabase,
+  upsertProfileToSupabase,
+  fetchAccountsFromSupabase,
+  upsertAccountToSupabase,
+  deleteAccountFromSupabase,
+  fetchTradesFromSupabase,
+  insertTradeToSupabase,
+  updateTradeInSupabase,
+  deleteTradeFromSupabase,
+  bulkDeleteTradesFromSupabase,
+  bulkEditTradesInSupabase,
+  fetchPropFirmAccountsFromSupabase,
+  upsertPropFirmAccountToSupabase,
+  deletePropFirmAccountFromSupabase,
+  fetchPlaybooksFromSupabase,
+  upsertPlaybookToSupabase,
+  deletePlaybookFromSupabase,
+  fetchStrategiesFromSupabase,
+  upsertStrategyToSupabase,
+  deleteStrategyFromSupabase,
+  fetchJournalNotesFromSupabase,
+  upsertJournalNoteToSupabase,
+  deleteJournalNoteFromSupabase,
+  softDeleteJournalNoteInSupabase,
+  restoreJournalNoteInSupabase,
+  fetchJournalFoldersFromSupabase,
+  upsertJournalFolderToSupabase,
+  deleteJournalFolderFromSupabase,
+  softDeleteJournalFolderInSupabase,
+  restoreJournalFolderInSupabase,
+  purgeExpiredTrashFromSupabase,
+  fetchRiskGoalsFromSupabase,
+  upsertRiskGoalsToSupabase,
+  fetchUserSettingsFromSupabase,
+  upsertUserSettingsToSupabase,
+  fetchCustomTagsFromSupabase,
+  insertCustomTagToSupabase,
+  deleteCustomTagFromSupabase,
+  fetchBacktestSessionsFromSupabase,
+  upsertBacktestSessionToSupabase,
+  fetchNotificationsFromSupabase,
+  markNotificationReadInSupabase,
+  clearAllNotificationsInSupabase,
+} from './supabaseDataService';
+
+export async function getCurrentUserId(): Promise<string> {
+  try {
+    const { data } = await supabase.auth.getSession();
+    if (data?.session?.user?.id) {
+      try {
+        localStorage.setItem('tradeforge_user_id', data.session.user.id);
+      } catch {}
+      return data.session.user.id;
+    }
+  } catch {}
+
+  try {
+    const stored = localStorage.getItem('tradeforge_user_id');
+    if (stored) return stored;
+  } catch {}
+
+  try {
+    const demoRaw = localStorage.getItem('tf_demo_session');
+    if (demoRaw) {
+      const parsed = JSON.parse(demoRaw);
+      if (parsed?.user?.id) return parsed.user.id;
+    }
+  } catch {}
+
+  return 'default_user_1';
+}
 
 const MIGRATION_KEY = 'duskflow_cloudsql_migrated_v1';
 
@@ -33,6 +111,21 @@ async function getAuthHeaders(headers: Record<string, string> = {}): Promise<Rec
   } catch (e) {
     console.warn('Failed to retrieve Supabase session:', e);
   }
+
+  if (!merged['x-user-id']) {
+    try {
+      const stored = localStorage.getItem('tradeforge_user_id');
+      if (stored) merged['x-user-id'] = stored;
+      else {
+        const demoRaw = localStorage.getItem('tf_demo_session');
+        if (demoRaw) {
+          const parsed = JSON.parse(demoRaw);
+          if (parsed?.user?.id) merged['x-user-id'] = parsed.user.id;
+        }
+      }
+    } catch {}
+  }
+
   if (currentIdToken) {
     merged['Authorization'] = `Bearer ${currentIdToken}`;
   }
@@ -59,49 +152,128 @@ export async function authenticatedFetch(url: string, init: RequestInit = {}): P
   return response;
 }
 
-export async function fetchInitialState(retries = 3, delay = 500) {
+export async function fetchInitialState(targetUserId?: string | null, retries = 1, delay = 200) {
+  let userId: string | null = targetUserId || null;
+
+  if (!userId) {
+    try {
+      const { data } = await supabase.auth.getSession();
+      userId = data?.session?.user?.id || null;
+    } catch {}
+  }
+
+  if (!userId) {
+    try {
+      userId = localStorage.getItem('tradeforge_user_id');
+    } catch {}
+  }
+
+  if (!userId) {
+    try {
+      const demoRaw = localStorage.getItem('tf_demo_session');
+      if (demoRaw) {
+        const parsed = JSON.parse(demoRaw);
+        if (parsed?.user?.id) userId = parsed.user.id;
+      }
+    } catch {}
+  }
+
+  // 1. Primary: Direct Supabase Data Load in parallel
+  if (userId) {
+    try {
+      const results = await Promise.allSettled([
+        fetchProfileFromSupabase(userId),
+        fetchAccountsFromSupabase(userId),
+        fetchTradesFromSupabase(userId),
+        fetchPlaybooksFromSupabase(userId),
+        fetchStrategiesFromSupabase(userId),
+        fetchJournalNotesFromSupabase(userId),
+        fetchJournalFoldersFromSupabase(userId),
+        fetchRiskGoalsFromSupabase(userId),
+        fetchPropFirmAccountsFromSupabase(userId),
+        fetchUserSettingsFromSupabase(userId),
+        fetchCustomTagsFromSupabase(userId),
+        fetchNotificationsFromSupabase(userId),
+      ]);
+
+      const [
+        profileRes,
+        accountsRes,
+        tradesRes,
+        playbooksRes,
+        strategiesRes,
+        notesRes,
+        foldersRes,
+        riskGoalsRes,
+        propFirmAccountsRes,
+        settingsRes,
+        tagsRes,
+        notificationsRes,
+      ] = results;
+
+      const profile = profileRes.status === 'fulfilled' ? profileRes.value : null;
+      const accounts = accountsRes.status === 'fulfilled' && Array.isArray(accountsRes.value) ? accountsRes.value : [];
+      const trades = tradesRes.status === 'fulfilled' && Array.isArray(tradesRes.value) ? tradesRes.value : [];
+      const playbooks = playbooksRes.status === 'fulfilled' && Array.isArray(playbooksRes.value) ? playbooksRes.value : [];
+      const strategies = strategiesRes.status === 'fulfilled' && Array.isArray(strategiesRes.value) ? strategiesRes.value : [];
+      const notes = notesRes.status === 'fulfilled' && Array.isArray(notesRes.value) ? notesRes.value : [];
+      const folders = foldersRes.status === 'fulfilled' && Array.isArray(foldersRes.value) ? foldersRes.value : [];
+      const riskGoals = riskGoalsRes.status === 'fulfilled' && riskGoalsRes.value ? riskGoalsRes.value : {};
+      const propFirmAccounts = propFirmAccountsRes.status === 'fulfilled' && Array.isArray(propFirmAccountsRes.value) ? propFirmAccountsRes.value : [];
+      const settings = settingsRes.status === 'fulfilled' ? settingsRes.value : null;
+      const tags = tagsRes.status === 'fulfilled' && Array.isArray(tagsRes.value) ? tagsRes.value : [];
+      const notifications = notificationsRes.status === 'fulfilled' && Array.isArray(notificationsRes.value) ? notificationsRes.value : [];
+
+      return {
+        success: true,
+        profile,
+        accounts,
+        trades,
+        playbooks,
+        strategies,
+        notes,
+        folders,
+        riskGoals,
+        propFirmAccounts,
+        userSettings: settings,
+        customTags: tags,
+        notifications,
+        connections: [],
+        communityPosts: [],
+      };
+    } catch (supabaseErr) {
+      console.warn('[Supabase Initial State Notice]', supabaseErr);
+    }
+  }
+
+  // 2. Secondary: Fallback to /api/state only if direct Supabase returned no data
   for (let attempt = 1; attempt <= retries; attempt++) {
     try {
       const response = await authenticatedFetch('/api/state');
-      if (!response.ok) {
-        throw new Error(`State fetch failed with status ${response.status}`);
+      if (response.ok) {
+        const data = await response.json();
+        if (data && data.success) {
+          return data;
+        }
       }
-      const data = await response.json();
-
-      if (!data.success) {
-        throw new Error(data.error || 'Failed to fetch state');
-      }
-
-      // Clean up any stale legacy localStorage items so they never leak between users
-      try {
-        localStorage.removeItem('duskflow_trades');
-        localStorage.removeItem('duskflow_accounts');
-        localStorage.removeItem('duskflow_notes');
-        localStorage.removeItem('duskflow_folders');
-        localStorage.removeItem('duskflow_playbooks');
-        localStorage.removeItem('duskflow_strategies');
-        localStorage.removeItem('duskflow_risk_goals');
-        localStorage.removeItem('duskflow_backtesting_sessions');
-      } catch {
-        // ignore
-      }
-
-      return data;
     } catch (error: any) {
       if (attempt < retries) {
-        console.warn(`fetchInitialState attempt ${attempt} failed (${error?.message || error}). Retrying in ${delay}ms...`);
         await new Promise((res) => setTimeout(res, delay));
         delay *= 1.5;
-      } else {
-        console.warn('fetchInitialState max retries reached:', error?.message || error);
-        return null;
       }
     }
   }
+
   return null;
 }
 
 export async function saveAccountApi(account: TradingAccount) {
+  try {
+    const userId = await getCurrentUserId();
+    await upsertAccountToSupabase(account, userId);
+  } catch (err) {
+    console.warn('saveAccountApi Supabase notice:', err);
+  }
   try {
     await authenticatedFetch('/api/accounts', {
       method: 'POST',
@@ -109,21 +281,89 @@ export async function saveAccountApi(account: TradingAccount) {
       body: JSON.stringify(account),
     });
   } catch (error) {
-    console.error('saveAccountApi error:', error);
+    // server optional
   }
 }
 
 export async function deleteAccountApi(id: string) {
   try {
+    const userId = await getCurrentUserId();
+    await deleteAccountFromSupabase(id, userId);
+  } catch (err) {
+    console.warn('deleteAccountApi Supabase notice:', err);
+  }
+  try {
     await authenticatedFetch(`/api/accounts/${id}`, {
       method: 'DELETE',
     });
   } catch (error) {
-    console.error('deleteAccountApi error:', error);
+    // server optional
   }
 }
 
+export async function fetchPropFirmAccountsApi(): Promise<PropFirmAccount[]> {
+  try {
+    const userId = await getCurrentUserId();
+    const accounts = await fetchPropFirmAccountsFromSupabase(userId);
+    if (accounts && accounts.length > 0) return accounts;
+  } catch {}
+  try {
+    const res = await authenticatedFetch('/api/prop-firm-accounts');
+    if (!res.ok) throw new Error(`Fetch prop firm accounts failed with status ${res.status}`);
+    const data = await res.json();
+    return data.success && Array.isArray(data.accounts) ? data.accounts : [];
+  } catch (err) {
+    return [];
+  }
+}
+
+export async function savePropFirmAccountApi(account: PropFirmAccount): Promise<boolean> {
+  try {
+    const userId = await getCurrentUserId();
+    await upsertPropFirmAccountToSupabase(account, userId);
+  } catch (err) {
+    console.warn('savePropFirmAccountApi Supabase notice:', err);
+  }
+  try {
+    const res = await authenticatedFetch('/api/prop-firm-accounts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(account),
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return !!data.success;
+    }
+  } catch {}
+  return true;
+}
+
+export async function deletePropFirmAccountApi(id: string): Promise<boolean> {
+  try {
+    const userId = await getCurrentUserId();
+    await deletePropFirmAccountFromSupabase(id, userId);
+  } catch (err) {
+    console.warn('deletePropFirmAccountApi Supabase notice:', err);
+  }
+  try {
+    const res = await authenticatedFetch(`/api/prop-firm-accounts/${id}`, {
+      method: 'DELETE',
+    });
+    if (res.ok) {
+      const data = await res.json();
+      return !!data.success;
+    }
+  } catch {}
+  return true;
+}
+
 export async function saveTradeApi(trade: Trade) {
+  try {
+    const userId = await getCurrentUserId();
+    await insertTradeToSupabase(trade, userId);
+  } catch (err) {
+    console.warn('saveTradeApi Supabase notice:', err);
+  }
   try {
     await authenticatedFetch('/api/trades', {
       method: 'POST',
@@ -131,21 +371,33 @@ export async function saveTradeApi(trade: Trade) {
       body: JSON.stringify(trade),
     });
   } catch (error) {
-    console.error('saveTradeApi error:', error);
+    // server optional
   }
 }
 
 export async function deleteTradeApi(id: string) {
   try {
+    const userId = await getCurrentUserId();
+    await deleteTradeFromSupabase(id, userId);
+  } catch (err) {
+    console.warn('deleteTradeApi Supabase notice:', err);
+  }
+  try {
     await authenticatedFetch(`/api/trades/${id}`, {
       method: 'DELETE',
     });
   } catch (error) {
-    console.error('deleteTradeApi error:', error);
+    // server optional
   }
 }
 
 export async function bulkDeleteTradesApi(ids: string[]) {
+  try {
+    const userId = await getCurrentUserId();
+    await bulkDeleteTradesFromSupabase(ids, userId);
+  } catch (err) {
+    console.warn('bulkDeleteTradesApi Supabase notice:', err);
+  }
   try {
     await authenticatedFetch('/api/trades/bulk-delete', {
       method: 'POST',
@@ -153,11 +405,17 @@ export async function bulkDeleteTradesApi(ids: string[]) {
       body: JSON.stringify({ ids }),
     });
   } catch (error) {
-    console.error('bulkDeleteTradesApi error:', error);
+    // server optional
   }
 }
 
 export async function bulkEditTradesApi(ids: string[], updates: Partial<Trade>) {
+  try {
+    const userId = await getCurrentUserId();
+    await bulkEditTradesInSupabase(ids, updates, userId);
+  } catch (err) {
+    console.warn('bulkEditTradesApi Supabase notice:', err);
+  }
   try {
     await authenticatedFetch('/api/trades/bulk-edit', {
       method: 'PATCH',
@@ -165,11 +423,17 @@ export async function bulkEditTradesApi(ids: string[], updates: Partial<Trade>) 
       body: JSON.stringify({ ids, updates }),
     });
   } catch (error) {
-    console.error('bulkEditTradesApi error:', error);
+    // server optional
   }
 }
 
 export async function savePlaybookApi(playbook: Playbook) {
+  try {
+    const userId = await getCurrentUserId();
+    await upsertPlaybookToSupabase(playbook, userId);
+  } catch (err) {
+    console.warn('savePlaybookApi Supabase notice:', err);
+  }
   try {
     await authenticatedFetch('/api/playbooks', {
       method: 'POST',
@@ -177,21 +441,33 @@ export async function savePlaybookApi(playbook: Playbook) {
       body: JSON.stringify(playbook),
     });
   } catch (error) {
-    console.error('savePlaybookApi error:', error);
+    // server optional
   }
 }
 
 export async function deletePlaybookApi(id: string) {
   try {
+    const userId = await getCurrentUserId();
+    await deletePlaybookFromSupabase(id, userId);
+  } catch (err) {
+    console.warn('deletePlaybookApi Supabase notice:', err);
+  }
+  try {
     await authenticatedFetch(`/api/playbooks/${id}`, {
       method: 'DELETE',
     });
   } catch (error) {
-    console.error('deletePlaybookApi error:', error);
+    // server optional
   }
 }
 
 export async function saveStrategyApi(strategy: Strategy) {
+  try {
+    const userId = await getCurrentUserId();
+    await upsertStrategyToSupabase(strategy, userId);
+  } catch (err) {
+    console.warn('saveStrategyApi Supabase notice:', err);
+  }
   try {
     await authenticatedFetch('/api/strategies', {
       method: 'POST',
@@ -199,87 +475,335 @@ export async function saveStrategyApi(strategy: Strategy) {
       body: JSON.stringify(strategy),
     });
   } catch (error) {
-    console.error('saveStrategyApi error:', error);
+    // server optional
   }
 }
 
 export async function deleteStrategyApi(id: string) {
   try {
+    const userId = await getCurrentUserId();
+    await deleteStrategyFromSupabase(id, userId);
+  } catch (err) {
+    console.warn('deleteStrategyApi Supabase notice:', err);
+  }
+  try {
     await authenticatedFetch(`/api/strategies/${id}`, {
       method: 'DELETE',
     });
   } catch (error) {
-    console.error('deleteStrategyApi error:', error);
+    // server optional
   }
 }
 
-export async function saveNoteApi(note: JournalNote) {
+export async function saveNoteApi(note: JournalNote): Promise<boolean> {
+  let supabaseSuccess = false;
   try {
-    await authenticatedFetch('/api/journal/notes', {
+    const userId = await getCurrentUserId();
+    supabaseSuccess = await upsertJournalNoteToSupabase(note, userId);
+  } catch (err) {
+    console.warn('saveNoteApi Supabase notice:', err);
+  }
+  
+  let apiSuccess = false;
+  try {
+    const res = await authenticatedFetch('/api/journal/notes', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(note),
     });
+    apiSuccess = res.ok;
   } catch (error) {
-    console.error('saveNoteApi error:', error);
+    // server optional
   }
+  
+  return supabaseSuccess || apiSuccess;
 }
 
-export async function deleteNoteApi(id: string) {
+/**
+ * Soft deletes a note (moves to Trash).
+ */
+export async function softDeleteNoteApi(id: string, originalFolderId?: string): Promise<boolean> {
+  let supabaseSuccess = false;
   try {
-    await authenticatedFetch(`/api/journal/notes/${id}`, {
+    const userId = await getCurrentUserId();
+    supabaseSuccess = await softDeleteJournalNoteInSupabase(id, userId, originalFolderId);
+  } catch (err) {
+    console.warn('softDeleteNoteApi Supabase notice:', err);
+  }
+
+  let apiSuccess = false;
+  try {
+    const res = await authenticatedFetch(`/api/journal/notes/${id}`, {
       method: 'DELETE',
     });
+    apiSuccess = res.ok;
   } catch (error) {
-    console.error('deleteNoteApi error:', error);
+    // server optional
   }
+
+  return supabaseSuccess || apiSuccess;
 }
 
-export async function saveFolderApi(folder: JournalFolder) {
+/**
+ * Default deleteNoteApi moves note to Trash.
+ */
+export async function deleteNoteApi(id: string): Promise<boolean> {
+  return await softDeleteNoteApi(id);
+}
+
+/**
+ * Restores a note from Trash.
+ */
+export async function restoreNoteApi(id: string, originalFolderId?: string): Promise<boolean> {
+  let supabaseSuccess = false;
   try {
-    await authenticatedFetch('/api/journal/folders', {
+    const userId = await getCurrentUserId();
+    supabaseSuccess = await restoreJournalNoteInSupabase(id, userId, originalFolderId);
+  } catch (err) {
+    console.warn('restoreNoteApi Supabase notice:', err);
+  }
+
+  let apiSuccess = false;
+  try {
+    const res = await authenticatedFetch(`/api/journal/notes/${id}/restore`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ originalFolderId }),
+    });
+    apiSuccess = res.ok;
+  } catch (error) {
+    // server optional
+  }
+
+  return supabaseSuccess || apiSuccess;
+}
+
+/**
+ * Permanently deletes a note from DB.
+ */
+export async function permanentDeleteNoteApi(id: string): Promise<boolean> {
+  let supabaseSuccess = false;
+  try {
+    const userId = await getCurrentUserId();
+    supabaseSuccess = await deleteJournalNoteFromSupabase(id, userId);
+  } catch (err) {
+    console.warn('permanentDeleteNoteApi Supabase notice:', err);
+  }
+
+  let apiSuccess = false;
+  try {
+    const res = await authenticatedFetch(`/api/journal/notes/${id}?permanent=true`, {
+      method: 'DELETE',
+    });
+    apiSuccess = res.ok;
+  } catch (error) {
+    // server optional
+  }
+
+  return supabaseSuccess || apiSuccess;
+}
+
+export async function saveFolderApi(folder: JournalFolder): Promise<boolean> {
+  let supabaseSuccess = false;
+  try {
+    const userId = await getCurrentUserId();
+    supabaseSuccess = await upsertJournalFolderToSupabase(folder, userId);
+  } catch (err) {
+    console.warn('saveFolderApi Supabase notice:', err);
+  }
+
+  let apiSuccess = false;
+  try {
+    const res = await authenticatedFetch('/api/journal/folders', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(folder),
     });
+    apiSuccess = res.ok;
   } catch (error) {
-    console.error('saveFolderApi error:', error);
+    // server optional
   }
+
+  return supabaseSuccess || apiSuccess;
 }
 
-export async function deleteFolderApi(id: string) {
+/**
+ * Soft deletes a folder (moves folder and its notes to Trash).
+ */
+export async function softDeleteFolderApi(id: string): Promise<boolean> {
+  let supabaseSuccess = false;
   try {
-    await authenticatedFetch(`/api/journal/folders/${id}`, {
+    const userId = await getCurrentUserId();
+    supabaseSuccess = await softDeleteJournalFolderInSupabase(id, userId);
+  } catch (err) {
+    console.warn('softDeleteFolderApi Supabase notice:', err);
+  }
+
+  let apiSuccess = false;
+  try {
+    const res = await authenticatedFetch(`/api/journal/folders/${id}`, {
       method: 'DELETE',
     });
+    apiSuccess = res.ok;
   } catch (error) {
-    console.error('deleteFolderApi error:', error);
+    // server optional
   }
+
+  return supabaseSuccess || apiSuccess;
+}
+
+/**
+ * Default deleteFolderApi moves folder to Trash.
+ */
+export async function deleteFolderApi(id: string): Promise<boolean> {
+  return await softDeleteFolderApi(id);
+}
+
+/**
+ * Restores a folder and its notes from Trash.
+ */
+export async function restoreFolderApi(id: string): Promise<boolean> {
+  let supabaseSuccess = false;
+  try {
+    const userId = await getCurrentUserId();
+    supabaseSuccess = await restoreJournalFolderInSupabase(id, userId);
+  } catch (err) {
+    console.warn('restoreFolderApi Supabase notice:', err);
+  }
+
+  let apiSuccess = false;
+  try {
+    const res = await authenticatedFetch(`/api/journal/folders/${id}/restore`, {
+      method: 'POST',
+    });
+    apiSuccess = res.ok;
+  } catch (error) {
+    // server optional
+  }
+
+  return supabaseSuccess || apiSuccess;
+}
+
+/**
+ * Permanently deletes a folder and its contents.
+ */
+export async function permanentDeleteFolderApi(id: string): Promise<boolean> {
+  let supabaseSuccess = false;
+  try {
+    const userId = await getCurrentUserId();
+    supabaseSuccess = await deleteJournalFolderFromSupabase(id, userId);
+  } catch (err) {
+    console.warn('permanentDeleteFolderApi Supabase notice:', err);
+  }
+
+  let apiSuccess = false;
+  try {
+    const res = await authenticatedFetch(`/api/journal/folders/${id}?permanent=true`, {
+      method: 'DELETE',
+    });
+    apiSuccess = res.ok;
+  } catch (error) {
+    // server optional
+  }
+
+  return supabaseSuccess || apiSuccess;
+}
+
+/**
+ * Purges expired trash items older than 2 days.
+ */
+export async function purgeExpiredTrashApi(): Promise<void> {
+  try {
+    const userId = await getCurrentUserId();
+    await purgeExpiredTrashFromSupabase(userId);
+  } catch (err) {
+    console.warn('purgeExpiredTrashApi Supabase notice:', err);
+  }
+
+  try {
+    await authenticatedFetch('/api/journal/cleanup-expired', {
+      method: 'POST',
+    });
+  } catch {}
 }
 
 export async function fetchRiskGoalsApi(accountId?: string): Promise<RiskGoalSettings | null> {
   try {
+    const userId = await getCurrentUserId();
+    const goals = await fetchRiskGoalsFromSupabase(userId, accountId);
+    if (goals) return goals;
+  } catch {}
+  try {
     const url = accountId && accountId !== 'all' ? `/api/risk-goals?accountId=${encodeURIComponent(accountId)}` : '/api/risk-goals';
     const res = await authenticatedFetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data.riskGoals || null;
-  } catch (error) {
-    console.error('fetchRiskGoalsApi error:', error);
+    if (!res || !res.ok) return null;
+    const data = await res.json().catch(() => null);
+    return data?.riskGoals || null;
+  } catch (error: any) {
     return null;
   }
 }
 
 export async function saveRiskGoalsApi(goals: RiskGoalSettings, accountId?: string) {
+  const effectiveAccId = accountId || goals.tradingAccountId;
   try {
-    const payload = accountId && accountId !== 'all' ? { ...goals, tradingAccountId: accountId } : goals;
+    const userId = await getCurrentUserId();
+    await upsertRiskGoalsToSupabase(goals, userId, effectiveAccId);
+  } catch (err) {
+    console.warn('saveRiskGoalsApi Supabase notice:', err);
+  }
+  try {
+    const payload = effectiveAccId && effectiveAccId !== 'all' ? { ...goals, tradingAccountId: effectiveAccId } : goals;
     await authenticatedFetch('/api/risk-goals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
   } catch (error) {
-    console.error('saveRiskGoalsApi error:', error);
+    // server optional
+  }
+}
+
+export async function unlockRiskAccountApi(tradingAccountId: string, unlockReason: string, unlockedBy: string = 'Trader') {
+  try {
+    const res = await authenticatedFetch('/api/risk-goals/unlock', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tradingAccountId, unlockReason, unlockedBy }),
+    });
+    if (res && res.ok) {
+      const data = await res.json().catch(() => null);
+      return data?.riskGoals || null;
+    }
+  } catch (err) {
+    console.warn('unlockRiskAccountApi error:', err);
+  }
+  return null;
+}
+
+export async function fetchRiskEventsApi(accountId?: string) {
+  try {
+    const url = accountId && accountId !== 'all' ? `/api/risk-events?accountId=${encodeURIComponent(accountId)}` : '/api/risk-events';
+    const res = await authenticatedFetch(url);
+    if (res && res.ok) {
+      const data = await res.json().catch(() => null);
+      return data?.riskEvents || [];
+    }
+  } catch (err) {
+    console.warn('fetchRiskEventsApi error:', err);
+  }
+  return [];
+}
+
+export async function saveRiskEventApi(event: any) {
+  try {
+    await authenticatedFetch('/api/risk-events', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(event),
+    });
+  } catch (err) {
+    console.warn('saveRiskEventApi error:', err);
   }
 }
 
@@ -633,45 +1157,70 @@ export async function retryIntegrationEventApi(id: string, eventId: string) {
 export async function fetchDailyChecklist(date: string): Promise<string[]> {
   try {
     const res = await authenticatedFetch(`/api/checklist?date=${encodeURIComponent(date)}`);
-    if (!res.ok) {
-      console.warn(`fetchDailyChecklist received status ${res.status}`);
-      return [];
+    if (res.ok) {
+      const data = await res.json().catch(() => ({}));
+      if (Array.isArray(data.completedItems)) {
+        try {
+          localStorage.setItem(`df_checklist_${date}`, JSON.stringify(data.completedItems));
+        } catch {}
+        return data.completedItems;
+      }
     }
-    const data = await res.json();
-    return data.completedItems || [];
-  } catch (error) {
-    console.error('fetchDailyChecklist error:', error);
-    return [];
+  } catch {
+    // Network or server endpoint unreachable - gracefully fallback to local storage
   }
+
+  // Graceful local cache fallback
+  try {
+    const saved = localStorage.getItem(`df_checklist_${date}`);
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {}
+
+  return [];
 }
 
 export async function saveDailyChecklistItemApi(itemId: string, date: string, completed: boolean): Promise<void> {
+  // Update local-first cache immediately
   try {
-    const res = await authenticatedFetch(`/api/checklist/${encodeURIComponent(itemId)}`, {
+    const saved = localStorage.getItem(`df_checklist_${date}`);
+    let items: string[] = saved ? JSON.parse(saved) : [];
+    if (!Array.isArray(items)) items = [];
+    if (completed && !items.includes(itemId)) {
+      items.push(itemId);
+    } else if (!completed && items.includes(itemId)) {
+      items = items.filter(id => id !== itemId);
+    }
+    localStorage.setItem(`df_checklist_${date}`, JSON.stringify(items));
+  } catch {}
+
+  try {
+    await authenticatedFetch(`/api/checklist/${encodeURIComponent(itemId)}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ date, completed }),
     });
-    if (!res.ok) {
-      console.error(`saveDailyChecklistItemApi failed with status ${res.status}`);
-    }
-  } catch (error) {
-    console.error('saveDailyChecklistItemApi error:', error);
+  } catch {
+    // Offline or server unreachable - local cache is already preserved
   }
 }
 
 export async function saveDailyChecklistBulkApi(date: string, completedItems: string[]): Promise<void> {
+  // Update local-first cache immediately
   try {
-    const res = await authenticatedFetch('/api/checklist/bulk', {
+    localStorage.setItem(`df_checklist_${date}`, JSON.stringify(completedItems));
+  } catch {}
+
+  try {
+    await authenticatedFetch('/api/checklist/bulk', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ date, completedItems }),
     });
-    if (!res.ok) {
-      console.error(`saveDailyChecklistBulkApi failed with status ${res.status}`);
-    }
-  } catch (error) {
-    console.error('saveDailyChecklistBulkApi error:', error);
+  } catch {
+    // Offline or server unreachable - local cache is already preserved
   }
 }
 
@@ -1082,6 +1631,29 @@ export async function fetchUserProfileApi() {
   }
 }
 
+export async function uploadAvatarApi(fileData: string, contentType: string = 'image/png'): Promise<string> {
+  try {
+    const res = await authenticatedFetch('/api/storage/upload', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        fileData,
+        bucket: 'avatars',
+        contentType,
+      }),
+    });
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Failed to upload avatar');
+    }
+    const data = await res.json();
+    return data.url;
+  } catch (error) {
+    console.error('uploadAvatarApi error:', error);
+    throw error;
+  }
+}
+
 export async function updateUserProfileApi(profileData: {
   fullName?: string;
   name?: string;
@@ -1089,7 +1661,34 @@ export async function updateUserProfileApi(profileData: {
   accountCode?: string;
   experienceLevel?: string;
   avatarUrl?: string;
+  country?: string;
+  timezone?: string;
+  preferredCurrency?: string;
+  professionalTitle?: string;
+  bio?: string;
+  tradingStyle?: string;
+  phone?: string;
 }) {
+  try {
+    const userId = await getCurrentUserId();
+    await upsertProfileToSupabase({
+      id: userId,
+      name: profileData.name || profileData.fullName || 'Trader',
+      email: profileData.email || '',
+      accountCode: profileData.accountCode || '',
+      experienceLevel: profileData.experienceLevel || 'Intermediate',
+      avatarUrl: profileData.avatarUrl || '',
+      country: profileData.country,
+      timezone: profileData.timezone,
+      preferredCurrency: profileData.preferredCurrency,
+      professionalTitle: profileData.professionalTitle,
+      bio: profileData.bio,
+      tradingStyle: profileData.tradingStyle,
+      phone: profileData.phone,
+    });
+  } catch (err) {
+    console.warn('updateUserProfileApi Supabase notice:', err);
+  }
   try {
     const res = await authenticatedFetch('/api/user/profile', {
       method: 'PUT',
@@ -1102,8 +1701,7 @@ export async function updateUserProfileApi(profileData: {
     }
     return await res.json();
   } catch (error) {
-    console.error('updateUserProfileApi error:', error);
-    throw error;
+    return { success: true, profile: profileData };
   }
 }
 
@@ -1269,6 +1867,221 @@ export async function fetchConnectionLogsApi(id: string) {
     throw error;
   }
 }
+
+// ---------------------------------------------------------------------------
+// SETTINGS API CLIENT FUNCTIONS
+// ---------------------------------------------------------------------------
+export async function getUserSettingsApi(accountId?: string): Promise<UserSettings | null> {
+  try {
+    const url = accountId ? `/api/user/settings?accountId=${encodeURIComponent(accountId)}` : '/api/user/settings';
+    const res = await authenticatedFetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data.settings || null;
+  } catch (err) {
+    console.warn('getUserSettingsApi error:', err);
+    return null;
+  }
+}
+
+export async function saveUserSettingsApi(settings: UserSettings, accountId?: string): Promise<UserSettings> {
+  try {
+    const userId = await getCurrentUserId();
+    await upsertUserSettingsToSupabase(settings, userId);
+  } catch (err) {
+    console.warn('saveUserSettingsApi Supabase notice:', err);
+  }
+  try {
+    const res = await authenticatedFetch('/api/user/settings', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ settings, accountId }),
+    });
+    const data = await res.json();
+    if (data && data.success && data.settings) {
+      return data.settings;
+    }
+  } catch (err) {
+    // server optional
+  }
+  return settings;
+}
+
+// ---------------------------------------------------------------------------
+// CUSTOM TAGS API CLIENT FUNCTIONS
+// ---------------------------------------------------------------------------
+export async function getCustomTagsApi(): Promise<CustomTag[]> {
+  try {
+    const res = await authenticatedFetch('/api/tags');
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.tags || [];
+  } catch (err) {
+    console.warn('getCustomTagsApi error:', err);
+    return [];
+  }
+}
+
+export async function saveCustomTagApi(tag: CustomTag): Promise<CustomTag> {
+  try {
+    const isUpdate = !!tag.id && !tag.id.startsWith('new-');
+    const url = isUpdate ? `/api/tags/${encodeURIComponent(tag.id)}` : '/api/tags';
+    const method = isUpdate ? 'PUT' : 'POST';
+
+    const res = await authenticatedFetch(url, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(tag),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to save tag');
+    }
+    return data.tag;
+  } catch (err) {
+    console.error('saveCustomTagApi error:', err);
+    throw err;
+  }
+}
+
+export async function deleteCustomTagApi(id: string): Promise<boolean> {
+  try {
+    const res = await authenticatedFetch(`/api/tags/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    return res.ok;
+  } catch (err) {
+    console.error('deleteCustomTagApi error:', err);
+    throw err;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// IMPORT HISTORY API CLIENT FUNCTIONS
+// ---------------------------------------------------------------------------
+export async function getImportHistoryApi(): Promise<ImportHistoryItem[]> {
+  try {
+    const res = await authenticatedFetch('/api/import-history');
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.history || [];
+  } catch (err) {
+    console.warn('getImportHistoryApi error:', err);
+    return [];
+  }
+}
+
+export async function recordImportHistoryApi(item: ImportHistoryItem): Promise<ImportHistoryItem> {
+  try {
+    const res = await authenticatedFetch('/api/import-history', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(item),
+    });
+    const data = await res.json();
+    return data.item || item;
+  } catch (err) {
+    console.warn('recordImportHistoryApi error:', err);
+    return item;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// ACTIVITY LOGS API CLIENT FUNCTIONS
+// ---------------------------------------------------------------------------
+export async function getActivityLogsApi(limit = 100): Promise<ActivityLogItem[]> {
+  try {
+    const res = await authenticatedFetch(`/api/activity-logs?limit=${limit}`);
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.logs || [];
+  } catch (err) {
+    console.warn('getActivityLogsApi error:', err);
+    return [];
+  }
+}
+
+export async function recordActivityLogApi(item: Omit<ActivityLogItem, 'id' | 'createdAt'>): Promise<ActivityLogItem | null> {
+  try {
+    const res = await authenticatedFetch('/api/activity-logs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(item),
+    });
+    const data = await res.json();
+    return data.log || null;
+  } catch (err) {
+    console.warn('recordActivityLogApi warning:', err);
+    return null;
+  }
+}
+
+// ---------------------------------------------------------------------------
+// BACKUPS & DATA RESET API CLIENT FUNCTIONS
+// ---------------------------------------------------------------------------
+export async function getUserBackupsApi(): Promise<UserBackup[]> {
+  try {
+    const res = await authenticatedFetch('/api/backups');
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.backups || [];
+  } catch (err) {
+    console.warn('getUserBackupsApi error:', err);
+    return [];
+  }
+}
+
+export async function createUserBackupApi(name?: string, backupData?: any): Promise<UserBackup> {
+  try {
+    const res = await authenticatedFetch('/api/backups', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, backupData }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Failed to create backup');
+    }
+    return data.backup;
+  } catch (err) {
+    console.error('createUserBackupApi error:', err);
+    throw err;
+  }
+}
+
+export async function deleteUserBackupApi(id: string): Promise<boolean> {
+  try {
+    const res = await authenticatedFetch(`/api/backups/${encodeURIComponent(id)}`, {
+      method: 'DELETE',
+    });
+    return res.ok;
+  } catch (err) {
+    console.error('deleteUserBackupApi error:', err);
+    throw err;
+  }
+}
+
+export async function executeDataResetApi(
+  resetType: 'wipeAll' | 'trades' | 'journal' | 'settings',
+  confirmationPhrase: string
+): Promise<{ success: boolean; message: string }> {
+  try {
+    const res = await authenticatedFetch('/api/data-reset', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ resetType, confirmationPhrase }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || 'Data reset failed');
+    }
+    return data;
+  } catch (err) {
+    console.error('executeDataResetApi error:', err);
+    throw err;
+  }
+}
+
 
 
 

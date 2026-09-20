@@ -24,11 +24,20 @@ import {
   getJournalNotes,
   saveJournalNote,
   deleteJournalNote,
+  softDeleteJournalNote,
+  restoreJournalNote,
+  permanentDeleteJournalNote,
   getJournalFolders,
   saveJournalFolder,
   deleteJournalFolder,
+  softDeleteJournalFolder,
+  restoreJournalFolder,
+  permanentDeleteJournalFolder,
+  purgeExpiredTrash,
   getRiskGoals,
   saveRiskGoals,
+  getRiskEvents,
+  saveRiskEvent,
   getNotifications,
   saveNotification,
   getCommunityPosts,
@@ -91,6 +100,22 @@ import {
   updateStudentSharingPermissions,
   getStudentDetailsForMentor,
   disconnectMentorStudentRelationship,
+  getPropFirmAccounts,
+  savePropFirmAccount,
+  deletePropFirmAccount,
+  getUserSettings,
+  saveUserSettings,
+  getCustomTags,
+  saveCustomTag,
+  deleteCustomTag,
+  getImportHistory,
+  recordImportHistory,
+  getActivityLogs,
+  recordActivityLog,
+  getUserBackups,
+  saveUserBackup,
+  deleteUserBackup,
+  resetUserData,
 } from '../db/repository.ts';
 import { db } from '../db/index.ts';
 import { integrationEvents, brokerIntegrations, mentorDirectives, tradingAccountConnections } from '../db/schema.ts';
@@ -99,6 +124,9 @@ import { encryptCredentials, decryptCredentials } from './cryptoUtils.ts';
 import { ConnectorRegistry } from './connectors/ConnectorRegistry.ts';
 import { PlatformType } from './connectors/types.ts';
 import { syncAccountConnection, startBackgroundSyncWorker } from './syncEngine.ts';
+import { executeAiCoachQuery } from './ai/aiCoachService.ts';
+import { executeTradeReview } from './ai/tradeReviewService.ts';
+import { generateAiPerformanceReport } from './ai/reportService.ts';
 
 // Initialize background auto-sync worker
 startBackgroundSyncWorker();
@@ -108,7 +136,7 @@ export const app = express();
 app.use(express.json({ limit: '10mb' }));
 
 // Health Check Endpoints (Liveness and Readiness)
-app.get('/health/live', (_req, res) => {
+app.get(['/health/live', '/api/health', '/api/health/live'], (_req, res) => {
   res.status(200).json({
     status: 'UP',
     timestamp: new Date().toISOString(),
@@ -123,8 +151,10 @@ app.post('/api/storage/upload', requireAuth, async (req: AuthRequest, res) => {
       return res.status(400).json({ success: false, error: 'Missing fileData (base64 string or data URL)' });
     }
 
-    const targetBucket = bucket || 'screenshots';
-    const targetPath = fileName || `${Date.now()}_${Math.random().toString(36).substring(2, 8)}.png`;
+    const userId = req.devUserId || (req.user as any)?.uid || (req.user as any)?.id || 'user_default';
+    const targetBucket = bucket || 'avatars';
+    const safeExtension = (contentType && contentType.includes('png')) ? 'png' : 'jpg';
+    const targetPath = fileName || `${userId}/avatar_${Date.now()}.${safeExtension}`;
 
     // Extract base64 payload
     const base64Data = fileData.replace(/^data:([A-Za-z-+/]+);base64,/, '');
@@ -135,28 +165,32 @@ app.post('/api/storage/upload', requireAuth, async (req: AuthRequest, res) => {
     const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY || process.env.VITE_SUPABASE_ANON_KEY;
 
     if (supabaseUrl && supabaseServiceKey) {
-      const uploadEndpoint = `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/${targetBucket}/${targetPath}`;
-      const response = await fetch(uploadEndpoint, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${supabaseServiceKey}`,
-          'apikey': supabaseServiceKey,
-          'Content-Type': mimeType,
-          'x-upsert': 'true',
-        },
-        body: buffer,
-      });
+      try {
+        const uploadEndpoint = `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/${targetBucket}/${targetPath}`;
+        const response = await fetch(uploadEndpoint, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${supabaseServiceKey}`,
+            'apikey': supabaseServiceKey,
+            'Content-Type': mimeType,
+            'x-upsert': 'true',
+          },
+          body: buffer,
+        });
 
-      if (response.ok) {
-        const publicUrl = `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/public/${targetBucket}/${targetPath}`;
-        return res.json({ success: true, url: publicUrl, path: targetPath });
-      } else {
-        const errText = await response.text();
-        console.warn('[Server Supabase Storage] Remote upload returned non-200:', errText);
+        if (response.ok) {
+          const publicUrl = `${supabaseUrl.replace(/\/$/, '')}/storage/v1/object/public/${targetBucket}/${targetPath}`;
+          return res.json({ success: true, url: publicUrl, path: targetPath });
+        } else {
+          const errText = await response.text();
+          console.warn('[Server Supabase Storage] Remote upload returned non-200:', errText);
+        }
+      } catch (remoteErr) {
+        console.warn('[Server Supabase Storage] Remote request exception:', remoteErr);
       }
     }
 
-    // Return the data URL directly as fallback if remote Supabase credentials are not supplied
+    // Return the data URL directly as persistent fallback if remote Supabase credentials/bucket are not ready
     res.json({ success: true, url: fileData, path: targetPath });
   } catch (err: any) {
     console.error('Storage upload proxy error:', err);
@@ -164,7 +198,7 @@ app.post('/api/storage/upload', requireAuth, async (req: AuthRequest, res) => {
   }
 });
 
-app.get('/health/ready', async (_req, res) => {
+app.get(['/health/ready', '/api/health/ready'], async (_req, res) => {
   try {
     // Perform a lightweight database query to check connectivity
     await db.execute(sql`SELECT 1`);
@@ -236,6 +270,12 @@ app.get('/api/state', requireAuth, async (req: AuthRequest, res) => {
       directivesSent,
       directivesReceived,
       connectionsList,
+      propFirmAccountsList,
+      userSettingsData,
+      customTagsList,
+      importHistoryList,
+      activityLogsList,
+      userBackupsList,
     ] = await Promise.all([
       getUserProfile(userId),
       getTradingAccounts(userId),
@@ -253,16 +293,33 @@ app.get('/api/state', requireAuth, async (req: AuthRequest, res) => {
       getMentorDirectivesForMentor(userId),
       getMentorDirectivesForStudent(userId),
       getTradingAccountConnections(userId),
+      getPropFirmAccounts(userId),
+      getUserSettings(userId),
+      getCustomTags(userId),
+      getImportHistory(userId),
+      getActivityLogs(userId),
+      getUserBackups(userId),
     ]);
+
+    const realEmail = (req.user?.email && !req.user.email.includes('duskflow.io')) 
+      ? req.user.email 
+      : (profile?.email && !profile.email.includes('duskflow.io') ? profile.email : (req.user?.email || ''));
 
     const userProfileData = profile
       ? {
           id: profile.id,
           name: profile.fullName || req.user?.name || 'Trader',
-          email: profile.email || req.user?.email || '',
+          email: realEmail,
           accountCode: profile.accountCode,
           experienceLevel: profile.experienceLevel || 'Intermediate',
           avatarUrl: profile.avatarUrl || '',
+          bio: userSettingsData.profile?.bio || '',
+          country: userSettingsData.profile?.country || 'United States',
+          timezone: userSettingsData.general?.timezone || 'America/New_York',
+          preferredCurrency: userSettingsData.general?.currency || 'USD',
+          professionalTitle: userSettingsData.profile?.professionalTitle || 'Independent Trader',
+          tradingStyle: userSettingsData.profile?.tradingStyle || 'Day Trader',
+          phone: userSettingsData.profile?.phone || '',
         }
       : {
           id: userId,
@@ -271,6 +328,13 @@ app.get('/api/state', requireAuth, async (req: AuthRequest, res) => {
           accountCode: '',
           experienceLevel: 'Intermediate',
           avatarUrl: '',
+          bio: userSettingsData.profile?.bio || '',
+          country: userSettingsData.profile?.country || 'United States',
+          timezone: userSettingsData.general?.timezone || 'America/New_York',
+          preferredCurrency: userSettingsData.general?.currency || 'USD',
+          professionalTitle: userSettingsData.profile?.professionalTitle || 'Independent Trader',
+          tradingStyle: userSettingsData.profile?.tradingStyle || 'Day Trader',
+          phone: userSettingsData.profile?.phone || '',
         };
 
     res.json({
@@ -292,6 +356,12 @@ app.get('/api/state', requireAuth, async (req: AuthRequest, res) => {
       connections: connectionsList,
       mentorDirectivesSent: directivesSent,
       mentorDirectivesReceived: directivesReceived,
+      propFirmAccounts: propFirmAccountsList,
+      settings: userSettingsData,
+      customTags: customTagsList,
+      importHistory: importHistoryList,
+      activityLogs: activityLogsList,
+      userBackups: userBackupsList,
     });
   } catch (error: any) {
     console.error('API /api/state error:', error);
@@ -303,15 +373,31 @@ app.get('/api/state', requireAuth, async (req: AuthRequest, res) => {
 app.get('/api/user/profile', requireAuth, async (req: AuthRequest, res) => {
   try {
     const userId = req.devUserId || 'default_user_1';
-    const profile = await getUserProfile(userId);
+    const [profile, settings] = await Promise.all([
+      getUserProfile(userId),
+      getUserSettings(userId),
+    ]);
+    const realEmail = (req.user?.email && !req.user.email.includes('duskflow.io'))
+      ? req.user.email
+      : (profile?.email && !profile.email.includes('duskflow.io') ? profile.email : (req.user?.email || ''));
+
     res.json({
       success: true,
-      profile: profile || {
-        id: userId,
-        fullName: req.user?.name || 'Trader',
-        email: req.user?.email || '',
-        accountCode: '',
-        experienceLevel: 'Intermediate',
+      profile: {
+        id: profile?.id || userId,
+        fullName: profile?.fullName || req.user?.name || 'Trader',
+        name: profile?.fullName || req.user?.name || 'Trader',
+        email: realEmail,
+        accountCode: profile?.accountCode || '',
+        experienceLevel: profile?.experienceLevel || 'Intermediate',
+        avatarUrl: profile?.avatarUrl || '',
+        bio: settings.profile?.bio || '',
+        country: settings.profile?.country || 'United States',
+        timezone: settings.general?.timezone || 'America/New_York',
+        preferredCurrency: settings.general?.currency || 'USD',
+        professionalTitle: settings.profile?.professionalTitle || 'Independent Trader',
+        tradingStyle: settings.profile?.tradingStyle || 'Day Trader',
+        phone: settings.profile?.phone || '',
       },
     });
   } catch (err: any) {
@@ -322,17 +408,347 @@ app.get('/api/user/profile', requireAuth, async (req: AuthRequest, res) => {
 app.put('/api/user/profile', requireAuth, async (req: AuthRequest, res) => {
   try {
     const userId = req.devUserId || 'default_user_1';
-    const { fullName, name, email, accountCode, experienceLevel, avatarUrl } = req.body;
-    const updated = await upsertUserProfile(userId, {
+    const { fullName, name, email, accountCode, experienceLevel, avatarUrl, bio, country, timezone, preferredCurrency, professionalTitle, tradingStyle, phone } = req.body;
+    
+    const updatedProfile = await upsertUserProfile(userId, {
       fullName: fullName || name,
       email,
       accountCode,
       experienceLevel,
       avatarUrl,
     });
-    res.json({ success: true, profile: updated });
+
+    const currentSettings = await getUserSettings(userId);
+    const updatedSettings = await saveUserSettings(userId, {
+      ...currentSettings,
+      general: {
+        ...currentSettings.general,
+        ...(timezone ? { timezone } : {}),
+        ...(preferredCurrency ? { currency: preferredCurrency } : {}),
+      },
+      profile: {
+        ...currentSettings.profile,
+        ...(bio !== undefined ? { bio } : {}),
+        ...(country !== undefined ? { country } : {}),
+        ...(professionalTitle !== undefined ? { professionalTitle } : {}),
+        ...(tradingStyle !== undefined ? { tradingStyle } : {}),
+        ...(phone !== undefined ? { phone } : {}),
+      },
+    });
+
+    await recordActivityLog(userId, {
+      action: 'Update User Profile',
+      category: 'SETTINGS',
+      object: 'Profile Info',
+      status: 'SUCCESS',
+      source: 'Web Client',
+      details: { fullName: fullName || name, country, professionalTitle },
+    });
+
+    res.json({
+      success: true,
+      profile: {
+        id: updatedProfile.id,
+        fullName: updatedProfile.fullName,
+        name: updatedProfile.fullName,
+        email: updatedProfile.email,
+        accountCode: updatedProfile.accountCode,
+        experienceLevel: updatedProfile.experienceLevel,
+        avatarUrl: updatedProfile.avatarUrl,
+        bio: updatedSettings.profile?.bio || '',
+        country: updatedSettings.profile?.country || 'United States',
+        timezone: updatedSettings.general?.timezone || 'America/New_York',
+        preferredCurrency: updatedSettings.general?.currency || 'USD',
+        professionalTitle: updatedSettings.profile?.professionalTitle || 'Independent Trader',
+        tradingStyle: updatedSettings.profile?.tradingStyle || 'Day Trader',
+        phone: updatedSettings.profile?.phone || '',
+      },
+      settings: updatedSettings,
+    });
   } catch (err: any) {
     res.status(500).json({ success: false, error: err?.message || 'Failed to update user profile' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// SETTINGS REST ENDPOINTS
+// ---------------------------------------------------------------------------
+app.get('/api/user/settings', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const accountId = req.query.accountId as string | undefined;
+    const settings = await getUserSettings(userId, accountId);
+    res.json({ success: true, settings });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to fetch settings' });
+  }
+});
+
+app.put('/api/user/settings', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const { settings, accountId } = req.body;
+    if (!settings) {
+      return res.status(400).json({ success: false, error: 'Missing settings payload' });
+    }
+    const saved = await saveUserSettings(userId, settings, accountId);
+    await recordActivityLog(userId, {
+      action: 'Update Platform Settings',
+      category: 'SETTINGS',
+      object: accountId ? `Account Settings (${accountId})` : 'Global Settings',
+      status: 'SUCCESS',
+      source: 'Web Client',
+      details: { scope: saved.scope, updatedFields: Object.keys(settings) },
+    });
+    res.json({ success: true, settings: saved });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to save settings' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// CUSTOM TAGS REST ENDPOINTS
+// ---------------------------------------------------------------------------
+app.get('/api/tags', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const tags = await getCustomTags(userId);
+    res.json({ success: true, tags });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to load tags' });
+  }
+});
+
+app.post('/api/tags', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const tag = req.body;
+    if (!tag.name || !tag.name.trim()) {
+      return res.status(400).json({ success: false, error: 'Tag name is required' });
+    }
+    const saved = await saveCustomTag(userId, {
+      id: tag.id || `tag-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+      name: tag.name.trim(),
+      category: tag.category || 'Custom',
+      color: tag.color || '#6366F1',
+      description: tag.description || '',
+      isArchived: !!tag.isArchived,
+      createdAt: new Date().toISOString(),
+    });
+    await recordActivityLog(userId, {
+      action: 'Create Tag',
+      category: 'TAG',
+      object: `Tag: ${saved.name}`,
+      status: 'SUCCESS',
+      source: 'Web Client',
+      details: { category: saved.category, color: saved.color },
+    });
+    res.json({ success: true, tag: saved });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to save tag' });
+  }
+});
+
+app.put('/api/tags/:id', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const { id } = req.params;
+    const tag = { ...req.body, id };
+    const saved = await saveCustomTag(userId, tag);
+    await recordActivityLog(userId, {
+      action: 'Update Tag',
+      category: 'TAG',
+      object: `Tag: ${saved.name}`,
+      status: 'SUCCESS',
+      source: 'Web Client',
+      details: { tagId: id },
+    });
+    res.json({ success: true, tag: saved });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to update tag' });
+  }
+});
+
+app.delete('/api/tags/:id', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const { id } = req.params;
+    await deleteCustomTag(userId, id);
+    await recordActivityLog(userId, {
+      action: 'Delete Tag',
+      category: 'TAG',
+      object: `Tag (${id})`,
+      status: 'WARNING',
+      source: 'Web Client',
+    });
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to delete tag' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// IMPORT & AUDIT LOG REST ENDPOINTS
+// ---------------------------------------------------------------------------
+app.get('/api/import-history', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const history = await getImportHistory(userId);
+    res.json({ success: true, history });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to load import history' });
+  }
+});
+
+app.post('/api/import-history', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const item = req.body;
+    const saved = await recordImportHistory(userId, item);
+    await recordActivityLog(userId, {
+      action: 'Import Trades File',
+      category: 'TRADE',
+      object: item.fileName || 'Import Batch',
+      status: item.status === 'FAILED' ? 'ERROR' : 'SUCCESS',
+      source: item.source || 'CSV',
+      details: { added: item.tradesAdded, processed: item.tradesProcessed },
+    });
+    res.json({ success: true, item: saved });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to record import history' });
+  }
+});
+
+app.get('/api/activity-logs', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const limit = req.query.limit ? parseInt(req.query.limit as string) : 100;
+    const logs = await getActivityLogs(userId, limit);
+    res.json({ success: true, logs });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to load activity logs' });
+  }
+});
+
+app.post('/api/activity-logs', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const saved = await recordActivityLog(userId, req.body);
+    res.json({ success: true, log: saved });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to record activity log' });
+  }
+});
+
+// ---------------------------------------------------------------------------
+// BACKUPS & DATA RESET REST ENDPOINTS
+// ---------------------------------------------------------------------------
+app.get('/api/backups', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const backups = await getUserBackups(userId);
+    res.json({ success: true, backups });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to load backups' });
+  }
+});
+
+app.post('/api/backups', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const { name, backupData } = req.body;
+    const tradesList = await getTrades(userId);
+    const notesList = await getJournalNotes(userId);
+
+    const backupPayload = backupData || {
+      trades: tradesList,
+      notes: notesList,
+      timestamp: new Date().toISOString(),
+    };
+
+    const sizeBytes = Buffer.byteLength(JSON.stringify(backupPayload), 'utf8');
+
+    const saved = await saveUserBackup(userId, {
+      id: `bak-${Date.now()}`,
+      name: name || `TradeForge Backup (${new Date().toLocaleDateString()})`,
+      sizeBytes,
+      tradeCount: tradesList.length,
+      notesCount: notesList.length,
+      backupData: backupPayload,
+      createdAt: new Date().toISOString(),
+    });
+
+    await recordActivityLog(userId, {
+      action: 'Create System Backup',
+      category: 'DATA',
+      object: saved.name,
+      status: 'SUCCESS',
+      source: 'Web Client',
+      details: { sizeBytes, tradeCount: tradesList.length },
+    });
+
+    res.json({ success: true, backup: saved });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to create backup' });
+  }
+});
+
+app.delete('/api/backups/:id', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const { id } = req.params;
+    await deleteUserBackup(userId, id);
+    await recordActivityLog(userId, {
+      action: 'Delete Backup Snapshot',
+      category: 'DATA',
+      object: `Backup (${id})`,
+      status: 'WARNING',
+      source: 'Web Client',
+    });
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to delete backup' });
+  }
+});
+
+app.post('/api/data-reset', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const { confirmationPhrase, resetType } = req.body;
+
+    // Strict validation
+    if (resetType === 'wipeAll') {
+      if (confirmationPhrase !== 'DELETE MY DATA') {
+        return res.status(400).json({ success: false, error: 'Confirmation phrase must match "DELETE MY DATA"' });
+      }
+      const result = await resetUserData(userId, { wipeAll: true });
+      return res.json({ success: true, ...result });
+    }
+
+    if (resetType === 'trades') {
+      if (confirmationPhrase !== 'DELETE TRADES') {
+        return res.status(400).json({ success: false, error: 'Confirmation phrase must match "DELETE TRADES"' });
+      }
+      const result = await resetUserData(userId, { deleteTrades: true });
+      return res.json({ success: true, ...result });
+    }
+
+    if (resetType === 'journal') {
+      if (confirmationPhrase !== 'DELETE JOURNAL') {
+        return res.status(400).json({ success: false, error: 'Confirmation phrase must match "DELETE JOURNAL"' });
+      }
+      const result = await resetUserData(userId, { deleteJournal: true });
+      return res.json({ success: true, ...result });
+    }
+
+    if (resetType === 'settings') {
+      const result = await resetUserData(userId, { resetSettings: true });
+      return res.json({ success: true, ...result });
+    }
+
+    return res.status(400).json({ success: false, error: 'Invalid resetType specified' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to execute data reset' });
   }
 });
 
@@ -348,7 +764,8 @@ app.post('/api/sync-migration', requireAuth, async (req: AuthRequest, res) => {
       notes: clientNotes,
       folders: clientFolders,
       riskGoals: clientRiskGoals,
-      backtestSessions: clientBacktestSessions
+      backtestSessions: clientBacktestSessions,
+      propFirmAccounts: clientPropFirmAccounts,
     } = req.body;
 
     if (Array.isArray(accounts)) {
@@ -374,6 +791,9 @@ app.post('/api/sync-migration', requireAuth, async (req: AuthRequest, res) => {
     }
     if (Array.isArray(clientBacktestSessions)) {
       for (const bs of clientBacktestSessions) await saveBacktestSession(userId, bs);
+    }
+    if (Array.isArray(clientPropFirmAccounts)) {
+      for (const pfa of clientPropFirmAccounts) await savePropFirmAccount(userId, pfa);
     }
 
     res.json({ success: true, message: 'Migration completed successfully' });
@@ -453,6 +873,37 @@ app.delete('/api/accounts/:id', requireAuth, async (req: AuthRequest, res) => {
   try {
     const userId = req.devUserId || 'default_user_1';
     await deleteTradingAccount(userId, req.params.id);
+    res.json({ success: true });
+  } catch (error: any) {
+    handleApiError(res, error);
+  }
+});
+
+// Prop Firm Accounts REST endpoints
+app.get('/api/prop-firm-accounts', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const accounts = await getPropFirmAccounts(userId);
+    res.json({ success: true, accounts });
+  } catch (error: any) {
+    handleApiError(res, error);
+  }
+});
+
+app.post('/api/prop-firm-accounts', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const account = await savePropFirmAccount(userId, req.body);
+    res.json({ success: true, account });
+  } catch (error: any) {
+    handleApiError(res, error);
+  }
+});
+
+app.delete('/api/prop-firm-accounts/:id', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    await deletePropFirmAccount(userId, req.params.id);
     res.json({ success: true });
   } catch (error: any) {
     handleApiError(res, error);
@@ -568,7 +1019,23 @@ app.post('/api/journal/notes', requireAuth, async (req: AuthRequest, res) => {
 app.delete('/api/journal/notes/:id', requireAuth, async (req: AuthRequest, res) => {
   try {
     const userId = req.devUserId || 'default_user_1';
-    await deleteJournalNote(userId, req.params.id);
+    const isPermanent = req.query.permanent === 'true';
+    if (isPermanent) {
+      await permanentDeleteJournalNote(userId, req.params.id);
+    } else {
+      await softDeleteJournalNote(userId, req.params.id);
+    }
+    res.json({ success: true, permanent: isPermanent });
+  } catch (error: any) {
+    handleApiError(res, error);
+  }
+});
+
+app.post('/api/journal/notes/:id/restore', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const originalFolderId = req.body?.originalFolderId || (req.query.folderId as string);
+    await restoreJournalNote(userId, req.params.id, originalFolderId);
     res.json({ success: true });
   } catch (error: any) {
     handleApiError(res, error);
@@ -585,15 +1052,60 @@ app.post('/api/journal/folders', requireAuth, async (req: AuthRequest, res) => {
   }
 });
 
-app.delete('/api/journal/folders/:id', requireAuth, async (req: AuthRequest, res) => {
+app.patch('/api/journal/folders/:id', requireAuth, async (req: AuthRequest, res) => {
   try {
     const userId = req.devUserId || 'default_user_1';
-    await deleteJournalFolder(userId, req.params.id);
+    await saveJournalFolder(userId, { ...req.body, id: req.params.id });
     res.json({ success: true });
   } catch (error: any) {
     handleApiError(res, error);
   }
 });
+
+app.delete('/api/journal/folders/:id', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const isPermanent = req.query.permanent === 'true';
+    if (isPermanent) {
+      await permanentDeleteJournalFolder(userId, req.params.id);
+    } else {
+      await softDeleteJournalFolder(userId, req.params.id);
+    }
+    res.json({ success: true, permanent: isPermanent });
+  } catch (error: any) {
+    handleApiError(res, error);
+  }
+});
+
+app.post('/api/journal/folders/:id/restore', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    await restoreJournalFolder(userId, req.params.id);
+    res.json({ success: true });
+  } catch (error: any) {
+    handleApiError(res, error);
+  }
+});
+
+app.post('/api/journal/cleanup-expired', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const result = await purgeExpiredTrash(userId);
+    res.json({ success: true, ...result });
+  } catch (error: any) {
+    handleApiError(res, error);
+  }
+});
+
+// Periodic background job: automatically purge expired trash items older than 2 days
+setTimeout(() => {
+  purgeExpiredTrash().catch((err) => console.warn('[Server] Trash purge initial check error:', err?.message || err));
+}, 5000);
+
+setInterval(() => {
+  purgeExpiredTrash().catch((err) => console.warn('[Server] Scheduled trash purge error:', err?.message || err));
+}, 15 * 60 * 1000);
+
 
 // Risk Goals REST endpoint
 app.get('/api/risk-goals', requireAuth, async (req: AuthRequest, res) => {
@@ -618,6 +1130,65 @@ app.post('/api/risk-goals', requireAuth, async (req: AuthRequest, res) => {
   }
 });
 
+// Unlock Hard Locked Account Endpoint
+app.post('/api/risk-goals/unlock', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const { tradingAccountId, unlockReason, unlockedBy } = req.body;
+    const currentGoals = await getRiskGoals(userId, tradingAccountId);
+    const updatedGoals = {
+      ...currentGoals,
+      circuitBreakerTriggered: false,
+      circuitBreakerState: 'ARMED' as const,
+      hardLockEnabled: false,
+      unlockedAt: new Date().toISOString(),
+      unlockedBy: unlockedBy || 'Trader',
+      unlockReason: unlockReason || 'Authorized supervisor unlock',
+    };
+    await saveRiskGoals(userId, updatedGoals, tradingAccountId);
+
+    // Also record unlock event into audit log
+    await saveRiskEvent(userId, {
+      accountId: tradingAccountId,
+      eventType: 'MANUAL_UNLOCK',
+      rule: 'Circuit Breaker Manual Unlock',
+      currentValue: 'LOCKED',
+      limitValue: 'ARMED',
+      severity: 'INFO',
+      actionTaken: 'Account unlocked and returned to ARMED status',
+      unlockedBy: unlockedBy || 'Trader',
+      unlockReason: unlockReason || 'Manual trader override',
+      notes: `Trader provided unlock confirmation with reflection: "${unlockReason || 'None provided'}"`,
+    });
+
+    res.json({ success: true, riskGoals: updatedGoals });
+  } catch (error: any) {
+    handleApiError(res, error);
+  }
+});
+
+// Risk Events Audit Log Endpoints
+app.get('/api/risk-events', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const accountId = (req.query.accountId as string) || undefined;
+    const events = await getRiskEvents(userId, accountId);
+    res.json({ success: true, riskEvents: events });
+  } catch (error: any) {
+    handleApiError(res, error);
+  }
+});
+
+app.post('/api/risk-events', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const eventId = await saveRiskEvent(userId, req.body);
+    res.json({ success: true, id: eventId });
+  } catch (error: any) {
+    handleApiError(res, error);
+  }
+});
+
 // Notifications REST endpoint
 app.post('/api/notifications', requireAuth, async (req: AuthRequest, res) => {
   try {
@@ -626,6 +1197,183 @@ app.post('/api/notifications', requireAuth, async (req: AuthRequest, res) => {
     res.json({ success: true });
   } catch (error: any) {
     handleApiError(res, error);
+  }
+});
+
+// ============================================================================
+// REAL PRODUCTION-GRADE GOOGLE GEMINI AI TRADING INTELLIGENCE ENDPOINTS
+// ============================================================================
+
+// 1. AI Trading Coach & Natural Language Intelligence Chat
+app.post(['/api/ai/coach', '/api/ai/chat'], requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    await ensureUserAndInitialSeed(userId);
+
+    const {
+      message,
+      question,
+      conversationHistory,
+      activeAccountId,
+      activePropFirmAccountId,
+      trades: clientTrades,
+      playbooks: clientPlaybooks,
+    } = req.body;
+
+    const query = (message || question || '').trim();
+    if (!query) {
+      return res.status(400).json({ success: false, error: 'Query message is required' });
+    }
+
+    // Retrieve full authenticated user dataset from database in parallel
+    const [
+      dbTrades,
+      dbAccounts,
+      dbPropFirmAccounts,
+      dbPlaybooks,
+      dbStrategies,
+      dbJournalNotes,
+      dbRiskGoals,
+    ] = await Promise.all([
+      getTrades(userId),
+      getTradingAccounts(userId),
+      getPropFirmAccounts(userId),
+      getPlaybooks(userId),
+      getStrategies(userId),
+      getJournalNotes(userId),
+      getRiskGoals(userId, activeAccountId),
+    ]);
+
+    // Use client-provided trades if passed (e.g. filtered view), otherwise database trades
+    const tradesToAnalyze = Array.isArray(clientTrades) && clientTrades.length > 0 ? clientTrades : dbTrades;
+    const playbooksToUse = Array.isArray(clientPlaybooks) && clientPlaybooks.length > 0 ? clientPlaybooks : dbPlaybooks;
+
+    const result = await executeAiCoachQuery({
+      userId,
+      query,
+      conversationHistory,
+      trades: tradesToAnalyze,
+      tradingAccounts: dbAccounts,
+      propFirmAccounts: dbPropFirmAccounts,
+      playbooks: playbooksToUse,
+      strategies: dbStrategies,
+      journalNotes: dbJournalNotes,
+      riskGoals: dbRiskGoals,
+      activeAccountId,
+      activePropFirmAccountId,
+    });
+
+    res.json({
+      success: true,
+      reply: result.reply,
+      summary: result.summary,
+      intent: result.intent,
+      sampleSizeTier: result.sampleSizeTier,
+      appliedFilters: result.appliedFilters,
+      dataScope: result.dataScope,
+      deterministicSummary: result.deterministicSummary,
+      evidence: result.evidence,
+      primaryLeak: result.primaryLeak,
+      referencedTrades: result.referencedTrades,
+      toolInvocations: result.toolInvocations,
+      actionablePrescriptions: result.actionablePrescriptions,
+    });
+  } catch (error: any) {
+    console.error('[AI Coach API Error]:', error);
+    res.status(500).json({
+      success: false,
+      error: error?.message || 'AI Intelligence Engine error',
+    });
+  }
+});
+
+// 2. AI Trade Execution Audit & Score
+app.post('/api/ai/trade-review', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    await ensureUserAndInitialSeed(userId);
+
+    const { tradeId, trade, playbook, playbookId } = req.body;
+
+    let targetTrade = trade;
+    if (!targetTrade && tradeId) {
+      const userTrades = await getTrades(userId);
+      targetTrade = userTrades.find((t) => t.id === tradeId);
+    }
+
+    if (!targetTrade) {
+      return res.status(400).json({ success: false, error: 'Trade data or valid tradeId is required' });
+    }
+
+    let targetPlaybook = playbook;
+    if (!targetPlaybook && (playbookId || targetTrade.setupType)) {
+      const playbooks = await getPlaybooks(userId);
+      targetPlaybook = playbooks.find(
+        (p) => p.id === playbookId || p.name === targetTrade.setupType || p.id === targetTrade.playbookId
+      );
+    }
+
+    const review = await executeTradeReview({
+      trade: targetTrade,
+      playbook: targetPlaybook,
+    });
+
+    res.json({ success: true, review });
+  } catch (error: any) {
+    console.error('[AI Trade Review API Error]:', error);
+    res.status(500).json({
+      success: false,
+      error: error?.message || 'Trade review failed',
+    });
+  }
+});
+
+// 3. AI Performance Report Generator
+app.post('/api/ai/report', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    await ensureUserAndInitialSeed(userId);
+
+    const { type = 'weekly', dateRange, accountId, propFirmAccountId } = req.body;
+
+    const [
+      dbTrades,
+      dbAccounts,
+      dbPropFirmAccounts,
+      dbPlaybooks,
+      dbStrategies,
+      dbJournalNotes,
+    ] = await Promise.all([
+      getTrades(userId),
+      getTradingAccounts(userId),
+      getPropFirmAccounts(userId),
+      getPlaybooks(userId),
+      getStrategies(userId),
+      getJournalNotes(userId),
+    ]);
+
+    const report = await generateAiPerformanceReport({
+      trades: dbTrades,
+      tradingAccounts: dbAccounts,
+      propFirmAccounts: dbPropFirmAccounts,
+      playbooks: dbPlaybooks,
+      strategies: dbStrategies,
+      journalNotes: dbJournalNotes,
+      request: {
+        type,
+        dateRange,
+        accountId,
+        propFirmAccountId,
+      },
+    });
+
+    res.json({ success: true, report });
+  } catch (error: any) {
+    console.error('[AI Report API Error]:', error);
+    res.status(500).json({
+      success: false,
+      error: error?.message || 'Performance report generation failed',
+    });
   }
 });
 
@@ -2681,8 +3429,12 @@ async function recoverStaleEvents(timeoutMinutes: number = 5) {
         });
       }
     }
-  } catch (error) {
-    console.error('[Stale Recovery] Error recovering stale events:', error);
+  } catch (error: any) {
+    // Graceful notice for background worker when database is offline or unmigrated
+    if (!(global as any).__lastStaleRecoveryErrorLogged || Date.now() - (global as any).__lastStaleRecoveryErrorLogged > 60000) {
+      console.warn('[Stale Recovery] Note: background stale recovery waiting for active database connection.');
+      (global as any).__lastStaleRecoveryErrorLogged = Date.now();
+    }
   }
 }
 

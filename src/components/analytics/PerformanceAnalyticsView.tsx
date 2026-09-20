@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { useTrading } from '../../context/TradingContext';
 import { Trade } from '../../types';
+import { safeFormatDate } from '../../utils/dateUtils';
 import { calculatePerformanceMetrics } from './analyticsUtils';
 import { DynamicChartCard } from '../reports/DynamicChartCard';
 
@@ -218,7 +219,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
       current += t.netPnl;
       if (current > peak) peak = current;
       points.push({
-        date: t.entryDate ? new Date(t.entryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '',
+        date: safeFormatDate(t.entryDate, '', { month: 'short', day: 'numeric' }),
         balance: current,
         pnl: t.netPnl,
         peak,
@@ -234,7 +235,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
     chronoTrades.forEach(t => {
       running += t.netPnl;
       points.push({
-        date: t.entryDate ? new Date(t.entryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '',
+        date: safeFormatDate(t.entryDate, '', { month: 'short', day: 'numeric' }),
         cumulative: running,
         pnl: t.netPnl,
       });
@@ -253,7 +254,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
       const dd = peak - current;
       const ddPct = peak > 0 ? (dd / peak) * 100 : 0;
       points.push({
-        date: t.entryDate ? new Date(t.entryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '',
+        date: safeFormatDate(t.entryDate, '', { month: 'short', day: 'numeric' }),
         ddDollar: dd,
         ddPercent: ddPct,
       });
@@ -327,7 +328,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
       {/* ========================================================================= */}
       {/* 1. HEADER & BREADCRUMB */}
       {/* ========================================================================= */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1C232E]">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-blue-400 uppercase tracking-wider mb-1">
             <span>Analytics</span>
@@ -346,7 +347,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs font-semibold text-slate-200 hover:bg-slate-800 hover:border-slate-700 transition"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#12161D] border border-[#1C232E] text-xs font-semibold text-slate-200 hover:bg-[#1A1F27] hover:border-[#273141] transition"
             title="Export filtered trades to CSV"
           >
             <Download className="w-3.5 h-3.5 text-blue-400" />
@@ -358,18 +359,18 @@ export const PerformanceAnalyticsView: React.FC = () => {
       {/* ========================================================================= */}
       {/* 2. FILTER TOOLBAR */}
       {/* ========================================================================= */}
-      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/90 p-4 shadow-xl backdrop-blur-sm space-y-3.5">
+      <div className="rounded-2xl border border-[#1C232E] bg-[#12161D] p-4 shadow-xl backdrop-blur-sm space-y-3.5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Time Range Pills */}
-          <div className="flex flex-wrap items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800/80">
+          <div className="flex flex-wrap items-center gap-1.5 bg-[#0A0D14] p-1 rounded-xl border border-[#1C232E]">
             {(['TODAY', '7D', '30D', '3M', '6M', '1Y', 'ALL', 'CUSTOM'] as TimeRangeFilter[]).map(tab => (
               <button
                 key={tab}
                 onClick={() => setTimeRange(tab)}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition whitespace-nowrap ${
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition whitespace-nowrap cursor-pointer ${
                   timeRange === tab
-                    ? 'bg-blue-600 text-white shadow-sm shadow-blue-600/30'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
+                    : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
                 }`}
               >
                 {tab === 'TODAY' ? 'Today' : tab === 'ALL' ? 'All Time' : tab === 'CUSTOM' ? 'Custom' : tab}
@@ -378,19 +379,19 @@ export const PerformanceAnalyticsView: React.FC = () => {
           </div>
 
           {/* Outcome Filter */}
-          <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800/80">
+          <div className="flex items-center gap-1 bg-[#0A0D14] p-1 rounded-xl border border-[#1C232E]">
             {(['ALL', 'WINNERS', 'LOSERS', 'BREAKEVEN'] as OutcomeFilter[]).map(outcome => (
               <button
                 key={outcome}
                 onClick={() => setOutcomeFilter(outcome)}
-                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition whitespace-nowrap ${
+                className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition whitespace-nowrap cursor-pointer ${
                   outcomeFilter === outcome
                     ? outcome === 'WINNERS'
-                      ? 'bg-emerald-600 text-white'
+                      ? 'bg-emerald-600 text-white shadow-md shadow-emerald-600/25'
                       : outcome === 'LOSERS'
-                      ? 'bg-rose-600 text-white'
-                      : 'bg-blue-600 text-white'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900'
+                      ? 'bg-rose-600 text-white shadow-md shadow-rose-600/25'
+                      : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
+                    : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
                 }`}
               >
                 {outcome === 'ALL' ? 'All Trades' : outcome === 'WINNERS' ? 'Winners' : outcome === 'LOSERS' ? 'Losers' : 'Break-even'}
@@ -400,14 +401,14 @@ export const PerformanceAnalyticsView: React.FC = () => {
         </div>
 
         {/* Second Filter Row (Dropdowns & Custom Date Range) */}
-        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-slate-800/60">
+        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-[#1C232E]">
           {/* Account Selector */}
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-medium text-slate-400">Account:</span>
             <select
               value={selectedAccountId}
               onChange={e => setSelectedAccountId(e.target.value)}
-              className="rounded-lg bg-slate-950 border border-slate-800 px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+              className="rounded-lg bg-[#0A0D14] border border-[#1C232E] px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
             >
               <option value="all">All Accounts ({accounts.length})</option>
               {accounts.map(acc => (
@@ -424,7 +425,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
             <select
               value={selectedSymbol}
               onChange={e => setSelectedSymbol(e.target.value)}
-              className="rounded-lg bg-slate-950 border border-slate-800 px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+              className="rounded-lg bg-[#0A0D14] border border-[#1C232E] px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
             >
               <option value="ALL">All Symbols ({availableSymbols.length})</option>
               {availableSymbols.map(s => (
@@ -439,7 +440,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
             <select
               value={selectedStrategy}
               onChange={e => setSelectedStrategy(e.target.value)}
-              className="rounded-lg bg-slate-950 border border-slate-800 px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+              className="rounded-lg bg-[#0A0D14] border border-[#1C232E] px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
             >
               <option value="ALL">All Setups ({availableStrategies.length})</option>
               {availableStrategies.map(strat => (
@@ -450,7 +451,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
 
           {/* Custom Date Inputs */}
           {timeRange === 'CUSTOM' && (
-            <div className="flex items-center gap-2 bg-slate-950 px-2.5 py-1 rounded-lg border border-slate-800">
+            <div className="flex items-center gap-2 bg-[#0A0D14] px-2.5 py-1 rounded-lg border border-[#1C232E]">
               <input
                 type="date"
                 value={customStartDate}
@@ -483,7 +484,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
       {/* ========================================================================= */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
         {/* Total Net PnL */}
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-md space-y-1">
+        <div className="p-4 rounded-2xl bg-[#12161D] border border-[#1C232E] shadow-md space-y-1">
           <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase">
             <span>Net Realized P&L</span>
             <DollarSign className={`w-3.5 h-3.5 ${metrics.totalNetPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`} />
@@ -500,7 +501,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
         </div>
 
         {/* Win Rate */}
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-md space-y-1">
+        <div className="p-4 rounded-2xl bg-[#12161D] border border-[#1C232E] shadow-md space-y-1">
           <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase">
             <span>Win Rate</span>
             <Percent className="w-3.5 h-3.5 text-blue-400" />
@@ -514,7 +515,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
         </div>
 
         {/* Profit Factor */}
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-md space-y-1">
+        <div className="p-4 rounded-2xl bg-[#12161D] border border-[#1C232E] shadow-md space-y-1">
           <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase">
             <span>Profit Factor</span>
             <Award className="w-3.5 h-3.5 text-amber-400" />
@@ -528,7 +529,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
         </div>
 
         {/* Average Trade P&L */}
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-md space-y-1">
+        <div className="p-4 rounded-2xl bg-[#12161D] border border-[#1C232E] shadow-md space-y-1">
           <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase">
             <span>Avg Trade P&L</span>
             <Activity className="w-3.5 h-3.5 text-cyan-400" />
@@ -542,7 +543,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
         </div>
 
         {/* Maximum Drawdown */}
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-md space-y-1">
+        <div className="p-4 rounded-2xl bg-[#12161D] border border-[#1C232E] shadow-md space-y-1">
           <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase">
             <span>Max Drawdown</span>
             <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
@@ -556,7 +557,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
         </div>
 
         {/* Streaks & Discipline */}
-        <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800/80 shadow-md space-y-1">
+        <div className="p-4 rounded-2xl bg-[#12161D] border border-[#1C232E] shadow-md space-y-1">
           <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase">
             <span>Win Streak</span>
             <Flame className="w-3.5 h-3.5 text-orange-400" />
@@ -575,8 +576,8 @@ export const PerformanceAnalyticsView: React.FC = () => {
       {/* ========================================================================= */}
       {/* 4. SECONDARY DETAILED PERFORMANCE METRIC GRID (18 Granular Stats) */}
       {/* ========================================================================= */}
-      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/90 p-5 shadow-xl backdrop-blur-sm space-y-4">
-        <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+      <div className="rounded-2xl border border-[#1C232E] bg-[#12161D] p-5 shadow-xl backdrop-blur-sm space-y-4">
+        <div className="flex items-center justify-between pb-2 border-b border-[#1C232E]">
           <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
             <SlidersHorizontal className="w-4 h-4 text-blue-400" />
             Executive Performance Roster
@@ -588,56 +589,56 @@ export const PerformanceAnalyticsView: React.FC = () => {
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 text-xs">
           {/* Gross Profit */}
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/70 space-y-1">
+          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
             <span className="text-[10px] text-slate-500 font-medium uppercase">Gross Profit</span>
             <div className="font-mono font-bold text-emerald-400 text-sm">+{formatCurrency(metrics.grossProfit)}</div>
             <div className="text-[10px] text-slate-400">{metrics.winningTrades} winning trades</div>
           </div>
 
           {/* Gross Loss */}
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/70 space-y-1">
+          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
             <span className="text-[10px] text-slate-500 font-medium uppercase">Gross Loss</span>
             <div className="font-mono font-bold text-rose-400 text-sm">-{formatCurrency(metrics.grossLoss)}</div>
             <div className="text-[10px] text-slate-400">{metrics.losingTrades} losing trades</div>
           </div>
 
           {/* Average Win */}
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/70 space-y-1">
+          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
             <span className="text-[10px] text-slate-500 font-medium uppercase">Average Win</span>
             <div className="font-mono font-bold text-emerald-400 text-sm">+{formatCurrency(metrics.avgWin)}</div>
             <div className="text-[10px] text-slate-400">Ratio: {metrics.winLossRatio}x</div>
           </div>
 
           {/* Average Loss */}
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/70 space-y-1">
+          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
             <span className="text-[10px] text-slate-500 font-medium uppercase">Average Loss</span>
             <div className="font-mono font-bold text-rose-400 text-sm">-{formatCurrency(metrics.avgLoss)}</div>
             <div className="text-[10px] text-slate-400">Risk controlled</div>
           </div>
 
           {/* Largest Win */}
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/70 space-y-1">
+          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
             <span className="text-[10px] text-slate-500 font-medium uppercase">Largest Win</span>
             <div className="font-mono font-bold text-emerald-400 text-sm">+{formatCurrency(metrics.largestWin)}</div>
             <div className="text-[10px] text-slate-400">Peak single trade</div>
           </div>
 
           {/* Largest Loss */}
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/70 space-y-1">
+          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
             <span className="text-[10px] text-slate-500 font-medium uppercase">Largest Loss</span>
             <div className="font-mono font-bold text-rose-400 text-sm">{formatCurrency(metrics.largestLoss)}</div>
             <div className="text-[10px] text-slate-400">Max single risk</div>
           </div>
 
           {/* Break-even Count */}
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/70 space-y-1">
+          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
             <span className="text-[10px] text-slate-500 font-medium uppercase">Break-even Trades</span>
             <div className="font-mono font-bold text-slate-300 text-sm">{metrics.breakevenTrades}</div>
             <div className="text-[10px] text-slate-400">{metrics.closedTrades ? ((metrics.breakevenTrades / metrics.closedTrades) * 100).toFixed(0) : 0}% of all trades</div>
           </div>
 
           {/* Current Drawdown */}
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/70 space-y-1">
+          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
             <span className="text-[10px] text-slate-500 font-medium uppercase">Current Drawdown</span>
             <div className="font-mono font-bold text-amber-400 text-sm">
               -${Math.round(metrics.currentDrawdownDollar).toLocaleString()}
@@ -646,7 +647,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
           </div>
 
           {/* Average Duration */}
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/70 space-y-1">
+          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
             <span className="text-[10px] text-slate-500 font-medium uppercase">Avg Holding Time</span>
             <div className="font-mono font-bold text-slate-200 text-sm">
               {metrics.avgDurationMinutes >= 60
@@ -657,7 +658,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
           </div>
 
           {/* Best Trading Day */}
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/70 space-y-1">
+          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
             <span className="text-[10px] text-slate-500 font-medium uppercase">Best Trading Day</span>
             <div className="font-mono font-bold text-emerald-400 text-sm">
               +{formatCurrency(metrics.bestTradingDay.pnl)}
@@ -666,7 +667,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
           </div>
 
           {/* Worst Trading Day */}
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/70 space-y-1">
+          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
             <span className="text-[10px] text-slate-500 font-medium uppercase">Worst Trading Day</span>
             <div className="font-mono font-bold text-rose-400 text-sm">
               {formatCurrency(metrics.worstTradingDay.pnl)}
@@ -675,7 +676,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
           </div>
 
           {/* Longest Loss Streak */}
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800/70 space-y-1">
+          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
             <span className="text-[10px] text-slate-500 font-medium uppercase">Max Losing Streak</span>
             <div className="font-mono font-bold text-rose-400 text-sm">{metrics.longestLossStreak} trades</div>
             <div className="text-[10px] text-slate-400">Rules followed: {metrics.rulesFollowedRate}%</div>
@@ -726,46 +727,56 @@ export const PerformanceAnalyticsView: React.FC = () => {
       {/* ========================================================================= */}
       {/* 5. INTERACTIVE PERFORMANCE CHARTS */}
       {/* ========================================================================= */}
-      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/90 p-5 shadow-xl backdrop-blur-sm space-y-4">
+      <div className="rounded-2xl border border-[#1C232E] bg-[#12161D] p-5 shadow-xl backdrop-blur-sm space-y-4">
         {/* Chart Navigation Tabs */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-slate-800">
-          <div className="flex flex-wrap items-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-slate-800">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#1C232E]">
+          <div className="flex flex-wrap items-center gap-1.5 bg-[#0A0D14] p-1 rounded-xl border border-[#1C232E]">
             <button
               onClick={() => setActiveChartTab('EQUITY')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
-                activeChartTab === 'EQUITY' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                activeChartTab === 'EQUITY'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
+                  : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
               }`}
             >
               Equity Curve & Growth
             </button>
             <button
               onClick={() => setActiveChartTab('CUMULATIVE')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
-                activeChartTab === 'CUMULATIVE' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                activeChartTab === 'CUMULATIVE'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
+                  : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
               }`}
             >
               Cumulative Net P&L
             </button>
             <button
               onClick={() => setActiveChartTab('DRAWDOWN')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
-                activeChartTab === 'DRAWDOWN' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                activeChartTab === 'DRAWDOWN'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
+                  : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
               }`}
             >
               Drawdown Curve (Underwater)
             </button>
             <button
               onClick={() => setActiveChartTab('PERIODIC')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
-                activeChartTab === 'PERIODIC' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                activeChartTab === 'PERIODIC'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
+                  : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
               }`}
             >
               Periodic Realized P&L
             </button>
             <button
               onClick={() => setActiveChartTab('DISTRIBUTION')}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition ${
-                activeChartTab === 'DISTRIBUTION' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-slate-200'
+              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                activeChartTab === 'DISTRIBUTION'
+                  ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
+                  : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
               }`}
             >
               P&L & Win/Loss Distribution
@@ -773,13 +784,15 @@ export const PerformanceAnalyticsView: React.FC = () => {
           </div>
 
           {activeChartTab === 'PERIODIC' && (
-            <div className="flex items-center gap-1 bg-slate-950 p-1 rounded-xl border border-slate-800">
+            <div className="flex items-center gap-1 bg-[#0A0D14] p-1 rounded-xl border border-[#1C232E]">
               {(['DAILY', 'WEEKLY', 'MONTHLY'] as PnlInterval[]).map(int => (
                 <button
                   key={int}
                   onClick={() => setPnlInterval(int)}
-                  className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition ${
-                    pnlInterval === int ? 'bg-slate-800 text-white' : 'text-slate-400 hover:text-slate-200'
+                  className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition cursor-pointer ${
+                    pnlInterval === int
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
+                      : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
                   }`}
                 >
                   {int}
@@ -789,7 +802,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
           )}
 
           {hoverDataPoint && (
-            <div className="text-xs font-mono bg-slate-950 px-3 py-1 rounded-lg border border-slate-800 text-slate-300">
+            <div className="text-xs font-mono bg-[#0A0D14] px-3 py-1 rounded-lg border border-[#1C232E] text-slate-300">
               <span className="text-slate-500">{hoverDataPoint.label}: </span>
               <span className="font-bold text-blue-400">{hoverDataPoint.value}</span>
               {hoverDataPoint.sub && <span className="text-slate-500 ml-1">({hoverDataPoint.sub})</span>}
@@ -1089,8 +1102,8 @@ export const PerformanceAnalyticsView: React.FC = () => {
       {/* ========================================================================= */}
       {/* 6. DETAILED EXECUTION AUDIT TABLE (Filtered Subset) */}
       {/* ========================================================================= */}
-      <div className="rounded-2xl border border-slate-800/90 bg-slate-900/90 p-5 shadow-xl backdrop-blur-sm space-y-4">
-        <div className="flex items-center justify-between pb-2 border-b border-slate-800">
+      <div className="rounded-2xl border border-[#1C232E] bg-[#12161D] p-5 shadow-xl backdrop-blur-sm space-y-4">
+        <div className="flex items-center justify-between pb-2 border-b border-[#1C232E]">
           <div>
             <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
               Filtered Execution Log ({filteredTrades.length} Trades)
@@ -1104,7 +1117,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-slate-800 text-[11px] font-bold uppercase text-slate-400 bg-slate-950/60">
+              <tr className="border-b border-[#1C232E] text-[11px] font-bold uppercase text-slate-400 bg-[#0A0D14]">
                 <th className="p-3">Date</th>
                 <th className="p-3">Asset / Symbol</th>
                 <th className="p-3">Direction</th>
@@ -1122,10 +1135,10 @@ export const PerformanceAnalyticsView: React.FC = () => {
                 <tr
                   key={trade.id}
                   onClick={() => setSelectedTrade(trade)}
-                  className="hover:bg-slate-800/50 cursor-pointer transition"
+                  className="hover:bg-[#1A1F27]/50 cursor-pointer transition"
                 >
                   <td className="p-3 text-slate-400 text-[11px]">
-                    {trade.entryDate ? new Date(trade.entryDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '—'}
+                    {safeFormatDate(trade.entryDate, '—', { month: 'short', day: 'numeric' })}
                   </td>
                   <td className="p-3 font-bold text-slate-200">
                     {trade.symbol}

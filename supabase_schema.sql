@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS public.journal_notes (
   account_id TEXT NOT NULL,
   date TEXT NOT NULL,
   title TEXT NOT NULL,
-  folder_id TEXT NOT NULL,
+  folder_id TEXT,
   tags JSONB NOT NULL DEFAULT '[]'::jsonb,
   content TEXT NOT NULL DEFAULT '',
   pre_market_plan JSONB NOT NULL DEFAULT '{}'::jsonb,
@@ -146,6 +146,10 @@ CREATE TABLE IF NOT EXISTS public.journal_notes (
   screenshots JSONB NOT NULL DEFAULT '[]'::jsonb,
   template_used TEXT,
   is_favorite BOOLEAN DEFAULT FALSE,
+  is_deleted BOOLEAN DEFAULT FALSE,
+  deleted_at TIMESTAMP WITH TIME ZONE,
+  deleted_by TEXT,
+  original_folder_id TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -156,6 +160,9 @@ CREATE TABLE IF NOT EXISTS public.journal_folders (
   name TEXT NOT NULL,
   icon TEXT,
   count INTEGER DEFAULT 0,
+  is_deleted BOOLEAN DEFAULT FALSE,
+  deleted_at TIMESTAMP WITH TIME ZONE,
+  deleted_by TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
@@ -403,6 +410,10 @@ CREATE INDEX IF NOT EXISTS idx_strategies_user_id ON public.strategies(user_id);
 CREATE INDEX IF NOT EXISTS idx_journal_notes_user_id ON public.journal_notes(user_id);
 CREATE INDEX IF NOT EXISTS idx_journal_notes_date ON public.journal_notes(date);
 CREATE INDEX IF NOT EXISTS idx_journal_notes_folder_id ON public.journal_notes(folder_id);
+CREATE INDEX IF NOT EXISTS idx_journal_notes_deleted ON public.journal_notes(user_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_journal_notes_deleted_at ON public.journal_notes(deleted_at);
+CREATE INDEX IF NOT EXISTS idx_journal_folders_deleted ON public.journal_folders(user_id, is_deleted);
+CREATE INDEX IF NOT EXISTS idx_journal_folders_deleted_at ON public.journal_folders(deleted_at);
 
 CREATE INDEX IF NOT EXISTS idx_community_posts_user_id ON public.community_posts(user_id);
 CREATE INDEX IF NOT EXISTS idx_community_posts_created_at ON public.community_posts(created_at DESC);
@@ -587,3 +598,36 @@ BEGIN
 EXCEPTION
   WHEN duplicate_object THEN NULL;
 END $$;
+
+-- 2-Day Automatic Trash Purge Function
+CREATE OR REPLACE FUNCTION public.purge_expired_trash_items()
+RETURNS void AS $$
+BEGIN
+  -- 1. Permanently delete notes in trash older than 2 days
+  DELETE FROM public.journal_notes
+  WHERE is_deleted = TRUE
+    AND deleted_at IS NOT NULL
+    AND deleted_at <= (NOW() - INTERVAL '2 days');
+
+  -- 2. Permanently delete folders in trash older than 2 days
+  DELETE FROM public.journal_folders
+  WHERE is_deleted = TRUE
+    AND deleted_at IS NOT NULL
+    AND deleted_at <= (NOW() - INTERVAL '2 days');
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Schedule purge via pg_cron if extension is available
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM pg_extension WHERE extname = 'pg_cron') THEN
+    PERFORM cron.schedule(
+      'purge_expired_journal_trash',
+      '0 * * * *', -- Run hourly
+      'SELECT public.purge_expired_trash_items();'
+    );
+  END IF;
+EXCEPTION
+  WHEN OTHERS THEN NULL;
+END $$;
+

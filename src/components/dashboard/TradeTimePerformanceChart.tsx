@@ -3,6 +3,7 @@ import { Trade } from '../../types';
 import { useTrading } from '../../context/TradingContext';
 import { Info, Settings, Sparkles, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import { DashboardInfoTooltip, METRIC_INFOS } from './DashboardInfoTooltip';
+import { parseSafeDate, safeFormatDate } from '../../utils/dateUtils';
 
 interface TradeTimePerformanceChartProps {
   trades: Trade[];
@@ -71,12 +72,10 @@ export const TradeTimePerformanceChart: React.FC<TradeTimePerformanceChartProps>
     const rawPoints = closed.map(trade => {
       let hours = 9;
       let minutes = 30;
-      if (trade.entryDate) {
-        const d = new Date(trade.entryDate);
-        if (!isNaN(d.getTime())) {
-          hours = d.getHours();
-          minutes = d.getMinutes();
-        }
+      const d = parseSafeDate(trade.entryDate || trade.exitDate);
+      if (d) {
+        hours = d.getHours();
+        minutes = d.getMinutes();
       }
       const totalMinutes = hours * 60 + minutes;
       const formattedTime = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
@@ -216,9 +215,9 @@ export const TradeTimePerformanceChart: React.FC<TradeTimePerformanceChartProps>
               <button
                 key={s}
                 onClick={() => setFilterSession(s)}
-                className={`px-2 py-0.5 rounded-md font-semibold transition ${
+                className={`px-2 py-0.5 rounded-md font-semibold transition cursor-pointer ${
                   filterSession === s
-                    ? 'bg-[#2563FF] text-white'
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-xs'
                     : theme === 'light'
                     ? 'text-[#6B7280] hover:text-[#111827] hover:bg-[#E5E7EB]'
                     : 'text-[#8C97AB] hover:text-[#F3F6FB] hover:bg-[#172030]'
