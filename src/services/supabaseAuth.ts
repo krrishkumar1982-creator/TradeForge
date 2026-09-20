@@ -153,42 +153,19 @@ export async function signInWithEmail(
   }
 }
 
-/**
- * Demo Sign In helper for quick inspection and review.
- */
-export async function signInDemoUser(): Promise<AuthResponse> {
+// Purge any lingering demo session on load to ensure only authentic user logins are used
+if (typeof window !== 'undefined') {
   try {
-    return await signInWithEmail('alex.river@tradeforge.com', 'TradeForge2026!');
-  } catch {
-    // If remote is paused, provide local demo session
-    const demoUser: User = {
-      id: 'usr_demo_trader_alex',
-      app_metadata: { provider: 'email' },
-      user_metadata: { full_name: 'Alex River', name: 'Alex River' },
-      aud: 'authenticated',
-      created_at: new Date().toISOString(),
-      email: 'alex.river@tradeforge.com',
-      role: 'authenticated',
-      updated_at: new Date().toISOString(),
-    };
-    const demoSession: Session = {
-      access_token: `demo_token_${Date.now()}`,
-      token_type: 'bearer',
-      expires_in: 3600 * 24 * 30,
-      refresh_token: `demo_rf_${Date.now()}`,
-      user: demoUser,
-    };
-    try {
-      localStorage.setItem('tradeforge_authenticated', 'true');
-      localStorage.setItem('tf_demo_session', JSON.stringify(demoSession));
-    } catch {}
+    localStorage.removeItem('tf_demo_session');
+    if (localStorage.getItem('tradeforge_user_id') === 'usr_demo_trader_alex') {
+      localStorage.removeItem('tradeforge_user_id');
+      localStorage.removeItem('tradeforge_authenticated');
+    }
+  } catch {}
+}
 
-    return {
-      user: demoUser,
-      session: demoSession,
-      error: null,
-    };
-  }
+export async function signInDemoUser(): Promise<AuthResponse> {
+  throw new Error('Demo login has been completely disabled. Please sign in with your account.');
 }
 
 /**
@@ -219,20 +196,8 @@ export async function getSession(): Promise<Session | null> {
   try {
     const { data, error } = await supabase.auth.getSession();
     if (!error && data?.session) return data.session;
-
-    // Check demo session
-    const demoRaw = localStorage.getItem('tf_demo_session');
-    if (demoRaw) {
-      return JSON.parse(demoRaw);
-    }
     return null;
   } catch {
-    const demoRaw = localStorage.getItem('tf_demo_session');
-    if (demoRaw) {
-      try {
-        return JSON.parse(demoRaw);
-      } catch {}
-    }
     return null;
   }
 }

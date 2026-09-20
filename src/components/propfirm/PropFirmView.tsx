@@ -24,6 +24,7 @@ import {
   ExternalLink,
   Edit2,
   Trash2,
+  Loader2,
   Copy,
   Zap,
   Globe,
@@ -79,6 +80,7 @@ export const PropFirmView: React.FC = () => {
   const [isAddAccountModalOpen, setIsAddAccountModalOpen] = useState(false);
   const [isEditAccountModalOpen, setIsEditAccountModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
   const [accountPendingDelete, setAccountPendingDelete] = useState<PropFirmAccount | null>(null);
   const [isAddRuleModalOpen, setIsAddRuleModalOpen] = useState(false);
   const [editingRule, setEditingRule] = useState<PropFirmRule | null>(null);
@@ -295,14 +297,23 @@ export const PropFirmView: React.FC = () => {
     setIsDeleteModalOpen(true);
   };
 
-  const handleConfirmDeleteAccount = () => {
+  const handleConfirmDeleteAccount = async () => {
     const target = accountPendingDelete || activeAccount;
     if (!target) return;
     const name = target.name;
-    deletePropFirmAccount(target.id);
-    setIsDeleteModalOpen(false);
-    setAccountPendingDelete(null);
-    addToast('Account Removed', `Prop firm account "${name}" has been deleted.`, 'info');
+    const targetId = target.id;
+    setIsDeletingAccount(true);
+    try {
+      await deletePropFirmAccount(targetId);
+      setIsDeleteModalOpen(false);
+      setAccountPendingDelete(null);
+      addToast('Account Removed', `Prop firm account "${name}" has been deleted.`, 'info');
+    } catch (err) {
+      console.error('Failed to delete prop firm account:', err);
+      addToast('Error', `Could not delete "${name}". Please try again.`, 'error');
+    } finally {
+      setIsDeletingAccount(false);
+    }
   };
 
   return (
@@ -2260,25 +2271,39 @@ export const PropFirmView: React.FC = () => {
             <div className={`pt-3 border-t flex items-center justify-end gap-3 ${isLight ? 'border-slate-100' : 'border-[#1C232E]'}`}>
               <button
                 type="button"
+                id="prop-firm-delete-cancel-btn"
                 onClick={() => {
+                  if (isDeletingAccount) return;
                   setIsDeleteModalOpen(false);
                   setAccountPendingDelete(null);
                 }}
-                className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer border ${
+                disabled={isDeletingAccount}
+                className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer border select-none inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-slate-400/40 disabled:opacity-50 disabled:cursor-not-allowed ${
                   isLight
-                    ? 'bg-slate-100 border-slate-200 text-slate-700 hover:bg-slate-200'
-                    : 'bg-[#1A1F27] border-[#1C232E] text-slate-300 hover:text-white'
+                    ? 'bg-slate-100 hover:bg-slate-200/80 active:bg-slate-300/80 border-slate-200 text-slate-700 hover:text-slate-900 shadow-xs'
+                    : 'bg-[#181D26] hover:bg-[#202734] active:bg-[#283141] border-[#252C38] text-slate-300 hover:text-white shadow-xs'
                 }`}
               >
                 Cancel
               </button>
               <button
                 type="button"
+                id="prop-firm-delete-confirm-btn"
                 onClick={handleConfirmDeleteAccount}
-                className="px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 active:scale-95 text-white text-xs font-bold transition shadow-md shadow-rose-600/25 border border-rose-500/40 cursor-pointer flex items-center gap-1.5"
+                disabled={isDeletingAccount}
+                className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-rose-600 to-red-600 hover:from-rose-500 hover:to-red-500 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-white text-xs font-bold transition-all duration-150 shadow-md shadow-rose-600/30 border border-rose-500/50 cursor-pointer inline-flex items-center justify-center gap-2 select-none focus:outline-none focus:ring-2 focus:ring-rose-500/50"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Delete Account</span>
+                {isDeletingAccount ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin shrink-0" />
+                    <span>Deleting Account...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5 shrink-0" />
+                    <span>Delete Account</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

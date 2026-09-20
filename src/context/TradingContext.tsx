@@ -389,12 +389,27 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
   // Prop Firm Accounts state scoped per user with fallback cache
   const [propFirmAccounts, setPropFirmAccounts] = useState<PropFirmAccount[]>(() => {
     try {
-      const keys = Object.keys(localStorage).filter((k) => k.startsWith('tf_prop_firm_accounts'));
-      for (const k of keys) {
-        const item = localStorage.getItem(k);
-        if (item) {
-          const parsed = JSON.parse(item);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      if (typeof localStorage !== 'undefined') {
+        const storedUid = localStorage.getItem('tradeforge_user_id');
+        if (storedUid) {
+          const userCache = localStorage.getItem(`tf_prop_firm_accounts_${storedUid}`);
+          if (userCache !== null) {
+            const parsed = JSON.parse(userCache);
+            if (Array.isArray(parsed)) return parsed;
+          }
+        }
+        const generalCache = localStorage.getItem('tf_prop_firm_accounts_cache');
+        if (generalCache !== null) {
+          const parsed = JSON.parse(generalCache);
+          if (Array.isArray(parsed)) return parsed;
+        }
+        const keys = Object.keys(localStorage).filter((k) => k.startsWith('tf_prop_firm_accounts'));
+        for (const k of keys) {
+          const item = localStorage.getItem(k);
+          if (item !== null) {
+            const parsed = JSON.parse(item);
+            if (Array.isArray(parsed)) return parsed;
+          }
         }
       }
     } catch {
@@ -404,11 +419,18 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
   });
   const [selectedPropFirmAccountId, setSelectedPropFirmAccountId] = useState<string>(() => {
     try {
-      const keys = Object.keys(localStorage).filter((k) => k.startsWith('tf_prop_firm_accounts'));
-      for (const k of keys) {
-        const item = localStorage.getItem(k);
-        if (item) {
-          const parsed = JSON.parse(item);
+      if (typeof localStorage !== 'undefined') {
+        const storedUid = localStorage.getItem('tradeforge_user_id');
+        if (storedUid) {
+          const userCache = localStorage.getItem(`tf_prop_firm_accounts_${storedUid}`);
+          if (userCache !== null) {
+            const parsed = JSON.parse(userCache);
+            if (Array.isArray(parsed) && parsed.length > 0) return parsed[0].id;
+          }
+        }
+        const generalCache = localStorage.getItem('tf_prop_firm_accounts_cache');
+        if (generalCache !== null) {
+          const parsed = JSON.parse(generalCache);
           if (Array.isArray(parsed) && parsed.length > 0) return parsed[0].id;
         }
       }
@@ -425,10 +447,27 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
 
   const persistPropFirmAccounts = (next: PropFirmAccount[]) => {
     try {
+      if (typeof localStorage === 'undefined') return;
       localStorage.setItem('tf_prop_firm_accounts_cache', JSON.stringify(next));
       const authUid = authUser?.id || (authUser as any)?.uid;
       if (authUid) {
         localStorage.setItem(`tf_prop_firm_accounts_${authUid}`, JSON.stringify(next));
+      }
+      const storedUid = localStorage.getItem('tradeforge_user_id');
+      if (storedUid && storedUid !== authUid) {
+        localStorage.setItem(`tf_prop_firm_accounts_${storedUid}`, JSON.stringify(next));
+      }
+      const allKeys = Object.keys(localStorage).filter(
+        (k) => k.startsWith('tf_prop_firm_accounts') || k.startsWith('tf_cache_prop_firm_accounts')
+      );
+      for (const k of allKeys) {
+        if (
+          k !== 'tf_prop_firm_accounts_cache' &&
+          (!authUid || k !== `tf_prop_firm_accounts_${authUid}`) &&
+          (!storedUid || k !== `tf_prop_firm_accounts_${storedUid}`)
+        ) {
+          localStorage.removeItem(k);
+        }
       }
     } catch {
       // ignore
@@ -462,16 +501,17 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   const deletePropFirmAccount = (id: string) => {
+    let nextList: PropFirmAccount[] = [];
     setPropFirmAccounts((prev) => {
-      const next = prev.filter((acc) => acc.id !== id);
-      persistPropFirmAccounts(next);
-      setSelectedPropFirmAccountId((prevSelectedId) => {
-        if (prevSelectedId === id || !prevSelectedId || !next.some((a) => a.id === prevSelectedId)) {
-          return next.length > 0 ? next[0].id : '';
-        }
-        return prevSelectedId;
-      });
-      return next;
+      nextList = prev.filter((acc) => acc.id !== id);
+      persistPropFirmAccounts(nextList);
+      return nextList;
+    });
+    setSelectedPropFirmAccountId((prevSelectedId) => {
+      if (prevSelectedId === id || !prevSelectedId || !nextList.some((a) => a.id === prevSelectedId)) {
+        return nextList.length > 0 ? nextList[0].id : '';
+      }
+      return prevSelectedId;
     });
     deletePropFirmAccountApi(id).catch((err) => console.error('Failed to delete prop firm account from DB:', err));
   };
@@ -861,15 +901,13 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
     if (Array.isArray(data.mentorDirectivesSent)) setMentorDirectivesSent(data.mentorDirectivesSent);
     if (Array.isArray(data.mentorDirectivesReceived)) setMentorDirectivesReceived(data.mentorDirectivesReceived);
     if (Array.isArray(data.propFirmAccounts)) {
-      if (data.propFirmAccounts.length > 0) {
-        setPropFirmAccounts(data.propFirmAccounts);
-        persistPropFirmAccounts(data.propFirmAccounts);
-        setSelectedPropFirmAccountId((curr) =>
-          curr && data.propFirmAccounts.some((a: PropFirmAccount) => a.id === curr)
-            ? curr
-            : data.propFirmAccounts[0].id
-        );
-      }
+      setPropFirmAccounts(data.propFirmAccounts);
+      persistPropFirmAccounts(data.propFirmAccounts);
+      setSelectedPropFirmAccountId((curr) =>
+        curr && data.propFirmAccounts.some((a: PropFirmAccount) => a.id === curr)
+          ? curr
+          : (data.propFirmAccounts.length > 0 ? data.propFirmAccounts[0].id : '')
+      );
     }
 
     if (data.userSettings || data.settings) {
@@ -976,11 +1014,11 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
             localStorage.setItem('tradeforge_user_id', session.user.id);
             const userPropKey = `tf_prop_firm_accounts_${session.user.id}`;
             const savedProps = localStorage.getItem(userPropKey);
-            if (savedProps) {
+            if (savedProps !== null) {
               const parsed = JSON.parse(savedProps);
-              if (Array.isArray(parsed) && parsed.length > 0) {
+              if (Array.isArray(parsed)) {
                 setPropFirmAccounts(parsed);
-                setSelectedPropFirmAccountId(parsed[0].id);
+                setSelectedPropFirmAccountId(parsed.length > 0 ? parsed[0].id : '');
               }
             }
           } catch {}
@@ -1046,11 +1084,11 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
           localStorage.setItem('tradeforge_user_id', user.id);
           const userPropKey = `tf_prop_firm_accounts_${user.id}`;
           const savedProps = localStorage.getItem(userPropKey);
-          if (savedProps) {
+          if (savedProps !== null) {
             const parsed = JSON.parse(savedProps);
-            if (Array.isArray(parsed) && parsed.length > 0) {
+            if (Array.isArray(parsed)) {
               setPropFirmAccounts(parsed);
-              setSelectedPropFirmAccountId(parsed[0].id);
+              setSelectedPropFirmAccountId(parsed.length > 0 ? parsed[0].id : '');
             }
           }
         } catch {}

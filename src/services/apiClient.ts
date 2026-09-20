@@ -79,14 +79,6 @@ export async function getCurrentUserId(): Promise<string> {
     if (stored) return stored;
   } catch {}
 
-  try {
-    const demoRaw = localStorage.getItem('tf_demo_session');
-    if (demoRaw) {
-      const parsed = JSON.parse(demoRaw);
-      if (parsed?.user?.id) return parsed.user.id;
-    }
-  } catch {}
-
   return 'default_user_1';
 }
 
@@ -116,13 +108,6 @@ async function getAuthHeaders(headers: Record<string, string> = {}): Promise<Rec
     try {
       const stored = localStorage.getItem('tradeforge_user_id');
       if (stored) merged['x-user-id'] = stored;
-      else {
-        const demoRaw = localStorage.getItem('tf_demo_session');
-        if (demoRaw) {
-          const parsed = JSON.parse(demoRaw);
-          if (parsed?.user?.id) merged['x-user-id'] = parsed.user.id;
-        }
-      }
     } catch {}
   }
 
@@ -165,16 +150,6 @@ export async function fetchInitialState(targetUserId?: string | null, retries = 
   if (!userId) {
     try {
       userId = localStorage.getItem('tradeforge_user_id');
-    } catch {}
-  }
-
-  if (!userId) {
-    try {
-      const demoRaw = localStorage.getItem('tf_demo_session');
-      if (demoRaw) {
-        const parsed = JSON.parse(demoRaw);
-        if (parsed?.user?.id) userId = parsed.user.id;
-      }
     } catch {}
   }
 

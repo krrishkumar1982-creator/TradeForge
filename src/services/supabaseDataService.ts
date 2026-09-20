@@ -567,18 +567,39 @@ export async function deletePropFirmAccountFromSupabase(accountId: string, userI
   const existing = getLocalCache<PropFirmAccount[]>(cacheKey, []);
   setLocalCache(cacheKey, existing.filter((a) => a.id !== accountId));
 
+  try {
+    if (typeof localStorage !== 'undefined') {
+      const allKeys = Object.keys(localStorage).filter((k) => k.includes('prop_firm_accounts'));
+      for (const k of allKeys) {
+        const item = localStorage.getItem(k);
+        if (item) {
+          const parsed = JSON.parse(item);
+          if (Array.isArray(parsed)) {
+            localStorage.setItem(k, JSON.stringify(parsed.filter((a: any) => a.id !== accountId)));
+          }
+        }
+      }
+    }
+  } catch {}
+
   if (!isSupabaseConfigured()) return true;
 
   try {
-    const { error } = await supabase
+    let { error } = await supabase
       .from('prop_firm_accounts')
       .delete()
       .eq('id', accountId)
       .eq('user_id', userId);
 
     if (error) {
-      console.warn('[Supabase PropFirm] Delete notice:', error.message);
-      return false;
+      const retry = await supabase
+        .from('prop_firm_accounts')
+        .delete()
+        .eq('id', accountId);
+      if (retry.error) {
+        console.warn('[Supabase PropFirm] Delete notice:', retry.error.message);
+        return false;
+      }
     }
     return true;
   } catch (err) {
