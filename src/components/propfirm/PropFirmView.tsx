@@ -256,11 +256,14 @@ export const PropFirmView: React.FC = () => {
     }
   };
 
-  const handleAccountCreated = (newAccount: PropFirmAccount) => {
-    addPropFirmAccount(newAccount);
-    setSelectedPropFirmAccountId(newAccount.id);
-    setIsAddAccountModalOpen(false);
-    addToast('Account Initialized', `Successfully initialized ${newAccount.name}`, 'success');
+  const handleAccountCreated = async (newAccount: PropFirmAccount) => {
+    try {
+      await addPropFirmAccount(newAccount);
+      setSelectedPropFirmAccountId(newAccount.id);
+      setIsAddAccountModalOpen(false);
+    } catch (err) {
+      console.error('Failed to create account:', err);
+    }
   };
 
   const handleOpenEditModal = () => {
@@ -274,7 +277,7 @@ export const PropFirmView: React.FC = () => {
     setIsEditAccountModalOpen(true);
   };
 
-  const handleEditAccountSubmit = (e?: React.FormEvent) => {
+  const handleEditAccountSubmit = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     if (!activeAccount) return;
     const updated: PropFirmAccount = {
@@ -286,9 +289,12 @@ export const PropFirmView: React.FC = () => {
       totalLossPercent: editTotalLossPercent,
       enforcementMode: editEnforcementMode,
     };
-    updatePropFirmAccount(updated);
-    setIsEditAccountModalOpen(false);
-    addToast('Account Saved', `${updated.name} updated successfully`, 'success');
+    try {
+      await updatePropFirmAccount(updated);
+      setIsEditAccountModalOpen(false);
+    } catch (err) {
+      console.error('Failed to update account:', err);
+    }
   };
 
   const handleOpenDeleteModal = () => {
@@ -317,20 +323,20 @@ export const PropFirmView: React.FC = () => {
   };
 
   return (
-    <div className={`max-w-7xl w-full mx-auto space-y-6 animate-fadeIn ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+    <div className={`max-w-7xl w-full mx-auto space-y-6 animate-fadeIn ${isLight ? 'text-slate-900' : 'text-[#F5F5F5]'}`}>
       {!activeAccount ? (
         <div className={`p-8 sm:p-12 rounded-2xl border text-center space-y-4 max-w-xl mx-auto shadow-lg ${
-          isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#12161D] border-[#1C232E]'
+          isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
         }`}>
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-600/20 via-indigo-600/20 to-purple-600/20 border border-indigo-500/30 text-indigo-400 mx-auto flex items-center justify-center">
             <Shield className="w-7 h-7" />
           </div>
           <div className="space-y-1.5">
             <h2 className={`text-xl font-bold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              No Prop Firm Accounts Configured
+              No Prop Firm Accounts
             </h2>
-            <p className={`text-xs sm:text-sm leading-relaxed max-w-md mx-auto ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-              Create an evaluation account or load an institutional rule template (LegionFunding, FTMO, Topstep, Apex) to begin live compliance tracking.
+            <p className={`text-xs sm:text-sm leading-relaxed max-w-md mx-auto ${isLight ? 'text-slate-600' : 'text-[#A1A1AA]'}`}>
+              Add an account or load a rule template (FTMO, Topstep, Apex) to start tracking your rules.
             </p>
           </div>
           <button
@@ -338,14 +344,14 @@ export const PropFirmView: React.FC = () => {
             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white text-xs font-bold transition cursor-pointer active:scale-95 shadow-md shadow-indigo-600/25 border border-indigo-400/30"
           >
             <Plus className="w-4 h-4" />
-            <span>Create Prop Firm Account</span>
+            <span>Add Account</span>
           </button>
         </div>
       ) : (
         <>
           {/* Top Header Card */}
           <div className={`p-5 sm:p-6 rounded-2xl border shadow-lg flex flex-col lg:flex-row lg:items-center justify-between gap-4 ${
-            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#12161D] border-[#1C232E] shadow-black/30'
+            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)] shadow-black/30'
           }`}>
             <div>
               <div className="flex items-center gap-3">
@@ -364,9 +370,9 @@ export const PropFirmView: React.FC = () => {
                     <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                       isLight ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-purple-500/10 border-purple-500/30 text-purple-300'
                     }`}>
-                      Rules Engine
+                      Account Rules
                     </span>
-                    {/* Institutional Verified Badge with Pulse */}
+                    {/* Monitoring Badge with Pulse */}
                     <div className={`flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono font-semibold border ${
                       isLight
                         ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
@@ -376,12 +382,12 @@ export const PropFirmView: React.FC = () => {
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
                       </span>
-                      <span>Telemetry Active</span>
+                      <span>Monitoring</span>
                     </div>
                   </div>
-                  <p className={`text-xs sm:text-sm mt-0.5 text-left flex items-center gap-1.5 flex-wrap ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                    <span>Institutional risk state monitor & multi-account compliance matrix.</span>
-                    <span className={`text-[11px] font-mono ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>•</span>
+                  <p className={`text-xs sm:text-sm mt-0.5 text-left flex items-center gap-1.5 flex-wrap ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
+                    <span>Keep every account within its rules.</span>
+                    <span className={`text-[11px] font-mono ${isLight ? 'text-[#A1A1AA]' : 'text-[#71717A]'}`}>•</span>
                     <span className={`text-[11px] font-mono font-medium ${isLight ? 'text-indigo-600' : 'text-indigo-400'}`}>
                       Buffer: {(maxDrawdownData?.bufferPercent ?? 0).toFixed(1)}% Safe
                     </span>
@@ -393,7 +399,7 @@ export const PropFirmView: React.FC = () => {
             {/* Account Selector Pills & New Account Button */}
             <div className="flex flex-wrap items-center gap-2.5">
               <div className={`flex items-center p-1.5 rounded-xl border overflow-x-auto max-w-full ${
-                isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'
+                isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
               }`}>
                 {propFirmAccounts.map((acc) => {
                   const isSelected = acc.id === activeAccount.id;
@@ -406,7 +412,7 @@ export const PropFirmView: React.FC = () => {
                           ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/25 border border-indigo-400/30'
                           : isLight
                           ? 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/70'
-                          : 'text-slate-400 hover:text-white hover:bg-[#1A1F27]'
+                          : 'text-[#A1A1AA] hover:text-white hover:bg-[#101010]'
                       }`}
                     >
                       <span>{acc.name}</span>
@@ -432,7 +438,7 @@ export const PropFirmView: React.FC = () => {
                 className={`p-2 rounded-xl border text-xs font-bold transition cursor-pointer ${
                   isLight
                     ? 'bg-white hover:bg-slate-100 text-slate-700 hover:text-slate-900 border-[#E3E7EE]'
-                    : 'bg-[#1A1F27] hover:bg-[#222936] text-slate-300 hover:text-white border-[#1C232E]'
+                    : 'bg-[#101010] hover:bg-[#18181B] text-[#D4D4D8] hover:text-white border-[rgba(255,255,255,0.07)]'
                 }`}
               >
                 <Edit2 className="w-4 h-4" />
@@ -445,8 +451,8 @@ export const PropFirmView: React.FC = () => {
                 aria-label="Delete Prop Firm Account"
                 className={`p-2 rounded-xl border text-xs font-bold transition-all duration-150 cursor-pointer active:scale-95 flex items-center justify-center ${
                   isLight
-                    ? 'bg-white hover:bg-rose-50 text-slate-500 hover:text-rose-600 border-[#E3E7EE] hover:border-rose-300 shadow-xs'
-                    : 'bg-[#1A1F27] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border-[#1C232E] hover:border-rose-500/40 shadow-xs'
+                    ? 'bg-white hover:bg-rose-50 text-[#71717A] hover:text-rose-600 border-[#E3E7EE] hover:border-rose-300 shadow-xs'
+                    : 'bg-[#101010] hover:bg-rose-500/20 text-[#A1A1AA] hover:text-rose-400 border-[rgba(255,255,255,0.07)] hover:border-rose-500/40 shadow-xs'
                 }`}
               >
                 <Trash2 className="w-4 h-4" />
@@ -464,28 +470,28 @@ export const PropFirmView: React.FC = () => {
 
       {/* Legal Entity & Institution Banner for LegionFunding */}
       <div className={`p-4 rounded-2xl border flex flex-wrap items-center justify-between gap-3 text-xs ${
-        isLight ? 'bg-white border-[#E3E7EE]' : 'bg-[#12161D] border-[#1C232E]'
+        isLight ? 'bg-white border-[#E3E7EE]' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
       }`}>
         <div className="flex items-center gap-3">
           <Building className={`w-4 h-4 shrink-0 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />
           <div className="space-x-2">
             <span className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>Legal Entity:</span>
-            <span className={isLight ? 'text-slate-700' : 'text-slate-300'}>{activeAccount.legalEntity || 'Hyper Funded Ltd.'}</span>
-            <span className={isLight ? 'text-slate-300' : 'text-slate-600'}>•</span>
+            <span className={isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}>{activeAccount.legalEntity || 'Hyper Funded Ltd.'}</span>
+            <span className={isLight ? 'text-[#D4D4D8]' : 'text-slate-600'}>•</span>
             <span className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>Trading Brand:</span>
-            <span className={isLight ? 'text-slate-700' : 'text-slate-300'}>{activeAccount.tradingBrand || activeAccount.firmName}</span>
-            <span className={isLight ? 'text-slate-300' : 'text-slate-600'}>•</span>
+            <span className={isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}>{activeAccount.tradingBrand || activeAccount.firmName}</span>
+            <span className={isLight ? 'text-[#D4D4D8]' : 'text-slate-600'}>•</span>
             <span className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>Registration:</span>
             <span className={`font-mono font-semibold ${isLight ? 'text-blue-700' : 'text-blue-300'}`}>{activeAccount.registrationNumber || '2026-00324'}</span>
-            <span className={isLight ? 'text-slate-300' : 'text-slate-600'}>•</span>
+            <span className={isLight ? 'text-[#D4D4D8]' : 'text-slate-600'}>•</span>
             <span className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>Jurisdiction:</span>
-            <span className={isLight ? 'text-slate-700' : 'text-slate-300'}>{activeAccount.jurisdiction || 'Saint Lucia'}</span>
+            <span className={isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}>{activeAccount.jurisdiction || 'Saint Lucia'}</span>
           </div>
         </div>
-        <div className={`flex items-center gap-2 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+        <div className={`flex items-center gap-2 ${isLight ? 'text-slate-600' : 'text-[#A1A1AA]'}`}>
           <span>Effective: {activeAccount.termsEffectiveDate || '1 July 2026'}</span>
           <span className={`px-2 py-0.5 rounded font-mono text-[10px] border ${
-            isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-[#1A1F27] text-slate-300 border-[#1C232E]'
+            isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-[#101010] text-[#D4D4D8] border-[rgba(255,255,255,0.07)]'
           }`}>
             Mode: {activeAccount.enforcementMode || 'MONITOR'}
           </span>
@@ -520,15 +526,15 @@ export const PropFirmView: React.FC = () => {
             <div>
               <div className="flex flex-wrap items-center gap-2.5">
                 {getRiskStateBadge(evaluation?.riskState || 'SAFE')}
-                <span className={`text-xs sm:text-sm font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                <span className={`text-xs sm:text-sm font-bold ${isLight ? 'text-slate-800' : 'text-[#F5F5F5]'}`}>
                   {activeAccount.firmName} • {activeAccount.phaseName || activeAccount.phase}
                 </span>
-                <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>({activeAccount.sessionTimezone})</span>
+                <span className={`text-xs ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>({activeAccount.sessionTimezone})</span>
               </div>
               <p className={`text-sm sm:text-base font-bold mt-1 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 {evaluation?.statusMessage}
               </p>
-              <p className={`text-xs sm:text-sm mt-0.5 leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+              <p className={`text-xs sm:text-sm mt-0.5 leading-relaxed ${isLight ? 'text-slate-600' : 'text-[#A1A1AA]'}`}>
                 {evaluation?.actionableAdvice}
               </p>
             </div>
@@ -556,11 +562,11 @@ export const PropFirmView: React.FC = () => {
               className={`px-3.5 py-2 rounded-xl border text-xs font-bold transition flex items-center gap-2 shadow-sm cursor-pointer ${
                 isLight
                   ? 'bg-white hover:bg-slate-100 text-slate-800 border-[#E3E7EE]'
-                  : 'bg-[#1A1F27] hover:bg-[#222936] text-slate-200 border-[#1C232E]'
+                  : 'bg-[#101010] hover:bg-[#18181B] text-[#F5F5F5] border-[rgba(255,255,255,0.07)]'
               }`}
             >
               <Sliders className="w-4 h-4 text-blue-500" />
-              <span>Configure Account</span>
+              <span>Account Settings</span>
             </button>
           </div>
         </div>
@@ -569,19 +575,19 @@ export const PropFirmView: React.FC = () => {
       {/* Multi-Phase Evaluation Progression Stepper */}
       {activeAccount.phases && activeAccount.phases.length > 0 && (
         <div className={`p-4 rounded-2xl border space-y-3 ${
-          isLight ? 'bg-white border-[#E3E7EE]' : 'bg-[#12161D] border-[#1C232E]'
+          isLight ? 'bg-white border-[#E3E7EE]' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
         }`}>
           <div className="flex items-center justify-between text-xs">
             <span className={`font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
               <Sparkles className="w-4 h-4 text-indigo-500" />
-              <span>Program Progression Stepper</span>
-              <span className={isLight ? 'text-slate-300' : 'text-slate-500'}>•</span>
-              <span className={`capitalize ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>{activeAccount.programModel.toLowerCase().replace('_', ' ')}</span>
+              <span>Account Progress</span>
+              <span className={isLight ? 'text-[#D4D4D8]' : 'text-[#71717A]'}>•</span>
+              <span className={`capitalize ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>{activeAccount.programModel.toLowerCase().replace('_', ' ')}</span>
             </span>
             <span className={`text-[11px] font-mono px-2 py-0.5 rounded-full border ${
               isLight ? 'text-indigo-700 bg-indigo-50 border-indigo-200' : 'text-indigo-300 bg-indigo-500/10 border-indigo-500/20'
             }`}>
-              Active: {activeAccount.phases[activeAccount.activePhaseIndex ?? 0]?.name || activeAccount.phase}
+              Current: {activeAccount.phases[activeAccount.activePhaseIndex ?? 0]?.name || activeAccount.phase}
             </span>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
@@ -595,14 +601,14 @@ export const PropFirmView: React.FC = () => {
                     isCurrent
                       ? isLight
                         ? 'bg-indigo-50/60 border-indigo-300 shadow-sm'
-                        : 'bg-gradient-to-br from-indigo-950/50 via-[#12161D] to-blue-950/40 border-indigo-500/50 shadow-md shadow-indigo-950/50'
+                        : 'bg-gradient-to-br from-indigo-950/50 via-[#0B0B0B] to-blue-950/40 border-indigo-500/50 shadow-md shadow-indigo-950/50'
                       : isDone
                       ? isLight
                         ? 'bg-emerald-50/40 border-emerald-200 text-slate-700'
-                        : 'bg-[#0A0D14] border-emerald-500/30 text-slate-300'
+                        : 'bg-[#080808] border-emerald-500/30 text-[#D4D4D8]'
                       : isLight
-                      ? 'bg-slate-50 border-[#E3E7EE] text-slate-500'
-                      : 'bg-[#0A0D14] border-[#1C232E] text-slate-500'
+                      ? 'bg-slate-50 border-[#E3E7EE] text-[#71717A]'
+                      : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#71717A]'
                   }`}
                 >
                   <div className="flex items-center justify-between">
@@ -611,7 +617,7 @@ export const PropFirmView: React.FC = () => {
                         ? isLight ? 'text-indigo-900' : 'text-white'
                         : isDone
                         ? isLight ? 'text-emerald-700' : 'text-emerald-400'
-                        : isLight ? 'text-slate-600' : 'text-slate-400'
+                        : isLight ? 'text-slate-600' : 'text-[#A1A1AA]'
                     }`}>
                       {ph.name}
                     </span>
@@ -626,26 +632,26 @@ export const PropFirmView: React.FC = () => {
                             ? 'bg-emerald-100 text-emerald-700 border-emerald-300'
                             : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
                           : isLight
-                          ? 'bg-slate-100 text-slate-500 border-slate-200'
-                          : 'bg-slate-800/40 text-slate-500 border border-slate-700/40'
+                          ? 'bg-slate-100 text-[#71717A] border-slate-200'
+                          : 'bg-[#101010]/40 text-[#71717A] border border-white/[0.10]/40'
                       }`}
                     >
-                      {isDone ? 'Completed' : isCurrent ? 'Active Stage' : 'Locked'}
+                      {isDone ? 'Completed' : isCurrent ? 'Current Stage' : 'Not unlocked'}
                     </span>
                   </div>
                   <div className="mt-2 grid grid-cols-3 gap-1.5 text-[10px] font-mono">
-                    <div className={`p-1 rounded border ${isLight ? 'bg-white border-[#E3E7EE]' : 'bg-[#0A0D14]/70 border-[#1C232E]'}`}>
-                      <span className={`block text-[9px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Target</span>
-                      <span className={ph.profitTargetPercent > 0 ? (isLight ? 'text-emerald-700 font-bold' : 'text-emerald-400 font-bold') : (isLight ? 'text-slate-600' : 'text-slate-400')}>
+                    <div className={`p-1 rounded border ${isLight ? 'bg-white border-[#E3E7EE]' : 'bg-[#080808]/70 border-[rgba(255,255,255,0.07)]'}`}>
+                      <span className={`block text-[9px] font-sans ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Target</span>
+                      <span className={ph.profitTargetPercent > 0 ? (isLight ? 'text-emerald-700 font-bold' : 'text-emerald-400 font-bold') : (isLight ? 'text-slate-600' : 'text-[#A1A1AA]')}>
                         {ph.profitTargetPercent > 0 ? `+${ph.profitTargetPercent}%` : 'Funded'}
                       </span>
                     </div>
-                    <div className={`p-1 rounded border ${isLight ? 'bg-white border-[#E3E7EE]' : 'bg-[#0A0D14]/70 border-[#1C232E]'}`}>
-                      <span className={`block text-[9px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Daily DD</span>
+                    <div className={`p-1 rounded border ${isLight ? 'bg-white border-[#E3E7EE]' : 'bg-[#080808]/70 border-[rgba(255,255,255,0.07)]'}`}>
+                      <span className={`block text-[9px] font-sans ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Daily DD</span>
                       <span className={`font-bold ${isLight ? 'text-rose-600' : 'text-rose-400'}`}>-{ph.dailyLossPercent}%</span>
                     </div>
-                    <div className={`p-1 rounded border ${isLight ? 'bg-white border-[#E3E7EE]' : 'bg-[#0A0D14]/70 border-[#1C232E]'}`}>
-                      <span className={`block text-[9px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Max DD</span>
+                    <div className={`p-1 rounded border ${isLight ? 'bg-white border-[#E3E7EE]' : 'bg-[#080808]/70 border-[rgba(255,255,255,0.07)]'}`}>
+                      <span className={`block text-[9px] font-sans ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Max DD</span>
                       <span className={`font-bold ${isLight ? 'text-rose-600' : 'text-rose-400'}`}>-{ph.totalLossPercent}%</span>
                     </div>
                   </div>
@@ -662,19 +668,19 @@ export const PropFirmView: React.FC = () => {
         <div className={`p-5 rounded-2xl border transition-all duration-200 space-y-4 shadow-sm text-left hover:-translate-y-0.5 ${
           isLight
             ? 'bg-white border-[#E3E7EE] hover:border-slate-300 hover:bg-slate-50/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
-            : 'bg-[#12161D] border-[#1C232E] hover:border-[#2A3444] hover:bg-[#151922] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]'
+            : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)] hover:border-[rgba(255,255,255,0.12)] hover:bg-[#101010] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]'
         }`}>
           <div className="flex items-center justify-between text-xs">
-            <span className={`font-semibold uppercase tracking-wider text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Account Balance</span>
+            <span className={`font-semibold uppercase tracking-wider text-[10px] ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Account Balance</span>
             <span className={`px-2 py-0.5 rounded font-mono tabular-nums text-[10px] font-semibold border ${
-              isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-[#1A1F27] text-slate-300 border-[#1C232E]'
+              isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-[#101010] text-[#D4D4D8] border-[rgba(255,255,255,0.07)]'
             }`}>
               Base: {formatCurrency(activeAccount.startingBalance)}
             </span>
           </div>
           <div className="space-y-1.5">
             <div className={`text-2xl sm:text-3xl font-black tracking-tight font-mono tabular-nums ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              <span className={`font-normal mr-0.5 text-xl sm:text-2xl ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>$</span>
+              <span className={`font-normal mr-0.5 text-xl sm:text-2xl ${isLight ? 'text-[#A1A1AA]' : 'text-[#71717A]'}`}>$</span>
               {activeAccount.currentBalance.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
             <div className="flex items-center gap-2 text-xs">
@@ -696,10 +702,10 @@ export const PropFirmView: React.FC = () => {
             </div>
           </div>
           <div className={`pt-3 border-t flex items-center justify-between text-xs font-mono tabular-nums ${
-            isLight ? 'border-[#E3E7EE] text-slate-500' : 'border-[#1C232E] text-slate-400'
+            isLight ? 'border-[#E3E7EE] text-[#71717A]' : 'border-[rgba(255,255,255,0.07)] text-[#A1A1AA]'
           }`}>
             <span className="font-sans text-[11px]">High-Water Mark</span>
-            <span className={`font-semibold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+            <span className={`font-semibold ${isLight ? 'text-slate-800' : 'text-[#F5F5F5]'}`}>
               {formatCurrency(maxDrawdownData?.peakEquity || activeAccount.startingBalance)}
             </span>
           </div>
@@ -709,10 +715,10 @@ export const PropFirmView: React.FC = () => {
         <div className={`p-5 rounded-2xl border transition-all duration-200 space-y-4 shadow-sm text-left hover:-translate-y-0.5 ${
           isLight
             ? 'bg-white border-[#E3E7EE] hover:border-slate-300 hover:bg-slate-50/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
-            : 'bg-[#12161D] border-[#1C232E] hover:border-[#2A3444] hover:bg-[#151922] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]'
+            : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)] hover:border-[rgba(255,255,255,0.12)] hover:bg-[#101010] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]'
         }`}>
           <div className="flex items-center justify-between text-xs">
-            <span className={`font-semibold uppercase tracking-wider text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Profit Target</span>
+            <span className={`font-semibold uppercase tracking-wider text-[10px] ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Profit Target</span>
             <span
               className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold border ${
                 profitTargetData?.isPassed
@@ -721,7 +727,7 @@ export const PropFirmView: React.FC = () => {
                     : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
                   : isLight
                   ? 'bg-slate-100 border-slate-200 text-slate-700'
-                  : 'bg-[#1A1F27] border-[#1C232E] text-slate-300'
+                  : 'bg-[#101010] border-[rgba(255,255,255,0.07)] text-[#D4D4D8]'
               }`}
             >
               {profitTargetData?.isPassed ? 'PASSED' : `${(profitTargetData?.progressPercent ?? 0).toFixed(0)}% DONE`}
@@ -730,14 +736,14 @@ export const PropFirmView: React.FC = () => {
           <div className="space-y-2">
             <div className={`text-2xl sm:text-3xl font-black tracking-tight font-mono tabular-nums flex items-baseline justify-between ${isLight ? 'text-slate-900' : 'text-white'}`}>
               <span>
-                <span className={`font-normal mr-0.5 text-xl sm:text-2xl ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>$</span>
+                <span className={`font-normal mr-0.5 text-xl sm:text-2xl ${isLight ? 'text-[#A1A1AA]' : 'text-[#71717A]'}`}>$</span>
                 {(profitTargetData?.currentProfit || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
-              <span className={`text-xs font-semibold font-mono ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+              <span className={`text-xs font-semibold font-mono ${isLight ? 'text-[#A1A1AA]' : 'text-[#71717A]'}`}>
                 / {formatCurrency(profitTargetData?.target || 0)}
               </span>
             </div>
-            <div className={`w-full h-2 rounded-full overflow-hidden border ${isLight ? 'bg-slate-100 border-[#E3E7EE]' : 'bg-[#1A1F27] border-[#1C232E]'}`}>
+            <div className={`w-full h-2 rounded-full overflow-hidden border ${isLight ? 'bg-slate-100 border-[#E3E7EE]' : 'bg-[#101010] border-[rgba(255,255,255,0.07)]'}`}>
               <div
                 className="bg-gradient-to-r from-emerald-500 via-teal-400 to-emerald-400 h-full rounded-full transition-all duration-500"
                 style={{ width: `${Math.min(100, profitTargetData?.progressPercent || 0)}%` }}
@@ -745,7 +751,7 @@ export const PropFirmView: React.FC = () => {
             </div>
           </div>
           <div className={`pt-3 border-t flex items-center justify-between text-xs font-mono tabular-nums ${
-            isLight ? 'border-[#E3E7EE] text-slate-500' : 'border-[#1C232E] text-slate-400'
+            isLight ? 'border-[#E3E7EE] text-[#71717A]' : 'border-[rgba(255,255,255,0.07)] text-[#A1A1AA]'
           }`}>
             <span className="font-sans text-[11px]">Remaining to Target</span>
             <span className={`font-bold ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`}>
@@ -758,23 +764,23 @@ export const PropFirmView: React.FC = () => {
         <div className={`p-5 rounded-2xl border transition-all duration-200 space-y-4 shadow-sm text-left hover:-translate-y-0.5 ${
           isLight
             ? 'bg-white border-[#E3E7EE] hover:border-slate-300 hover:bg-slate-50/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
-            : 'bg-[#12161D] border-[#1C232E] hover:border-[#2A3444] hover:bg-[#151922] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]'
+            : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)] hover:border-[rgba(255,255,255,0.12)] hover:bg-[#101010] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]'
         }`}>
           <div className="flex items-center justify-between text-xs">
-            <span className={`font-semibold uppercase tracking-wider text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Daily Loss Limit</span>
+            <span className={`font-semibold uppercase tracking-wider text-[10px] ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Daily Loss Limit</span>
             <span className={`px-2 py-0.5 rounded font-mono tabular-nums text-[10px] font-semibold border ${
-              isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-[#1A1F27] text-slate-300 border-[#1C232E]'
+              isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-[#101010] text-[#D4D4D8] border-[rgba(255,255,255,0.07)]'
             }`}>
               Limit: {formatCurrency(dailyDrawdownData?.dailyLimit || 0)}
             </span>
           </div>
           <div className="space-y-2">
             <div className={`text-2xl sm:text-3xl font-black tracking-tight font-mono tabular-nums flex items-baseline justify-between ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              <span className={dailyDrawdownData?.todayLoss ? (isLight ? 'text-rose-600' : 'text-rose-400') : (isLight ? 'text-slate-800' : 'text-slate-100')}>
-                <span className={`font-normal mr-0.5 text-xl sm:text-2xl ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>$</span>
+              <span className={dailyDrawdownData?.todayLoss ? (isLight ? 'text-rose-600' : 'text-rose-400') : (isLight ? 'text-slate-800' : 'text-[#F5F5F5]')}>
+                <span className={`font-normal mr-0.5 text-xl sm:text-2xl ${isLight ? 'text-[#A1A1AA]' : 'text-[#71717A]'}`}>$</span>
                 {(dailyDrawdownData?.todayLoss || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
-              <span className={`text-[10px] uppercase font-semibold tracking-wider ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>today's loss</span>
+              <span className={`text-[10px] uppercase font-semibold tracking-wider ${isLight ? 'text-[#A1A1AA]' : 'text-[#71717A]'}`}>today's loss</span>
             </div>
 
             {/* Institutional Multi-Segment Risk Gauge */}
@@ -814,7 +820,7 @@ export const PropFirmView: React.FC = () => {
                   />
                 </div>
               </div>
-              <div className="flex justify-between text-[9px] font-mono text-slate-500 pt-0.5">
+              <div className="flex justify-between text-[9px] font-mono text-[#71717A] pt-0.5">
                 <span className="text-emerald-500 font-semibold">Safe Zone</span>
                 <span className="text-amber-500">Caution</span>
                 <span className="text-rose-500 font-semibold">Breach</span>
@@ -822,7 +828,7 @@ export const PropFirmView: React.FC = () => {
             </div>
           </div>
           <div className={`pt-3 border-t flex items-center justify-between text-xs font-mono tabular-nums ${
-            isLight ? 'border-[#E3E7EE] text-slate-500' : 'border-[#1C232E] text-slate-400'
+            isLight ? 'border-[#E3E7EE] text-[#71717A]' : 'border-[rgba(255,255,255,0.07)] text-[#A1A1AA]'
           }`}>
             <span className="font-sans text-[11px]">Remaining Daily Buffer</span>
             <span className={`font-bold ${
@@ -830,7 +836,7 @@ export const PropFirmView: React.FC = () => {
                 ? 'text-rose-500'
                 : (dailyDrawdownData?.remainingDailyBufferPercent ?? 100) < 60
                 ? 'text-amber-500'
-                : isLight ? 'text-slate-800' : 'text-slate-200'
+                : isLight ? 'text-slate-800' : 'text-[#F5F5F5]'
             }`}>
               {formatCurrency(dailyDrawdownData?.remainingDailyBuffer || 0)} ({(dailyDrawdownData?.remainingDailyBufferPercent ?? 0).toFixed(0)}%)
             </span>
@@ -841,10 +847,10 @@ export const PropFirmView: React.FC = () => {
         <div className={`p-5 rounded-2xl border transition-all duration-200 space-y-4 shadow-sm text-left hover:-translate-y-0.5 ${
           isLight
             ? 'bg-white border-[#E3E7EE] hover:border-slate-300 hover:bg-slate-50/60 shadow-[0_1px_3px_rgba(0,0,0,0.04)]'
-            : 'bg-[#12161D] border-[#1C232E] hover:border-[#2A3444] hover:bg-[#151922] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]'
+            : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)] hover:border-[rgba(255,255,255,0.12)] hover:bg-[#101010] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]'
         }`}>
           <div className="flex items-center justify-between text-xs">
-            <span className={`font-semibold uppercase tracking-wider text-[10px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Max Drawdown</span>
+            <span className={`font-semibold uppercase tracking-wider text-[10px] ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Max Drawdown</span>
             <span className={`px-2 py-0.5 rounded font-mono text-[10px] font-bold border ${
               isLight ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-blue-500/10 text-blue-300 border-blue-500/30'
             }`}>
@@ -853,11 +859,11 @@ export const PropFirmView: React.FC = () => {
           </div>
           <div className="space-y-2">
             <div className={`text-2xl sm:text-3xl font-black tracking-tight font-mono tabular-nums flex items-baseline justify-between ${isLight ? 'text-slate-900' : 'text-white'}`}>
-              <span className={maxDrawdownData?.currentDrawdown ? (isLight ? 'text-amber-600' : 'text-amber-400') : (isLight ? 'text-slate-800' : 'text-slate-100')}>
-                <span className={`font-normal mr-0.5 text-xl sm:text-2xl ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>$</span>
+              <span className={maxDrawdownData?.currentDrawdown ? (isLight ? 'text-amber-600' : 'text-amber-400') : (isLight ? 'text-slate-800' : 'text-[#F5F5F5]')}>
+                <span className={`font-normal mr-0.5 text-xl sm:text-2xl ${isLight ? 'text-[#A1A1AA]' : 'text-[#71717A]'}`}>$</span>
                 {(maxDrawdownData?.currentDrawdown || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </span>
-              <span className={`text-xs font-semibold font-mono ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+              <span className={`text-xs font-semibold font-mono ${isLight ? 'text-[#A1A1AA]' : 'text-[#71717A]'}`}>
                 / {formatCurrency(activeAccount.rules.find((r) => r.type === 'MAX_DRAWDOWN')?.threshold || 5000)}
               </span>
             </div>
@@ -899,7 +905,7 @@ export const PropFirmView: React.FC = () => {
                   />
                 </div>
               </div>
-              <div className="flex justify-between text-[9px] font-mono text-slate-500 pt-0.5">
+              <div className="flex justify-between text-[9px] font-mono text-[#71717A] pt-0.5">
                 <span className="text-emerald-500 font-semibold">Safe Zone</span>
                 <span className="text-amber-500">Caution</span>
                 <span className="text-rose-500 font-semibold">Breach</span>
@@ -907,7 +913,7 @@ export const PropFirmView: React.FC = () => {
             </div>
           </div>
           <div className={`pt-3 border-t flex items-center justify-between text-xs font-mono tabular-nums ${
-            isLight ? 'border-[#E3E7EE] text-slate-500' : 'border-[#1C232E] text-slate-400'
+            isLight ? 'border-[#E3E7EE] text-[#71717A]' : 'border-[rgba(255,255,255,0.07)] text-[#A1A1AA]'
           }`}>
             <span className="font-sans text-[11px]">Remaining Max Buffer</span>
             <span className={`font-bold ${
@@ -915,7 +921,7 @@ export const PropFirmView: React.FC = () => {
                 ? 'text-rose-500'
                 : (maxDrawdownData?.bufferPercent ?? 100) < 60
                 ? 'text-amber-500'
-                : isLight ? 'text-slate-800' : 'text-slate-200'
+                : isLight ? 'text-slate-800' : 'text-[#F5F5F5]'
             }`}>
               {formatCurrency(maxDrawdownData?.bufferRemaining || 0)} ({(maxDrawdownData?.bufferPercent ?? 0).toFixed(0)}%)
             </span>
@@ -924,7 +930,7 @@ export const PropFirmView: React.FC = () => {
       </div>
 
       {/* Sub-Navigation Tabs */}
-      <div className={`flex items-center gap-2 border-b overflow-x-auto pb-2 custom-scrollbar ${isLight ? 'border-[#E3E7EE]' : 'border-[#1C232E]'}`}>
+      <div className={`flex items-center gap-2 border-b overflow-x-auto pb-2 custom-scrollbar ${isLight ? 'border-[#E3E7EE]' : 'border-[rgba(255,255,255,0.07)]'}`}>
         <button
           onClick={() => setActiveTab('overview')}
           className={`px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2 border whitespace-nowrap cursor-pointer ${
@@ -932,11 +938,11 @@ export const PropFirmView: React.FC = () => {
               ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
               : isLight
               ? 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-[#E3E7EE]'
-              : 'bg-[#12161D] text-slate-400 hover:text-white hover:bg-[#1A1F27] border-[#1C232E]'
+              : 'bg-[#0B0B0B] text-[#A1A1AA] hover:text-white hover:bg-[#101010] border-[rgba(255,255,255,0.07)]'
           }`}
         >
           <Shield className={`w-3.5 h-3.5 ${activeTab === 'overview' ? 'text-white' : isLight ? 'text-blue-600' : 'text-blue-400'}`} />
-          <span>Rule Health Center</span>
+          <span>Rules Overview</span>
         </button>
 
         <button
@@ -946,11 +952,11 @@ export const PropFirmView: React.FC = () => {
               ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
               : isLight
               ? 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-[#E3E7EE]'
-              : 'bg-[#12161D] text-slate-400 hover:text-white hover:bg-[#1A1F27] border-[#1C232E]'
+              : 'bg-[#0B0B0B] text-[#A1A1AA] hover:text-white hover:bg-[#101010] border-[rgba(255,255,255,0.07)]'
           }`}
         >
           <Zap className={`w-3.5 h-3.5 ${activeTab === 'pre-trade' ? 'text-white' : isLight ? 'text-amber-600' : 'text-amber-400'}`} />
-          <span>Pre-Trade Order Simulator</span>
+          <span>Pre-Trade Check</span>
         </button>
 
         <button
@@ -960,7 +966,7 @@ export const PropFirmView: React.FC = () => {
               ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
               : isLight
               ? 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-[#E3E7EE]'
-              : 'bg-[#12161D] text-slate-400 hover:text-white hover:bg-[#1A1F27] border-[#1C232E]'
+              : 'bg-[#0B0B0B] text-[#A1A1AA] hover:text-white hover:bg-[#101010] border-[rgba(255,255,255,0.07)]'
           }`}
         >
           <Calendar className={`w-3.5 h-3.5 ${activeTab === 'days' ? 'text-white' : isLight ? 'text-purple-600' : 'text-purple-400'}`} />
@@ -974,11 +980,11 @@ export const PropFirmView: React.FC = () => {
               ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
               : isLight
               ? 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-[#E3E7EE]'
-              : 'bg-[#12161D] text-slate-400 hover:text-white hover:bg-[#1A1F27] border-[#1C232E]'
+              : 'bg-[#0B0B0B] text-[#A1A1AA] hover:text-white hover:bg-[#101010] border-[rgba(255,255,255,0.07)]'
           }`}
         >
           <Scale className={`w-3.5 h-3.5 ${activeTab === 'exposures' ? 'text-white' : isLight ? 'text-emerald-600' : 'text-emerald-400'}`} />
-          <span>Symbol Risk & Durations</span>
+          <span>Risk & Duration</span>
         </button>
 
         <button
@@ -988,11 +994,11 @@ export const PropFirmView: React.FC = () => {
               ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
               : isLight
               ? 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-[#E3E7EE]'
-              : 'bg-[#12161D] text-slate-400 hover:text-white hover:bg-[#1A1F27] border-[#1C232E]'
+              : 'bg-[#0B0B0B] text-[#A1A1AA] hover:text-white hover:bg-[#101010] border-[rgba(255,255,255,0.07)]'
           }`}
         >
           <Sliders className={`w-3.5 h-3.5 ${activeTab === 'rules' ? 'text-white' : isLight ? 'text-cyan-600' : 'text-cyan-400'}`} />
-          <span>Rule Configuration & Presets</span>
+          <span>Rule Settings</span>
         </button>
 
         <button
@@ -1002,11 +1008,11 @@ export const PropFirmView: React.FC = () => {
               ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
               : isLight
               ? 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-[#E3E7EE]'
-              : 'bg-[#12161D] text-slate-400 hover:text-white hover:bg-[#1A1F27] border-[#1C232E]'
+              : 'bg-[#0B0B0B] text-[#A1A1AA] hover:text-white hover:bg-[#101010] border-[rgba(255,255,255,0.07)]'
           }`}
         >
           <Wallet className={`w-3.5 h-3.5 ${activeTab === 'payouts' ? 'text-white' : isLight ? 'text-emerald-600' : 'text-emerald-400'}`} />
-          <span>Payouts & Reward Split ({activeAccount.rewardSplitPercent || 80}%)</span>
+          <span>Payouts ({activeAccount.rewardSplitPercent || 80}%)</span>
         </button>
 
         <button
@@ -1016,11 +1022,11 @@ export const PropFirmView: React.FC = () => {
               ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
               : isLight
               ? 'bg-white text-slate-600 hover:text-slate-900 hover:bg-slate-100 border-[#E3E7EE]'
-              : 'bg-[#12161D] text-slate-400 hover:text-white hover:bg-[#1A1F27] border-[#1C232E]'
+              : 'bg-[#0B0B0B] text-[#A1A1AA] hover:text-white hover:bg-[#101010] border-[rgba(255,255,255,0.07)]'
           }`}
         >
           <AlertTriangle className={`w-3.5 h-3.5 ${activeTab === 'violations' ? 'text-white' : isLight ? 'text-rose-600' : 'text-rose-400'}`} />
-          <span>Violations & Audit Logs ({activeAccount.violations.length})</span>
+          <span>Rule Violations ({activeAccount.violations.length})</span>
         </button>
       </div>
 
@@ -1028,18 +1034,18 @@ export const PropFirmView: React.FC = () => {
       {activeTab === 'overview' && (
         <div className="space-y-6">
           <div className={`rounded-2xl border overflow-hidden shadow-lg text-left ${
-            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#12161D] border-[#1C232E] shadow-black/30'
+            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)] shadow-black/30'
           }`}>
             <div className={`p-5 sm:p-6 border-b flex flex-wrap items-center justify-between gap-4 ${
-              isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'
+              isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
             }`}>
               <div>
                 <h3 className={`text-base sm:text-lg font-bold flex items-center gap-2.5 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   <Shield className="w-5 h-5 text-blue-500" />
-                  <span>LegionFunding Institutional Compliance Matrix</span>
+                  <span>Account Rules</span>
                 </h3>
-                <p className={`text-xs sm:text-sm mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Live status, threshold boundaries and calculation transparent formulas.
+                <p className={`text-xs sm:text-sm mt-0.5 ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
+                  Live status, thresholds, and calculations.
                 </p>
               </div>
               <button
@@ -1047,7 +1053,7 @@ export const PropFirmView: React.FC = () => {
                 className="flex items-center gap-2 px-3.5 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold transition shadow-sm active:scale-95 cursor-pointer"
               >
                 <Plus className="w-4 h-4" />
-                <span>Add Custom Rule</span>
+                <span>Add Rule</span>
               </button>
             </div>
 
@@ -1069,20 +1075,20 @@ export const PropFirmView: React.FC = () => {
                       <div className="flex flex-wrap items-center gap-2.5">
                         <span className={`text-sm sm:text-base font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{rule.name}</span>
                         <span className={`px-2.5 py-0.5 rounded-lg text-[10px] font-mono font-bold uppercase border ${
-                          isLight ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-white/[0.06] border-white/10 text-slate-300'
+                          isLight ? 'bg-slate-100 border-slate-200 text-slate-700' : 'bg-white/[0.06] border-white/10 text-[#D4D4D8]'
                         }`}>
                           {rule.type}
                         </span>
                         {!rule.enabled && (
                           <span className={`px-2 py-0.5 rounded-lg text-[10px] font-medium ${
-                            isLight ? 'bg-slate-200 text-slate-500' : 'bg-zinc-800 text-zinc-500'
+                            isLight ? 'bg-slate-200 text-[#71717A]' : 'bg-zinc-800 text-zinc-500'
                           }`}>
                             Disabled
                           </span>
                         )}
                       </div>
-                      <p className={`text-xs sm:text-sm leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{rule.description}</p>
-                      <div className={`flex items-center gap-3 text-xs pt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                      <p className={`text-xs sm:text-sm leading-relaxed ${isLight ? 'text-slate-600' : 'text-[#A1A1AA]'}`}>{rule.description}</p>
+                      <div className={`flex items-center gap-3 text-xs pt-1 ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
                         <span>
                           Formula:{' '}
                           <code className={`px-2 py-0.5 rounded border text-[11px] font-mono break-all ${
@@ -1096,10 +1102,10 @@ export const PropFirmView: React.FC = () => {
 
                     <div className="flex items-center gap-3 sm:gap-5 self-start md:self-center shrink-0 flex-wrap sm:flex-nowrap">
                       <div className="text-left md:text-right">
-                        <div className={`text-sm font-mono font-bold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+                        <div className={`text-sm font-mono font-bold ${isLight ? 'text-slate-900' : 'text-[#F5F5F5]'}`}>
                           {rule.details || `Threshold: ${rule.threshold} ${rule.unit}`}
                         </div>
-                        <div className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                        <div className={`text-xs ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
                           Limit: {rule.threshold} {rule.unit}
                         </div>
                       </div>
@@ -1145,7 +1151,7 @@ export const PropFirmView: React.FC = () => {
                           setIsAddRuleModalOpen(true);
                         }}
                         className={`p-1.5 rounded-lg transition ${
-                          isLight ? 'text-slate-400 hover:text-slate-700 hover:bg-slate-100' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
+                          isLight ? 'text-[#A1A1AA] hover:text-slate-700 hover:bg-slate-100' : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800'
                         }`}
                         title="Edit Rule"
                       >
@@ -1164,25 +1170,25 @@ export const PropFirmView: React.FC = () => {
       {activeTab === 'pre-trade' && (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 text-left">
           <div className={`p-6 rounded-2xl border space-y-4 shadow-sm ${
-            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
           }`}>
             <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
               <Zap className="w-4 h-4 text-amber-500" />
-              <span>Pre-Trade Order Simulator</span>
+              <span>Pre-Trade Check</span>
             </h3>
-            <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-              Simulate proposed position parameters against live prop firm limits before opening trades.
+            <p className={`text-xs ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
+              Check order size and risk against account limits before entering.
             </p>
 
             <div className="space-y-3 pt-2">
               <div>
-                <label className={`text-xs font-semibold block mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Symbol / Asset</label>
+                <label className={`text-xs font-semibold block mb-1 ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Symbol / Asset</label>
                 <input
                   type="text"
                   value={preTradeSymbol}
                   onChange={(e) => setPreTradeSymbol(e.target.value.toUpperCase())}
                   className={`w-full rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-indigo-500 border ${
-                    isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900 placeholder:text-slate-400' : 'bg-[#0A0D14] border-[#1C232E] text-white'
+                    isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900 placeholder:text-[#A1A1AA]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-white'
                   }`}
                   placeholder="e.g. NQ, ES, EURUSD"
                 />
@@ -1190,16 +1196,16 @@ export const PropFirmView: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className={`text-xs font-semibold block mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Direction</label>
+                  <label className={`text-xs font-semibold block mb-1 ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Direction</label>
                   <div className={`grid grid-cols-2 gap-1 p-1 rounded-xl border ${
-                    isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'
+                    isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                   }`}>
                     <button
                       onClick={() => setPreTradeDirection('BUY')}
                       className={`py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                         preTradeDirection === 'BUY'
                           ? 'bg-emerald-600 text-white shadow-sm'
-                          : isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+                          : isLight ? 'text-[#71717A] hover:text-slate-900' : 'text-[#A1A1AA] hover:text-white'
                       }`}
                     >
                       BUY
@@ -1209,7 +1215,7 @@ export const PropFirmView: React.FC = () => {
                       className={`py-1.5 rounded-lg text-xs font-bold transition cursor-pointer ${
                         preTradeDirection === 'SELL'
                           ? 'bg-rose-600 text-white shadow-sm'
-                          : isLight ? 'text-slate-500 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+                          : isLight ? 'text-[#71717A] hover:text-slate-900' : 'text-[#A1A1AA] hover:text-white'
                       }`}
                     >
                       SELL
@@ -1218,14 +1224,14 @@ export const PropFirmView: React.FC = () => {
                 </div>
 
                 <div>
-                  <label className={`text-xs font-semibold block mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Quantity / Contracts</label>
+                  <label className={`text-xs font-semibold block mb-1 ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Quantity / Contracts</label>
                   <input
                     type="number"
                     min="1"
                     value={preTradeQuantity}
                     onChange={(e) => setPreTradeQuantity(Math.max(1, parseInt(e.target.value) || 1))}
                     className={`w-full rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-indigo-500 border ${
-                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-white'
+                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-white'
                     }`}
                   />
                 </div>
@@ -1233,36 +1239,36 @@ export const PropFirmView: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <label className={`text-xs font-semibold block mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Stop Loss (Points/Pips)</label>
+                  <label className={`text-xs font-semibold block mb-1 ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Stop Loss (Points/Pips)</label>
                   <input
                     type="number"
                     min="1"
                     value={preTradeStopLossPoints}
                     onChange={(e) => setPreTradeStopLossPoints(Math.max(1, parseFloat(e.target.value) || 1))}
                     className={`w-full rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-indigo-500 border ${
-                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-white'
+                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-white'
                     }`}
                   />
                 </div>
 
                 <div>
-                  <label className={`text-xs font-semibold block mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Point Multiplier ($)</label>
+                  <label className={`text-xs font-semibold block mb-1 ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Point Multiplier ($)</label>
                   <input
                     type="number"
                     min="1"
                     value={preTradePointMultiplier}
                     onChange={(e) => setPreTradePointMultiplier(Math.max(1, parseFloat(e.target.value) || 1))}
                     className={`w-full rounded-xl px-3 py-2 text-sm font-mono focus:outline-none focus:border-indigo-500 border ${
-                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-white'
+                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-white'
                     }`}
                   />
                 </div>
               </div>
 
               <div className={`p-3 rounded-xl border flex items-center justify-between text-xs font-mono ${
-                isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'
+                isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
               }`}>
-                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Total Dollar Risk:</span>
+                <span className={isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}>Total Dollar Risk:</span>
                 <span className={`font-bold ${isLight ? 'text-rose-600' : 'text-rose-400'}`}>
                   {formatCurrency(preTradeQuantity * preTradeStopLossPoints * preTradePointMultiplier)}
                 </span>
@@ -1273,18 +1279,18 @@ export const PropFirmView: React.FC = () => {
                 className="w-full py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-bold text-xs transition flex items-center justify-center gap-2 shadow-md shadow-indigo-600/25 border border-indigo-400/30 cursor-pointer"
               >
                 <Shield className="w-4 h-4" />
-                <span>Evaluate Prop Firm Rules</span>
+                <span>Check Rules</span>
               </button>
             </div>
           </div>
 
           {/* Validation Result Box */}
           <div className={`lg:col-span-2 p-6 rounded-2xl border space-y-4 shadow-sm ${
-            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
           }`}>
             <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
               <Scale className="w-4 h-4 text-purple-500" />
-              <span>Compliance Evaluation Result</span>
+              <span>Pre-Trade Result</span>
             </h3>
 
             {preTradeValidation ? (
@@ -1322,17 +1328,17 @@ export const PropFirmView: React.FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                    Rule-by-Rule Compliance Checks
+                  <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
+                    Rule Checks
                   </span>
                   <div className={`divide-y border rounded-xl overflow-hidden ${
-                    isLight ? 'divide-slate-200 border-[#E3E7EE] bg-[#F8F9FB]' : 'divide-[#1C232E] border-[#1C232E] bg-[#0A0D14]'
+                    isLight ? 'divide-slate-200 border-[#E3E7EE] bg-[#F8F9FB]' : 'divide-[rgba(255,255,255,0.07)] border-[rgba(255,255,255,0.07)] bg-[#080808]'
                   }`}>
                     {preTradeValidation.checks.map((c: any, i: number) => (
                       <div key={i} className="p-3 flex items-center justify-between text-xs">
                         <div className="space-y-0.5">
-                          <div className={`font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{c.ruleName}</div>
-                          <div className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{c.message}</div>
+                          <div className={`font-bold ${isLight ? 'text-slate-800' : 'text-[#F5F5F5]'}`}>{c.ruleName}</div>
+                          <div className={`text-[11px] ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>{c.message}</div>
                         </div>
                         <span
                           className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
@@ -1357,10 +1363,10 @@ export const PropFirmView: React.FC = () => {
                 </div>
               </div>
             ) : (
-              <div className={`p-8 text-center space-y-2 ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+              <div className={`p-8 text-center space-y-2 ${isLight ? 'text-[#A1A1AA]' : 'text-[#71717A]'}`}>
                 <Info className="w-8 h-8 mx-auto opacity-50" />
                 <p className="text-xs">
-                  Configure your simulated trade parameters and click "Evaluate Prop Firm Rules" to run pre-trade validation.
+                  Enter your trade parameters and check against account rules.
                 </p>
               </div>
             )}
@@ -1373,12 +1379,12 @@ export const PropFirmView: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left">
           {/* Trading Days Tracker */}
           <div className={`p-6 rounded-2xl border space-y-4 shadow-sm ${
-            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
           }`}>
             <div className="flex items-center justify-between">
               <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 <Calendar className="w-4 h-4 text-purple-500" />
-                <span>Trading Day & Qualifying Day Tracker</span>
+                <span>Trading Days</span>
               </h3>
               <span className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border ${
                 isLight ? 'bg-purple-50 border-purple-200 text-purple-700' : 'bg-purple-950/60 border-purple-500/30 text-purple-300'
@@ -1386,22 +1392,22 @@ export const PropFirmView: React.FC = () => {
                 {tradingDaysData?.daysCompleted} / {tradingDaysData?.minDaysRequired} Days
               </span>
             </div>
-            <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+            <p className={`text-xs ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
               LegionFunding rule: Minimum 3 active days. A qualifying trading day requires at least 0.5% realized profit ($250 on $50K).
             </p>
 
             <div className={`p-4 rounded-xl border space-y-2 ${
-              isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'
+              isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
             }`}>
               <div className="flex justify-between text-xs font-semibold">
-                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Requirement Status:</span>
+                <span className={isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}>Requirement Status:</span>
                 <span className={tradingDaysData?.isSatisfied ? (isLight ? 'text-emerald-700 font-bold' : 'text-emerald-400 font-bold') : (isLight ? 'text-amber-700 font-bold' : 'text-amber-400 font-bold')}>
                   {tradingDaysData?.isSatisfied
                     ? 'Minimum Days Satisfied'
                     : `${tradingDaysData?.daysRemaining} more trading days needed`}
                 </span>
               </div>
-              <div className={`w-full h-2.5 rounded-full overflow-hidden border ${isLight ? 'bg-slate-200 border-slate-300' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
+              <div className={`w-full h-2.5 rounded-full overflow-hidden border ${isLight ? 'bg-slate-200 border-slate-300' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'}`}>
                 <div
                   className="bg-gradient-to-r from-purple-500 to-indigo-500 h-full rounded-full transition-all duration-500"
                   style={{
@@ -1415,18 +1421,18 @@ export const PropFirmView: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Session Calendar Breakdown</span>
+              <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Session Calendar Breakdown</span>
               <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
                 {tradingDaysData?.dailyBreakdown.map((d, i) => (
                   <div
                     key={i}
                     className={`p-3 rounded-xl border flex items-center justify-between text-xs ${
-                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'
+                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                     }`}
                   >
                     <div>
-                      <span className={`font-mono font-bold ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>{d.date}</span>
-                      <span className={`ml-3 font-mono text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>P&L: {formatCurrency(d.netPnl)}</span>
+                      <span className={`font-mono font-bold ${isLight ? 'text-slate-900' : 'text-[#F5F5F5]'}`}>{d.date}</span>
+                      <span className={`ml-3 font-mono text-xs ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>P&L: {formatCurrency(d.netPnl)}</span>
                     </div>
                     {d.isQualifying ? (
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold border flex items-center gap-1 ${
@@ -1436,7 +1442,7 @@ export const PropFirmView: React.FC = () => {
                       </span>
                     ) : (
                       <span className={`px-2 py-0.5 rounded text-[10px] border ${
-                        isLight ? 'bg-slate-200 text-slate-600 border-slate-300' : 'bg-[#1A1F27] text-slate-400 border-[#1C232E]'
+                        isLight ? 'bg-slate-200 text-slate-600 border-slate-300' : 'bg-[#101010] text-[#A1A1AA] border-[rgba(255,255,255,0.07)]'
                       }`}>
                         Active Day
                       </span>
@@ -1449,12 +1455,12 @@ export const PropFirmView: React.FC = () => {
 
           {/* Consistency Rule Engine */}
           <div className={`p-6 rounded-2xl border space-y-4 shadow-sm ${
-            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
           }`}>
             <div className="flex items-center justify-between">
               <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 <Scale className="w-4 h-4 text-blue-500" />
-                <span>Consistency Rule Breakdown</span>
+                <span>Consistency Rule</span>
               </h3>
               <span
                 className={`px-2.5 py-0.5 rounded-full text-xs font-mono font-bold border ${
@@ -1466,33 +1472,33 @@ export const PropFirmView: React.FC = () => {
                 {consistencyData?.consistencyPercent}% / {consistencyData?.allowedPercent}% Limit
               </span>
             </div>
-            <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+            <p className={`text-xs leading-relaxed ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
               Formula: <code>(Highest Single Day Profit / Total Accumulated Profit) × 100</code>. No single day can exceed {consistencyData?.allowedPercent}%.
             </p>
 
             <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
-                <span className={`text-[10px] uppercase font-bold block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Best Single Day Profit</span>
+              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'}`}>
+                <span className={`text-[10px] uppercase font-bold block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Best Single Day Profit</span>
                 <span className={`text-lg font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   {formatCurrency(consistencyData?.bestDayProfit || 0)}
                 </span>
               </div>
-              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
-                <span className={`text-[10px] uppercase font-bold block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Total Positive Profit</span>
+              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'}`}>
+                <span className={`text-[10px] uppercase font-bold block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Total Positive Profit</span>
                 <span className={`text-lg font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   {formatCurrency(consistencyData?.totalProfit || 0)}
                 </span>
               </div>
             </div>
 
-            <div className={`p-4 rounded-xl border space-y-2 ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
+            <div className={`p-4 rounded-xl border space-y-2 ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'}`}>
               <div className="flex justify-between text-xs font-semibold">
-                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Profit Concentration:</span>
+                <span className={isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}>Profit Concentration:</span>
                 <span className={consistencyData?.isCompliant ? (isLight ? 'text-emerald-700 font-bold' : 'text-emerald-400 font-bold') : (isLight ? 'text-amber-700 font-bold' : 'text-amber-400 font-bold')}>
                   {consistencyData?.consistencyPercent}% ({consistencyData?.marginRemaining}% safety margin)
                 </span>
               </div>
-              <div className={`w-full h-2.5 rounded-full overflow-hidden border ${isLight ? 'bg-slate-200 border-slate-300' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
+              <div className={`w-full h-2.5 rounded-full overflow-hidden border ${isLight ? 'bg-slate-200 border-slate-300' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'}`}>
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
                     (consistencyData?.consistencyPercent || 0) > (consistencyData?.allowedPercent || 20)
@@ -1528,13 +1534,13 @@ export const PropFirmView: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-left">
           {/* Symbol Exposure Card */}
           <div className={`p-6 rounded-2xl border space-y-4 shadow-sm ${
-            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
           }`}>
             <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
               <Scale className="w-4 h-4 text-emerald-500" />
-              <span>Max Risk Exposure Per Symbol</span>
+              <span>Risk Per Symbol</span>
             </h3>
-            <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+            <p className={`text-xs ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
               LegionFunding constraint: Combined open and closed risk exposure on a single symbol must not exceed {activeAccount.maxRiskPerSymbolPercent || 2}% of initial balance (${formatCurrency(activeAccount.startingBalance * ((activeAccount.maxRiskPerSymbolPercent || 2) / 100))}).
             </p>
 
@@ -1542,19 +1548,19 @@ export const PropFirmView: React.FC = () => {
               {symbolRiskData.length > 0 ? (
                 symbolRiskData.map((sym, idx) => (
                   <div key={idx} className={`p-3.5 rounded-xl border flex items-center justify-between text-xs ${
-                    isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'
+                    isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                   }`}>
                     <div className="space-y-0.5">
                       <div className={`font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                         <span>{sym.symbol}</span>
-                        <span className={`text-[10px] font-normal ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>({sym.totalTradesCount} trades)</span>
+                        <span className={`text-[10px] font-normal ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>({sym.totalTradesCount} trades)</span>
                       </div>
-                      <div className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                      <div className={`text-[11px] ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
                         Realized PnL: <span className={sym.realizedPnl >= 0 ? (isLight ? 'text-emerald-700 font-mono font-bold' : 'text-emerald-400 font-mono') : (isLight ? 'text-rose-700 font-mono font-bold' : 'text-rose-400 font-mono')}>{formatCurrency(sym.realizedPnl)}</span>
                       </div>
                     </div>
                     <div className="text-right">
-                      <div className={`font-mono font-bold ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>
+                      <div className={`font-mono font-bold ${isLight ? 'text-slate-900' : 'text-[#F5F5F5]'}`}>
                         Risk: {formatCurrency(sym.potentialRiskDollar)} / {formatCurrency(sym.maxAllowedRiskDollar)}
                       </div>
                       <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
@@ -1570,7 +1576,7 @@ export const PropFirmView: React.FC = () => {
                   </div>
                 ))
               ) : (
-                <div className={`p-6 text-center text-xs ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+                <div className={`p-6 text-center text-xs ${isLight ? 'text-[#A1A1AA]' : 'text-[#71717A]'}`}>
                   No symbol executions logged yet for risk exposure monitoring.
                 </div>
               )}
@@ -1579,25 +1585,25 @@ export const PropFirmView: React.FC = () => {
 
           {/* Trade Duration Check */}
           <div className={`p-6 rounded-2xl border space-y-4 shadow-sm ${
-            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
           }`}>
             <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
               <Clock className="w-4 h-4 text-blue-500" />
-              <span>Trade Duration Engine (Min 60 Seconds)</span>
+              <span>Trade Duration</span>
             </h3>
-            <p className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+            <p className={`text-xs ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
               LegionFunding rule: Positions must be held open for at least {durationData?.minRequiredSec || 60} seconds to prevent high-frequency tick scalping.
             </p>
 
             <div className="grid grid-cols-2 gap-3 pt-2">
-              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
-                <span className={`text-[10px] uppercase font-bold block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Avg Trade Duration</span>
+              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'}`}>
+                <span className={`text-[10px] uppercase font-bold block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Avg Trade Duration</span>
                 <span className={`text-lg font-bold font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   {Math.floor((durationData?.avgTradeDurationSec || 0) / 60)}m {(durationData?.avgTradeDurationSec || 0) % 60}s
                 </span>
               </div>
-              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
-                <span className={`text-[10px] uppercase font-bold block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Duration Breaches</span>
+              <div className={`p-3 rounded-xl border ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'}`}>
+                <span className={`text-[10px] uppercase font-bold block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Duration Breaches</span>
                 <span className={`text-lg font-bold font-mono ${(durationData?.durationBreachesCount || 0) > 0 ? (isLight ? 'text-rose-600' : 'text-rose-400') : (isLight ? 'text-emerald-600' : 'text-emerald-400')}`}>
                   {durationData?.durationBreachesCount || 0} Trades
                 </span>
@@ -1605,14 +1611,14 @@ export const PropFirmView: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Execution Audit</span>
+              <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Execution Audit</span>
               <div className="max-h-48 overflow-y-auto space-y-1.5 pr-1 custom-scrollbar">
                 {durationData?.details.map((t, idx) => (
                   <div key={idx} className={`p-2.5 rounded-lg border flex items-center justify-between text-xs ${
-                    isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'
+                    isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                   }`}>
-                    <span className={`font-mono font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{t.symbol}</span>
-                    <span className={`font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{t.durationText}</span>
+                    <span className={`font-mono font-bold ${isLight ? 'text-slate-800' : 'text-[#F5F5F5]'}`}>{t.symbol}</span>
+                    <span className={`font-mono ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>{t.durationText}</span>
                     <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
                       t.isCompliant
                         ? isLight ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-emerald-950 text-emerald-400 border-emerald-500/30'
@@ -1632,16 +1638,16 @@ export const PropFirmView: React.FC = () => {
       {activeTab === 'rules' && (
         <div className="space-y-6 text-left">
           <div className={`p-6 rounded-2xl border space-y-4 shadow-sm ${
-            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
           }`}>
             <div className="flex items-center justify-between">
               <div>
                 <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   <Sliders className="w-4 h-4 text-cyan-500" />
-                  <span>Configurable Prop Firm Parameters</span>
+                  <span>Account Parameters</span>
                 </h3>
-                <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                  Customize loss calculation methods, enforcement modes, or load official LegionFunding presets.
+                <p className={`text-xs mt-0.5 ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
+                  Customize drawdown calculation, enforcement, and presets.
                 </p>
               </div>
               <button
@@ -1649,18 +1655,18 @@ export const PropFirmView: React.FC = () => {
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-semibold transition cursor-pointer shadow-sm"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span>Preset Templates</span>
+                <span>Templates</span>
               </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
-              <div className={`p-4 rounded-xl border space-y-2 ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
-                <label className={`text-xs font-bold block ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Enforcement Mode</label>
+              <div className={`p-4 rounded-xl border space-y-2 ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'}`}>
+                <label className={`text-xs font-bold block ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Enforcement Mode</label>
                 <select
                   value={activeAccount.enforcementMode || 'MONITOR'}
                   onChange={(e) => updatePropFirmAccount({ ...activeAccount, enforcementMode: e.target.value as any })}
                   className={`w-full rounded-lg px-3 py-2 text-xs font-semibold focus:outline-none focus:border-indigo-500 border ${
-                    isLight ? 'bg-white border-[#E3E7EE] text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-white'
+                    isLight ? 'bg-white border-[#E3E7EE] text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-white'
                   }`}
                 >
                   <option value="MONITOR">MONITOR (Soft Warnings & Alerts)</option>
@@ -1668,13 +1674,13 @@ export const PropFirmView: React.FC = () => {
                 </select>
               </div>
 
-              <div className={`p-4 rounded-xl border space-y-2 ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
-                <label className={`text-xs font-bold block ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Daily Loss Method</label>
+              <div className={`p-4 rounded-xl border space-y-2 ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'}`}>
+                <label className={`text-xs font-bold block ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Daily Loss Method</label>
                 <select
                   value={activeAccount.dailyLossMethod || 'REALIZED_ONLY'}
                   onChange={(e) => updatePropFirmAccount({ ...activeAccount, dailyLossMethod: e.target.value as any })}
                   className={`w-full rounded-lg px-3 py-2 text-xs font-semibold focus:outline-none focus:border-indigo-500 border ${
-                    isLight ? 'bg-white border-[#E3E7EE] text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-white'
+                    isLight ? 'bg-white border-[#E3E7EE] text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-white'
                   }`}
                 >
                   <option value="REALIZED_ONLY">REALIZED ONLY (Closed Trades)</option>
@@ -1684,13 +1690,13 @@ export const PropFirmView: React.FC = () => {
                 </select>
               </div>
 
-              <div className={`p-4 rounded-xl border space-y-2 ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
-                <label className={`text-xs font-bold block ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Drawdown Model</label>
+              <div className={`p-4 rounded-xl border space-y-2 ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'}`}>
+                <label className={`text-xs font-bold block ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Drawdown Model</label>
                 <select
                   value={activeAccount.drawdownModel}
                   onChange={(e) => updatePropFirmAccount({ ...activeAccount, drawdownModel: e.target.value as any })}
                   className={`w-full rounded-lg px-3 py-2 text-xs font-semibold focus:outline-none focus:border-indigo-500 border ${
-                    isLight ? 'bg-white border-[#E3E7EE] text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-white'
+                    isLight ? 'bg-white border-[#E3E7EE] text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-white'
                   }`}
                 >
                   <option value="STATIC">STATIC (Initial Balance Fixed)</option>
@@ -1700,14 +1706,14 @@ export const PropFirmView: React.FC = () => {
               </div>
             </div>
 
-            <div className={`space-y-3 pt-4 border-t ${isLight ? 'border-[#E3E7EE]' : 'border-[#1C232E]'}`}>
-              <span className={`text-xs font-bold uppercase tracking-wider block ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Active Rules List</span>
+            <div className={`space-y-3 pt-4 border-t ${isLight ? 'border-[#E3E7EE]' : 'border-[rgba(255,255,255,0.07)]'}`}>
+              <span className={`text-xs font-bold uppercase tracking-wider block ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Active Rules List</span>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {activeAccount.rules.map((rule) => (
                   <div
                     key={rule.id}
                     className={`p-4 rounded-xl border space-y-3 ${
-                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'
+                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                     }`}
                   >
                     <div className="flex items-start justify-between">
@@ -1715,12 +1721,12 @@ export const PropFirmView: React.FC = () => {
                         <div className="flex items-center gap-2">
                           <span className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{rule.name}</span>
                           <span className={`px-1.5 py-0.5 rounded text-[9px] font-mono border ${
-                            isLight ? 'bg-slate-200 text-slate-700 border-slate-300' : 'bg-[#1A1F27] text-slate-400 border-[#1C232E]'
+                            isLight ? 'bg-slate-200 text-slate-700 border-slate-300' : 'bg-[#101010] text-[#A1A1AA] border-[rgba(255,255,255,0.07)]'
                           }`}>
                             {rule.type}
                           </span>
                         </div>
-                        <p className={`text-[11px] mt-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>{rule.description}</p>
+                        <p className={`text-[11px] mt-1 ${isLight ? 'text-slate-600' : 'text-[#A1A1AA]'}`}>{rule.description}</p>
                       </div>
                       <div className="flex items-center gap-1">
                         <button
@@ -1733,7 +1739,7 @@ export const PropFirmView: React.FC = () => {
                           className={`px-2 py-0.5 rounded text-[10px] font-semibold transition cursor-pointer border ${
                             rule.enabled
                               ? isLight ? 'bg-emerald-100 text-emerald-800 border-emerald-300' : 'bg-emerald-950 text-emerald-400 border-emerald-500/30'
-                              : isLight ? 'bg-slate-200 text-slate-500 border-slate-300' : 'bg-[#1A1F27] text-slate-500 border-[#1C232E]'
+                              : isLight ? 'bg-slate-200 text-[#71717A] border-slate-300' : 'bg-[#101010] text-[#71717A] border-[rgba(255,255,255,0.07)]'
                           }`}
                         >
                           {rule.enabled ? 'Active' : 'Muted'}
@@ -1744,7 +1750,7 @@ export const PropFirmView: React.FC = () => {
                             setIsAddRuleModalOpen(true);
                           }}
                           className={`p-1 rounded cursor-pointer ${
-                            isLight ? 'text-slate-400 hover:text-slate-700' : 'text-slate-400 hover:text-white'
+                            isLight ? 'text-[#A1A1AA] hover:text-slate-700' : 'text-[#A1A1AA] hover:text-white'
                           }`}
                         >
                           <Edit2 className="w-3 h-3" />
@@ -1753,9 +1759,9 @@ export const PropFirmView: React.FC = () => {
                     </div>
 
                     <div className={`pt-2 border-t flex items-center justify-between text-[11px] ${
-                      isLight ? 'border-[#E3E7EE]' : 'border-[#1C232E]'
+                      isLight ? 'border-[#E3E7EE]' : 'border-[rgba(255,255,255,0.07)]'
                     }`}>
-                      <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Threshold:</span>
+                      <span className={isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}>Threshold:</span>
                       <span className={`font-mono font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>
                         {rule.threshold} {rule.unit}
                       </span>
@@ -1767,21 +1773,21 @@ export const PropFirmView: React.FC = () => {
 
             {/* 20 Modular Institutional Rule Evaluators Matrix */}
             {evaluation?.evaluators && (
-              <div className={`space-y-3 pt-6 border-t ${isLight ? 'border-[#E3E7EE]' : 'border-[#1C232E]'}`}>
+              <div className={`space-y-3 pt-6 border-t ${isLight ? 'border-[#E3E7EE]' : 'border-[rgba(255,255,255,0.07)]'}`}>
                 <div className="flex items-center justify-between">
                   <div>
                     <span className={`text-xs font-bold uppercase tracking-wider block flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                       <Shield className="w-4 h-4 text-indigo-500" />
-                      <span>20 Modular Institutional Rule Evaluators Matrix</span>
+                      <span>Account Rules</span>
                     </span>
-                    <p className={`text-[11px] mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                      Live real-time monitoring across all 20 institutional prop firm rules and risk parameters.
+                    <p className={`text-[11px] mt-0.5 ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
+                      Track your limits. Stay within plan.
                     </p>
                   </div>
                   <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${
                     isLight ? 'bg-indigo-50 text-indigo-700 border-indigo-200' : 'bg-indigo-500/10 text-indigo-300 border-indigo-500/20'
                   }`}>
-                    20 Active Monitors
+                    20 Rules Active
                   </span>
                 </div>
 
@@ -1899,7 +1905,7 @@ export const PropFirmView: React.FC = () => {
                         className={`p-3.5 rounded-xl border space-y-2 transition ${
                           isLight
                             ? 'bg-[#F8F9FB] border-[#E3E7EE] hover:border-slate-300'
-                            : 'bg-[#0A0D14] border-[#1C232E] hover:border-[#2A3444]'
+                            : 'bg-[#080808] border-[rgba(255,255,255,0.07)] hover:border-[rgba(255,255,255,0.12)]'
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -1920,9 +1926,9 @@ export const PropFirmView: React.FC = () => {
                             {status}
                           </span>
                         </div>
-                        <p className={`text-[10px] line-clamp-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{item.desc}</p>
+                        <p className={`text-[10px] line-clamp-1 ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>{item.desc}</p>
                         <div className={`p-1.5 rounded border text-[10px] font-mono ${
-                          isLight ? 'bg-white border-[#E3E7EE] text-slate-700' : 'bg-[#0A0D14] border-[#1C232E] text-slate-300'
+                          isLight ? 'bg-white border-[#E3E7EE] text-slate-700' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#D4D4D8]'
                         }`}>
                           {item.evaluator?.message || 'Rule evaluated & verified.'}
                         </div>
@@ -1941,39 +1947,39 @@ export const PropFirmView: React.FC = () => {
         <div className="space-y-6 text-left">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className={`p-4 rounded-2xl border space-y-1 shadow-sm ${
-              isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#12161D] border-[#1C232E]'
+              isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
             }`}>
-              <span className={`text-[10px] uppercase font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Eligible Net Profit</span>
+              <span className={`text-[10px] uppercase font-bold ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Eligible Net Profit</span>
               <div className={`text-2xl font-black font-mono ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>
                 {formatCurrency(payoutData?.eligibleProfit || 0)}
               </div>
-              <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Above starting balance</span>
+              <span className={`text-xs ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Above starting balance</span>
             </div>
 
             <div className={`p-4 rounded-2xl border space-y-1 shadow-sm ${
-              isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#12161D] border-[#1C232E]'
+              isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
             }`}>
-              <span className={`text-[10px] uppercase font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Trader Share ({payoutData?.rewardSplitPercent || 80}%)</span>
+              <span className={`text-[10px] uppercase font-bold ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Trader Share ({payoutData?.rewardSplitPercent || 80}%)</span>
               <div className={`text-2xl font-black font-mono ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 {formatCurrency(payoutData?.traderShare || 0)}
               </div>
-              <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>80% Payout split</span>
+              <span className={`text-xs ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>80% Payout split</span>
             </div>
 
             <div className={`p-4 rounded-2xl border space-y-1 shadow-sm ${
-              isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#12161D] border-[#1C232E]'
+              isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
             }`}>
-              <span className={`text-[10px] uppercase font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Firm Share (20%)</span>
-              <div className={`text-2xl font-black font-mono ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+              <span className={`text-[10px] uppercase font-bold ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Firm Share (20%)</span>
+              <div className={`text-2xl font-black font-mono ${isLight ? 'text-slate-600' : 'text-[#A1A1AA]'}`}>
                 {formatCurrency(payoutData?.firmShare || 0)}
               </div>
-              <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Hyper Funded Ltd.</span>
+              <span className={`text-xs ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Hyper Funded Ltd.</span>
             </div>
 
             <div className={`p-4 rounded-2xl border flex flex-col justify-between shadow-sm ${
-              isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#12161D] border-[#1C232E]'
+              isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
             }`}>
-              <span className={`text-[10px] uppercase font-bold ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Reward Claim Status</span>
+              <span className={`text-[10px] uppercase font-bold ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Payout Status</span>
               <button
                 disabled={!payoutData?.isEligibleForRequest}
                 onClick={() => setIsPayoutModalOpen(true)}
@@ -1981,22 +1987,22 @@ export const PropFirmView: React.FC = () => {
                   payoutData?.isEligibleForRequest
                     ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 shadow-md shadow-indigo-600/25 border border-indigo-400/30'
                     : isLight
-                    ? 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'
-                    : 'bg-[#1A1F27] text-slate-500 border border-[#1C232E] cursor-not-allowed'
+                    ? 'bg-slate-100 text-[#A1A1AA] border-slate-200 cursor-not-allowed'
+                    : 'bg-[#101010] text-[#71717A] border border-[rgba(255,255,255,0.07)] cursor-not-allowed'
                 }`}
               >
                 <Wallet className="w-3.5 h-3.5" />
-                <span>Submit Reward Request</span>
+                <span>Request Payout</span>
               </button>
             </div>
           </div>
 
           <div className={`p-4 rounded-2xl border flex items-center justify-between text-xs shadow-sm ${
-            isLight ? 'bg-white border-[#E3E7EE]' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-[#E3E7EE]' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
           }`}>
             <div className="space-y-1">
-              <span className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>Reward Buffer Policy:</span>
-              <p className={isLight ? 'text-slate-600' : 'text-slate-400'}>
+              <span className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>Payout Buffer:</span>
+              <p className={isLight ? 'text-slate-600' : 'text-[#A1A1AA]'}>
                 {payoutData?.rewardBufferPercent ? `Must hold a 3% profit buffer ($${payoutData.rewardBufferAmount}) before first payout.` : 'No active reward buffer restriction for this model.'}
               </p>
             </div>
@@ -2015,19 +2021,19 @@ export const PropFirmView: React.FC = () => {
       {activeTab === 'violations' && (
         <div className="space-y-6 text-left">
           <div className={`p-6 rounded-2xl border space-y-4 shadow-sm ${
-            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-200/50' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
           }`}>
             <div className="flex items-center justify-between">
               <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 <AlertTriangle className="w-4 h-4 text-rose-500" />
-                <span>Historical Rule Violations & Prohibited Behavior Monitor</span>
+                <span>Rule Violations</span>
               </h3>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className={`p-4 rounded-xl border space-y-2 ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
-                <span className={`text-xs font-bold block ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Inactivity Rule Monitor (30 Days)</span>
-                <div className={`text-sm font-mono ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+              <div className={`p-4 rounded-xl border space-y-2 ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'}`}>
+                <span className={`text-xs font-bold block ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Inactivity Rule Monitor (30 Days)</span>
+                <div className={`text-sm font-mono ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>
                   Days Inactive: <strong className={isLight ? 'text-slate-900' : 'text-white'}>{inactivityData?.daysInactive} days</strong> (Max: 30)
                 </div>
                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
@@ -2039,9 +2045,9 @@ export const PropFirmView: React.FC = () => {
                 </span>
               </div>
 
-              <div className={`p-4 rounded-xl border space-y-2 ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
-                <span className={`text-xs font-bold block ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>News Trading Audit</span>
-                <div className={`text-sm font-mono ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+              <div className={`p-4 rounded-xl border space-y-2 ${isLight ? 'bg-[#F8F9FB] border-[#E3E7EE]' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'}`}>
+                <span className={`text-xs font-bold block ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>News Trading Audit</span>
+                <div className={`text-sm font-mono ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>
                   Violating Trades: <strong className={isLight ? 'text-emerald-700' : 'text-emerald-400'}>{newsData?.violatingTradesCount || 0}</strong> (5m Window)
                 </div>
                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold border ${
@@ -2054,18 +2060,18 @@ export const PropFirmView: React.FC = () => {
 
             {activeAccount.violations.length > 0 ? (
               <div className={`divide-y border rounded-xl overflow-hidden ${
-                isLight ? 'divide-slate-200 border-[#E3E7EE] bg-[#F8F9FB]' : 'divide-[#1C232E] border-[#1C232E] bg-[#0A0D14]'
+                isLight ? 'divide-slate-200 border-[#E3E7EE] bg-[#F8F9FB]' : 'divide-[rgba(255,255,255,0.07)] border-[rgba(255,255,255,0.07)] bg-[#080808]'
               }`}>
                 {activeAccount.violations.map((v) => (
                   <div key={v.id} className="p-4 space-y-1.5">
                     <div className="flex items-center justify-between">
                       <span className={`text-xs font-bold ${isLight ? 'text-rose-600' : 'text-rose-400'}`}>{v.ruleName}</span>
-                      <span className={`text-[10px] font-mono ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>{new Date(v.timestamp).toLocaleString()}</span>
+                      <span className={`text-[10px] font-mono ${isLight ? 'text-[#A1A1AA]' : 'text-[#71717A]'}`}>{new Date(v.timestamp).toLocaleString()}</span>
                     </div>
-                    <p className={`text-xs ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>{v.explanation}</p>
-                    <div className={`flex items-center gap-3 text-[11px] pt-1 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                    <p className={`text-xs ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>{v.explanation}</p>
+                    <div className={`flex items-center gap-3 text-[11px] pt-1 ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
                       <span>Actual: <strong className={isLight ? 'text-rose-600' : 'text-rose-400'}>{v.actualValue}</strong></span>
-                      <span>Allowed: <strong className={isLight ? 'text-slate-800' : 'text-slate-200'}>{v.allowedValue}</strong></span>
+                      <span>Allowed: <strong className={isLight ? 'text-slate-800' : 'text-[#F5F5F5]'}>{v.allowedValue}</strong></span>
                     </div>
                   </div>
                 ))}
@@ -2074,7 +2080,7 @@ export const PropFirmView: React.FC = () => {
               <div className={`p-6 text-center text-xs space-y-1 ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>
                 <CheckCircle2 className={`w-8 h-8 mx-auto opacity-80 ${isLight ? 'text-emerald-600' : 'text-emerald-500'}`} />
                 <p className="font-bold">Zero Violations Recorded</p>
-                <p className={isLight ? 'text-slate-500' : 'text-slate-400'}>Account has maintained 100% compliance across all active rules.</p>
+                <p className={isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}>Account has maintained 100% compliance across all active rules.</p>
               </div>
             )}
           </div>
@@ -2094,17 +2100,17 @@ export const PropFirmView: React.FC = () => {
       {isEditAccountModalOpen && activeAccount && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
           <div className={`border rounded-2xl w-full max-w-lg p-6 space-y-4 text-left shadow-2xl ${
-            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-400/30' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-[#E3E7EE] shadow-slate-400/30' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
           }`}>
-            <div className={`flex items-center justify-between border-b pb-3 ${isLight ? 'border-[#E3E7EE]' : 'border-[#1C232E]'}`}>
+            <div className={`flex items-center justify-between border-b pb-3 ${isLight ? 'border-[#E3E7EE]' : 'border-[rgba(255,255,255,0.07)]'}`}>
               <h3 className={`text-base font-extrabold flex items-center gap-2 ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 <Edit2 className="w-4 h-4 text-indigo-500" />
-                <span>Edit Account Parameters</span>
+                <span>Edit Account</span>
               </h3>
               <button
                 onClick={() => setIsEditAccountModalOpen(false)}
                 className={`p-1 rounded-lg transition cursor-pointer ${
-                  isLight ? 'text-slate-400 hover:text-slate-700 hover:bg-slate-100' : 'text-slate-400 hover:text-white hover:bg-[#1A1F27]'
+                  isLight ? 'text-[#A1A1AA] hover:text-slate-700 hover:bg-slate-100' : 'text-[#A1A1AA] hover:text-white hover:bg-[#101010]'
                 }`}
               >
                 <XCircle className="w-5 h-5" />
@@ -2113,36 +2119,36 @@ export const PropFirmView: React.FC = () => {
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className={`font-bold block mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Account Name</label>
+                <label className={`font-bold block mb-1 ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Account Name</label>
                 <input
                   type="text"
                   value={editAccountName}
                   onChange={(e) => setEditAccountName(e.target.value)}
                   className={`w-full rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 border ${
-                    isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-white'
+                    isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-white'
                   }`}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={`font-bold block mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Starting Balance ($)</label>
+                  <label className={`font-bold block mb-1 ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Starting Balance ($)</label>
                   <input
                     type="number"
                     value={editStartingBalance}
                     onChange={(e) => setEditStartingBalance(parseFloat(e.target.value) || 0)}
                     className={`w-full rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 border ${
-                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-white'
+                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-white'
                     }`}
                   />
                 </div>
                 <div>
-                  <label className={`font-bold block mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Enforcement Mode</label>
+                  <label className={`font-bold block mb-1 ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Enforcement Mode</label>
                   <select
                     value={editEnforcementMode}
                     onChange={(e) => setEditEnforcementMode(e.target.value as any)}
                     className={`w-full rounded-xl px-3 py-2 text-xs focus:outline-none focus:border-indigo-500 border ${
-                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-white'
+                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-white'
                     }`}
                   >
                     <option value="MONITOR">MONITOR (Alerts Only)</option>
@@ -2154,47 +2160,47 @@ export const PropFirmView: React.FC = () => {
 
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className={`font-bold block mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Profit Target %</label>
+                  <label className={`font-bold block mb-1 ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Profit Target %</label>
                   <input
                     type="number"
                     value={editTargetPercent}
                     onChange={(e) => setEditTargetPercent(parseFloat(e.target.value) || 0)}
                     className={`w-full rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 border ${
-                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-white'
+                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-white'
                     }`}
                   />
                 </div>
                 <div>
-                  <label className={`font-bold block mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Daily Loss %</label>
+                  <label className={`font-bold block mb-1 ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Daily Loss %</label>
                   <input
                     type="number"
                     value={editDailyLossPercent}
                     onChange={(e) => setEditDailyLossPercent(parseFloat(e.target.value) || 0)}
                     className={`w-full rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 border ${
-                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-white'
+                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-white'
                     }`}
                   />
                 </div>
                 <div>
-                  <label className={`font-bold block mb-1 ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>Total Loss %</label>
+                  <label className={`font-bold block mb-1 ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>Total Loss %</label>
                   <input
                     type="number"
                     value={editTotalLossPercent}
                     onChange={(e) => setEditTotalLossPercent(parseFloat(e.target.value) || 0)}
                     className={`w-full rounded-xl px-3 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 border ${
-                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-white'
+                      isLight ? 'bg-[#F8F9FB] border-[#E3E7EE] text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-white'
                     }`}
                   />
                 </div>
               </div>
             </div>
 
-            <div className={`pt-3 border-t flex items-center justify-end gap-3 ${isLight ? 'border-[#E3E7EE]' : 'border-[#1C232E]'}`}>
+            <div className={`pt-3 border-t flex items-center justify-end gap-3 ${isLight ? 'border-[#E3E7EE]' : 'border-[rgba(255,255,255,0.07)]'}`}>
               <button
                 type="button"
                 onClick={() => setIsEditAccountModalOpen(false)}
                 className={`px-4 py-2 rounded-xl text-xs font-semibold transition cursor-pointer border ${
-                  isLight ? 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200' : 'bg-[#1A1F27] border-[#1C232E] text-slate-300 hover:text-white'
+                  isLight ? 'bg-slate-100 border-slate-200 text-slate-600 hover:bg-slate-200' : 'bg-[#101010] border-[rgba(255,255,255,0.07)] text-[#D4D4D8] hover:text-white'
                 }`}
               >
                 Cancel
@@ -2222,7 +2228,7 @@ export const PropFirmView: React.FC = () => {
         >
           <div
             className={`border rounded-2xl w-full max-w-md p-6 space-y-5 text-left shadow-2xl animate-in zoom-in-95 duration-150 ${
-              isLight ? 'bg-white border-[#E3E7EE] shadow-slate-400/30' : 'bg-[#12161D] border-[#1C232E]'
+              isLight ? 'bg-white border-[#E3E7EE] shadow-slate-400/30' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
             }`}
             onClick={(e) => e.stopPropagation()}
           >
@@ -2236,7 +2242,7 @@ export const PropFirmView: React.FC = () => {
                 <h3 className={`text-base font-bold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
                   Delete Prop Firm Account?
                 </h3>
-                <p className={`text-xs mt-1 leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+                <p className={`text-xs mt-1 leading-relaxed ${isLight ? 'text-slate-600' : 'text-[#A1A1AA]'}`}>
                   Are you sure you want to delete <span className="font-semibold text-slate-900 dark:text-white">"{(accountPendingDelete || activeAccount)?.name}"</span>? All linked evaluation rules, phase milestones, and live risk metrics will be removed.
                 </p>
               </div>
@@ -2245,30 +2251,30 @@ export const PropFirmView: React.FC = () => {
             {/* Account Quick Specs Summary Badge */}
             {(accountPendingDelete || activeAccount) && (
               <div className={`p-3.5 rounded-xl border text-xs space-y-2 ${
-                isLight ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-[#0A0D14] border-[#1C232E] text-slate-300'
+                isLight ? 'bg-slate-50 border-slate-200 text-slate-700' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#D4D4D8]'
               }`}>
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Firm / Provider:</span>
+                  <span className={isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}>Firm / Provider:</span>
                   <span className="font-semibold">{(accountPendingDelete || activeAccount)?.firmName}</span>
                 </div>
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Starting Balance:</span>
+                  <span className={isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}>Starting Balance:</span>
                   <span className="font-mono font-semibold">{formatCurrency((accountPendingDelete || activeAccount)?.startingBalance || 0)}</span>
                 </div>
                 <div className="flex items-center justify-between text-[11px]">
-                  <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Program Model:</span>
+                  <span className={isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}>Program Model:</span>
                   <span className="font-medium capitalize">{(accountPendingDelete || activeAccount)?.programModel?.toLowerCase().replace('_', ' ')}</span>
                 </div>
                 {(accountPendingDelete || activeAccount)?.phase && (
                   <div className="flex items-center justify-between text-[11px]">
-                    <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Current Phase:</span>
+                    <span className={isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}>Current Phase:</span>
                     <span className="font-medium">{(accountPendingDelete || activeAccount)?.phaseName || (accountPendingDelete || activeAccount)?.phase}</span>
                   </div>
                 )}
               </div>
             )}
 
-            <div className={`pt-3 border-t flex items-center justify-end gap-3 ${isLight ? 'border-slate-100' : 'border-[#1C232E]'}`}>
+            <div className={`pt-3 border-t flex items-center justify-end gap-3 ${isLight ? 'border-slate-100' : 'border-[rgba(255,255,255,0.07)]'}`}>
               <button
                 type="button"
                 id="prop-firm-delete-cancel-btn"
@@ -2281,7 +2287,7 @@ export const PropFirmView: React.FC = () => {
                 className={`px-4 py-2.5 rounded-xl text-xs font-semibold transition-all duration-150 cursor-pointer border select-none inline-flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-slate-400/40 disabled:opacity-50 disabled:cursor-not-allowed ${
                   isLight
                     ? 'bg-slate-100 hover:bg-slate-200/80 active:bg-slate-300/80 border-slate-200 text-slate-700 hover:text-slate-900 shadow-xs'
-                    : 'bg-[#181D26] hover:bg-[#202734] active:bg-[#283141] border-[#252C38] text-slate-300 hover:text-white shadow-xs'
+                    : 'bg-[#181D26] hover:bg-[#202734] active:bg-[#283141] border-[#252C38] text-[#D4D4D8] hover:text-white shadow-xs'
                 }`}
               >
                 Cancel

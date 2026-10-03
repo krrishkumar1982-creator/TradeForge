@@ -291,7 +291,7 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
             className={`p-1.5 rounded-md border transition cursor-pointer ${
               isLight
                 ? 'border-slate-200 hover:bg-slate-100 text-slate-700'
-                : 'border-[rgba(255,255,255,0.08)] bg-[#101116] hover:bg-[#181A21] text-slate-300 hover:text-white'
+                : 'border-[rgba(255,255,255,0.08)] bg-[#101116] hover:bg-[#181A21] text-[#D4D4D8] hover:text-white'
             }`}
             title="Previous Month"
           >
@@ -301,7 +301,7 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
           <span
             id="calendar-current-month-heading"
             className={`text-sm sm:text-base font-bold min-w-[140px] text-center tracking-tight ${
-              isLight ? 'text-slate-900' : 'text-slate-100'
+              isLight ? 'text-slate-900' : 'text-[#F5F5F5]'
             }`}
           >
             {formattedMonthTitle}
@@ -313,7 +313,7 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
             className={`p-1.5 rounded-md border transition cursor-pointer ${
               isLight
                 ? 'border-slate-200 hover:bg-slate-100 text-slate-700'
-                : 'border-[rgba(255,255,255,0.08)] bg-[#101116] hover:bg-[#181A21] text-slate-300 hover:text-white'
+                : 'border-[rgba(255,255,255,0.08)] bg-[#101116] hover:bg-[#181A21] text-[#D4D4D8] hover:text-white'
             }`}
             title="Next Month"
           >
@@ -326,7 +326,7 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
             className={`text-xs font-semibold px-2.5 py-1 rounded-md border transition cursor-pointer ${
               isLight
                 ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'
-                : 'border-[rgba(255,255,255,0.08)] bg-[#101116] hover:bg-[#181A21] text-slate-300 hover:text-white'
+                : 'border-[rgba(255,255,255,0.08)] bg-[#101116] hover:bg-[#181A21] text-[#D4D4D8] hover:text-white'
             }`}
           >
             Today
@@ -344,7 +344,7 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
               className={`text-xs font-medium px-2 py-1 rounded-md border outline-none cursor-pointer ${
                 isLight
                   ? 'border-slate-200 bg-white text-slate-700'
-                  : 'border-[rgba(255,255,255,0.08)] bg-[#101116] text-slate-300'
+                  : 'border-[rgba(255,255,255,0.08)] bg-[#101116] text-[#D4D4D8]'
               }`}
             >
               {availableTradeMonths.map(key => {
@@ -364,7 +364,7 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
         <div className="flex flex-wrap items-center gap-3">
           {/* Monthly Stats Badge */}
           <div className="flex items-center gap-2 text-xs">
-            <span className={isLight ? 'text-slate-500 font-medium' : 'text-slate-400 font-medium'}>
+            <span className={isLight ? 'text-[#71717A] font-medium' : 'text-[#A1A1AA] font-medium'}>
               Month Net:
             </span>
             <span
@@ -380,12 +380,12 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
                       : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
                     : isLight
                       ? 'bg-slate-100 text-slate-700 border-slate-200'
-                      : 'bg-slate-800 text-slate-300 border-slate-700'
+                      : 'bg-[#101010] text-[#D4D4D8] border-white/[0.10]'
               }`}
             >
               {monthNetPnl > 0 ? `+${formatCompactCurrency(monthNetPnl)}` : formatCompactCurrency(monthNetPnl)}
             </span>
-            <span className={`font-mono text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+            <span className={`font-mono text-[11px] ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
               ({tradingDaysCount} {tradingDaysCount === 1 ? 'day' : 'days'} • {totalTradesCount} trades)
             </span>
           </div>
@@ -398,7 +398,7 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
               className={`p-1.5 rounded-md border transition cursor-pointer ${
                 isLight
                   ? 'border-slate-200 hover:bg-slate-100 text-slate-700'
-                  : 'border-[rgba(255,255,255,0.08)] bg-[#101116] hover:bg-[#181A21] text-slate-300 hover:text-white'
+                  : 'border-[rgba(255,255,255,0.08)] bg-[#101116] hover:bg-[#181A21] text-[#D4D4D8] hover:text-white'
               }`}
               title="Add Trade"
             >
@@ -413,7 +413,7 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
                 className={`p-1.5 rounded-md border transition cursor-pointer ${
                   isSettingsOpen
                     ? isLight ? 'bg-slate-200 text-slate-900' : 'bg-[#181A21] text-white'
-                    : isLight ? 'border-slate-200 hover:bg-slate-100 text-slate-700' : 'border-[rgba(255,255,255,0.08)] bg-[#101116] hover:bg-[#181A21] text-slate-300'
+                    : isLight ? 'border-slate-200 hover:bg-slate-100 text-slate-700' : 'border-[rgba(255,255,255,0.08)] bg-[#101116] hover:bg-[#181A21] text-[#D4D4D8]'
                 }`}
                 title="Calendar Settings"
               >
@@ -422,10 +422,10 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
 
               {isSettingsOpen && (
                 <div className={`absolute right-0 mt-2 w-56 rounded-lg border p-3 shadow-xl z-30 space-y-2.5 ${
-                  isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#14151C] border-[rgba(255,255,255,0.12)] text-slate-100 shadow-2xl'
+                  isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#14151C] border-[rgba(255,255,255,0.12)] text-[#F5F5F5] shadow-2xl'
                 }`}>
                   <h4 className={`text-[10px] font-bold uppercase tracking-wider pb-1 border-b ${
-                    isLight ? 'text-slate-500 border-slate-200' : 'text-slate-400 border-[rgba(255,255,255,0.08)]'
+                    isLight ? 'text-[#71717A] border-slate-200' : 'text-[#A1A1AA] border-[rgba(255,255,255,0.08)]'
                   }`}>
                     Calendar Display
                   </h4>
@@ -462,7 +462,7 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
               className={`p-1.5 rounded-md border transition cursor-pointer ${
                 isLight
                   ? 'border-slate-200 hover:bg-slate-100 text-slate-700'
-                  : 'border-[rgba(255,255,255,0.08)] bg-[#101116] hover:bg-[#181A21] text-slate-300 hover:text-white'
+                  : 'border-[rgba(255,255,255,0.08)] bg-[#101116] hover:bg-[#181A21] text-[#D4D4D8] hover:text-white'
               }`}
               title="Snapshot View"
             >
@@ -500,7 +500,7 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
               <div
                 key={day}
                 className={`text-[11px] font-semibold py-1 uppercase tracking-wider ${
-                  isLight ? 'text-slate-500' : 'text-slate-400'
+                  isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'
                 }`}
               >
                 {day}
@@ -571,8 +571,8 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
                                 ? 'bg-slate-100 border-slate-300 hover:border-slate-400 cursor-pointer'
                                 : 'bg-[#141720] border-[rgba(255,255,255,0.12)] hover:border-[rgba(255,255,255,0.25)] cursor-pointer'
                           : isLight
-                            ? 'bg-white border-slate-200 text-slate-400'
-                            : 'bg-[#0E1015] border-[rgba(255,255,255,0.05)] text-slate-500'
+                            ? 'bg-white border-slate-200 text-[#A1A1AA]'
+                            : 'bg-[#0E1015] border-[rgba(255,255,255,0.05)] text-[#71717A]'
                       } ${isToday ? isLight ? 'ring-2 ring-blue-500 ring-offset-1 ring-offset-white' : 'ring-2 ring-blue-500 ring-offset-1 ring-offset-[#0A0C10]' : ''}`}
                     >
                       {/* Day Header: Left Event Icon / Today Dot + Right Day Number */}
@@ -586,7 +586,7 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
                                 ? isLight ? 'text-emerald-700' : 'text-emerald-400'
                                 : isLoss
                                   ? isLight ? 'text-rose-700' : 'text-rose-400'
-                                  : isLight ? 'text-slate-600' : 'text-slate-400'
+                                  : isLight ? 'text-slate-600' : 'text-[#A1A1AA]'
                             }`}
                           >
                             {dayTrades.length}T
@@ -599,7 +599,7 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
                           className={`text-[10px] sm:text-xs font-bold ${
                             hasTrades
                               ? isLight ? 'text-slate-900' : 'text-white'
-                              : isLight ? 'text-slate-400' : 'text-slate-500'
+                              : isLight ? 'text-[#A1A1AA]' : 'text-[#71717A]'
                           }`}
                         >
                           {dayNum}
@@ -615,14 +615,14 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
                                 ? isLight ? 'text-emerald-600' : 'text-emerald-400'
                                 : isLoss
                                   ? isLight ? 'text-rose-600' : 'text-rose-400'
-                                  : isLight ? 'text-slate-700' : 'text-slate-300'
+                                  : isLight ? 'text-slate-700' : 'text-[#D4D4D8]'
                             }`}
                           >
                             {dayPnl > 0 ? `+${formatCompactCurrency(dayPnl)}` : formatCompactCurrency(dayPnl)}
                           </div>
 
                           <div className={`text-[9px] font-mono leading-tight truncate ${
-                            isLight ? 'text-slate-600' : 'text-slate-400'
+                            isLight ? 'text-slate-600' : 'text-[#A1A1AA]'
                           }`}>
                             <span>{winRate}% win</span>
                           </div>
@@ -655,7 +655,7 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
                   }`}
                 >
                   <span className={`text-[10px] uppercase font-semibold tracking-wider ${
-                    isLight ? 'text-slate-500' : 'text-slate-400'
+                    isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'
                   }`}>
                     Week {week.weekNumber}
                   </span>
@@ -666,7 +666,7 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
                         ? isLight ? 'text-emerald-600' : 'text-emerald-400'
                         : isNegative
                           ? isLight ? 'text-rose-600' : 'text-rose-400'
-                          : isLight ? 'text-slate-600' : 'text-slate-400'
+                          : isLight ? 'text-slate-600' : 'text-[#A1A1AA]'
                     }`}
                   >
                     {week.weekPnl !== 0
@@ -674,7 +674,7 @@ export const PerformanceCalendar: React.FC<PerformanceCalendarProps> = ({
                       : '—'}
                   </div>
 
-                  <span className={`text-[9px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                  <span className={`text-[9px] font-mono ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
                     {week.tradesCount > 0 ? `${week.tradesCount} trades • ${week.activeDaysCount}d` : 'No trades'}
                   </span>
                 </div>

@@ -47,7 +47,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           <label
             htmlFor={id}
             className={`block text-xs font-medium select-none ${
-              isLight ? 'text-zinc-700' : 'text-slate-300'
+              isLight ? 'text-zinc-700' : 'text-[#A7ADB7]'
             }`}
           >
             {label}
@@ -58,7 +58,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {Icon && iconPosition === 'left' && (
             <div
               className={`absolute left-3 pointer-events-none ${
-                isLight ? 'text-zinc-400' : 'text-slate-400'
+                isLight ? 'text-zinc-400' : 'text-[#8A919D]'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -71,7 +71,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
             className={`w-full border font-normal transition-all duration-140 focus:outline-none focus:ring-1 disabled:opacity-50 disabled:cursor-not-allowed ${
               isLight
                 ? 'bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500 focus:ring-blue-500/20'
-                : 'bg-[#0C0D12] text-slate-100 placeholder:text-slate-500 focus:border-blue-500/60 focus:ring-blue-500/20'
+                : 'bg-[#080A0D] text-[#F4F5F7] placeholder:text-[#5E6570] focus:border-[rgba(99,102,241,0.5)] focus:ring-[rgba(99,102,241,0.2)]'
             } ${
               error
                 ? 'border-rose-500/50 focus:border-rose-500 focus:ring-rose-500/20'
@@ -85,7 +85,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
           {Icon && iconPosition === 'right' && (
             <div
               className={`absolute right-3 pointer-events-none ${
-                isLight ? 'text-zinc-400' : 'text-slate-400'
+                isLight ? 'text-zinc-400' : 'text-[#8A919D]'
               }`}
             >
               <Icon className="w-4 h-4" />
@@ -95,7 +95,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
 
         {error && <p className="text-[11px] text-rose-500">{error}</p>}
         {hint && !error && (
-          <p className={`text-[11px] ${isLight ? 'text-zinc-500' : 'text-slate-500'}`}>{hint}</p>
+          <p className={`text-[11px] ${isLight ? 'text-zinc-500' : 'text-[#8A919D]'}`}>{hint}</p>
         )}
       </div>
     );
@@ -128,7 +128,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           <label
             htmlFor={id}
             className={`block text-xs font-medium select-none ${
-              isLight ? 'text-zinc-700' : 'text-slate-300'
+              isLight ? 'text-zinc-700' : 'text-[#A7ADB7]'
             }`}
           >
             {label}
@@ -142,7 +142,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
             className={`w-full appearance-none border transition-all duration-140 focus:outline-none focus:ring-1 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer ${
               isLight
                 ? 'bg-white text-zinc-900 focus:border-blue-500 focus:ring-blue-500/20'
-                : 'bg-[#0C0D12] text-slate-100 focus:border-blue-500/60 focus:ring-blue-500/20'
+                : 'bg-[#080A0D] text-[#F4F5F7] focus:border-[rgba(99,102,241,0.5)] focus:ring-[rgba(99,102,241,0.2)]'
             } ${
               error
                 ? 'border-rose-500/50 focus:border-rose-500'
@@ -158,7 +158,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
                     key={opt.value}
                     value={opt.value}
                     disabled={opt.disabled}
-                    className={isLight ? 'bg-white text-zinc-900' : 'bg-[#12141A] text-slate-100'}
+                    className={isLight ? 'bg-white text-zinc-900' : 'bg-[#0B0E12] text-[#F4F5F7]'}
                   >
                     {opt.label}
                   </option>
@@ -167,14 +167,14 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           </select>
           <ChevronDown
             className={`w-4 h-4 pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 ${
-              isLight ? 'text-zinc-500' : 'text-slate-400'
+              isLight ? 'text-zinc-500' : 'text-[#8A919D]'
             }`}
           />
         </div>
 
         {error && <p className="text-[11px] text-rose-500">{error}</p>}
         {hint && !error && (
-          <p className={`text-[11px] ${isLight ? 'text-zinc-500' : 'text-slate-500'}`}>{hint}</p>
+          <p className={`text-[11px] ${isLight ? 'text-zinc-500' : 'text-[#8A919D]'}`}>{hint}</p>
         )}
       </div>
     );
@@ -199,7 +199,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           <label
             htmlFor={id}
             className={`block text-xs font-medium select-none ${
-              isLight ? 'text-zinc-700' : 'text-slate-300'
+              isLight ? 'text-zinc-700' : 'text-[#A7ADB7]'
             }`}
           >
             {label}
@@ -211,7 +211,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           className={`w-full p-3 rounded-xl border text-xs transition-all duration-140 focus:outline-none focus:ring-1 disabled:opacity-50 resize-y min-h-[80px] ${
             isLight
               ? 'bg-white text-zinc-900 placeholder:text-zinc-400 focus:border-blue-500 focus:ring-blue-500/20'
-              : 'bg-[#0C0D12] text-slate-100 placeholder:text-slate-500 focus:border-blue-500/60 focus:ring-blue-500/20'
+              : 'bg-[#080A0D] text-[#F4F5F7] placeholder:text-[#5E6570] focus:border-[rgba(99,102,241,0.5)] focus:ring-[rgba(99,102,241,0.2)]'
           } ${
             error
               ? 'border-rose-500/50 focus:border-rose-500'
@@ -223,7 +223,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
         />
         {error && <p className="text-[11px] text-rose-500">{error}</p>}
         {hint && !error && (
-          <p className={`text-[11px] ${isLight ? 'text-zinc-500' : 'text-slate-500'}`}>{hint}</p>
+          <p className={`text-[11px] ${isLight ? 'text-zinc-500' : 'text-[#8A919D]'}`}>{hint}</p>
         )}
       </div>
     );
@@ -271,7 +271,7 @@ export const Toggle: React.FC<ToggleProps> = ({
             ? 'bg-blue-600'
             : isLight
             ? 'bg-zinc-200 border border-zinc-300'
-            : 'bg-[#1C1F27] border border-[rgba(255,255,255,0.08)]'
+            : 'bg-[#11151A] border border-[rgba(255,255,255,0.07)]'
         }`}
       >
         <span
@@ -284,7 +284,7 @@ export const Toggle: React.FC<ToggleProps> = ({
         <div className="text-xs">
           {label && (
             <span
-              className={`font-medium block ${isLight ? 'text-zinc-900' : 'text-slate-200'}`}
+              className={`font-medium block ${isLight ? 'text-zinc-900' : 'text-[#F4F5F7]'}`}
             >
               {label}
             </span>
@@ -292,7 +292,7 @@ export const Toggle: React.FC<ToggleProps> = ({
           {description && (
             <span
               className={`text-[11px] block mt-0.5 ${
-                isLight ? 'text-zinc-500' : 'text-slate-400'
+                isLight ? 'text-zinc-500' : 'text-[#8A919D]'
               }`}
             >
               {description}
@@ -329,7 +329,7 @@ export const FormSection: React.FC<FormSectionProps> = ({
       className={`p-5 rounded-2xl border space-y-4 ${
         isLight
           ? 'bg-white border-zinc-200 shadow-xs'
-          : 'bg-[#0F1117] border-[rgba(255,255,255,0.06)]'
+          : 'bg-[#0D1014] border-[rgba(255,255,255,0.055)] shadow-[0_4px_20px_rgba(0,0,0,0.25)]'
       } ${className}`}
     >
       <div className="flex items-start gap-3">
@@ -340,12 +340,12 @@ export const FormSection: React.FC<FormSectionProps> = ({
         )}
         <div>
           <h3
-            className={`text-sm font-semibold ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}
+            className={`text-sm font-semibold ${isLight ? 'text-zinc-900' : 'text-[#F4F5F7]'}`}
           >
             {title}
           </h3>
           {description && (
-            <p className={`text-xs mt-0.5 ${isLight ? 'text-zinc-500' : 'text-slate-400'}`}>
+            <p className={`text-xs mt-0.5 ${isLight ? 'text-zinc-500' : 'text-[#8A919D]'}`}>
               {description}
             </p>
           )}
@@ -399,7 +399,7 @@ export const FormField: React.FC<FormFieldProps> = ({
     <div className={`space-y-1.5 ${className}`}>
       {label && (
         <label
-          className={`block text-xs font-medium ${isLight ? 'text-zinc-700' : 'text-slate-300'}`}
+          className={`block text-xs font-medium ${isLight ? 'text-zinc-700' : 'text-[#A7ADB7]'}`}
         >
           {label}
         </label>
@@ -407,7 +407,7 @@ export const FormField: React.FC<FormFieldProps> = ({
       {children}
       {error && <p className="text-[11px] text-rose-500">{error}</p>}
       {hint && !error && (
-        <p className={`text-[11px] ${isLight ? 'text-zinc-500' : 'text-slate-500'}`}>{hint}</p>
+        <p className={`text-[11px] ${isLight ? 'text-zinc-500' : 'text-[#8A919D]'}`}>{hint}</p>
       )}
     </div>
   );

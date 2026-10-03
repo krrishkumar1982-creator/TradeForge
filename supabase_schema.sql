@@ -390,6 +390,125 @@ CREATE TABLE IF NOT EXISTS public.chart_templates (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
+-- 22. Prop Firm Accounts Table
+CREATE TABLE IF NOT EXISTS public.prop_firm_accounts (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  firm_name TEXT NOT NULL,
+  trading_brand TEXT,
+  legal_entity TEXT,
+  registration_number TEXT,
+  jurisdiction TEXT,
+  terms_effective_date TEXT,
+  rules_version TEXT,
+  account_number TEXT,
+  account_size DOUBLE PRECISION,
+  starting_balance DOUBLE PRECISION NOT NULL,
+  current_balance DOUBLE PRECISION NOT NULL,
+  equity DOUBLE PRECISION NOT NULL,
+  high_water_mark DOUBLE PRECISION,
+  currency TEXT NOT NULL DEFAULT 'USD',
+  program_model TEXT NOT NULL DEFAULT 'TWO_STEP',
+  phases JSONB NOT NULL DEFAULT '[]'::jsonb,
+  active_phase_index INTEGER DEFAULT 0,
+  phase TEXT NOT NULL DEFAULT 'PHASE_1',
+  phase_name TEXT,
+  status TEXT NOT NULL DEFAULT 'ACTIVE',
+  risk_state TEXT NOT NULL DEFAULT 'SAFE',
+  enforcement_mode TEXT DEFAULT 'MONITOR',
+  drawdown_model TEXT NOT NULL DEFAULT 'STATIC',
+  daily_drawdown_model TEXT NOT NULL DEFAULT 'START_OF_DAY_BALANCE',
+  daily_loss_method TEXT DEFAULT 'REALIZED_ONLY',
+  max_risk_per_symbol_percent DOUBLE PRECISION,
+  min_trade_duration_sec INTEGER,
+  avg_trade_duration_sec INTEGER,
+  min_trading_days INTEGER DEFAULT 0,
+  max_trading_days INTEGER DEFAULT 0,
+  start_date TEXT,
+  deadline TEXT,
+  qualifying_day_profit_percent DOUBLE PRECISION,
+  profit_target_percent DOUBLE PRECISION,
+  daily_loss_percent DOUBLE PRECISION,
+  total_loss_percent DOUBLE PRECISION,
+  profit_target_amount DOUBLE PRECISION,
+  daily_loss_amount DOUBLE PRECISION,
+  total_loss_amount DOUBLE PRECISION,
+  consistency_max_day_percent DOUBLE PRECISION,
+  max_profit_concentration_percent DOUBLE PRECISION,
+  news_trading_allowed TEXT DEFAULT 'ALLOWED',
+  weekend_holding_allowed BOOLEAN DEFAULT TRUE,
+  overnight_holding_allowed BOOLEAN DEFAULT TRUE,
+  ea_allowed TEXT DEFAULT 'ALLOWED',
+  copy_trading_allowed TEXT DEFAULT 'ALLOWED',
+  hedging_allowed TEXT DEFAULT 'ALLOWED',
+  max_lot_size DOUBLE PRECISION,
+  min_lot_size DOUBLE PRECISION,
+  max_positions INTEGER,
+  max_leverage INTEGER DEFAULT 100,
+  ip_restrictions JSONB DEFAULT '{}'::jsonb,
+  prohibited_strategies JSONB DEFAULT '[]'::jsonb,
+  reward_buffer_percent DOUBLE PRECISION,
+  reward_split_percent DOUBLE PRECISION DEFAULT 80,
+  profit_split_trader_percent DOUBLE PRECISION DEFAULT 80,
+  profit_split_firm_percent DOUBLE PRECISION DEFAULT 20,
+  min_reward_request DOUBLE PRECISION,
+  payout_frequency TEXT DEFAULT 'BIWEEKLY',
+  activation_fee DOUBLE PRECISION,
+  inactivity_max_days INTEGER DEFAULT 30,
+  news_window_minutes INTEGER DEFAULT 5,
+  session_timezone TEXT DEFAULT 'America/New_York',
+  scaling_rules JSONB DEFAULT '{}'::jsonb,
+  rules JSONB NOT NULL DEFAULT '[]'::jsonb,
+  violations JSONB NOT NULL DEFAULT '[]'::jsonb,
+  timeline JSONB DEFAULT '[]'::jsonb,
+  payout_info JSONB DEFAULT '{}'::jsonb,
+  trading_account_link TEXT,
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 23. User Settings Table
+CREATE TABLE IF NOT EXISTS public.user_settings (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  account_id TEXT,
+  scope TEXT NOT NULL DEFAULT 'GLOBAL',
+  general JSONB NOT NULL DEFAULT '{}'::jsonb,
+  notifications JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ai_settings JSONB NOT NULL DEFAULT '{}'::jsonb,
+  trade_defaults JSONB NOT NULL DEFAULT '{}'::jsonb,
+  commission_rules JSONB NOT NULL DEFAULT '[]'::jsonb,
+  profile JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 24. Custom Tags Table
+CREATE TABLE IF NOT EXISTS public.custom_tags (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL DEFAULT 'Custom',
+  color TEXT NOT NULL DEFAULT '#6366F1',
+  description TEXT DEFAULT '',
+  is_archived BOOLEAN NOT NULL DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- 25. User Backups Table
+CREATE TABLE IF NOT EXISTS public.user_backups (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  name TEXT NOT NULL,
+  file_size TEXT NOT NULL,
+  trade_count INTEGER NOT NULL DEFAULT 0,
+  backup_data JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
 -- ========================================================================
 -- PERFORMANCE INDEXES
 -- ========================================================================
@@ -461,6 +580,10 @@ ALTER TABLE public.daily_checklist_states ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.admin_audit_logs ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.backtest_drawings ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.chart_templates ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.prop_firm_accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.custom_tags ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_backups ENABLE ROW LEVEL SECURITY;
 
 -- 1. Users policies
 CREATE POLICY "Allow public read of public profiles" ON public.users
@@ -552,6 +675,22 @@ CREATE POLICY "Users can manage own backtest drawings" ON public.backtest_drawin
 
 -- 20. Chart Templates policies
 CREATE POLICY "Users can manage own chart templates" ON public.chart_templates
+  FOR ALL USING (user_id = auth.uid()::text OR auth.role() = 'service_role');
+
+-- 21. Prop Firm Accounts policies
+CREATE POLICY "Users can manage own prop firm accounts" ON public.prop_firm_accounts
+  FOR ALL USING (user_id = auth.uid()::text OR auth.role() = 'service_role');
+
+-- 22. User Settings policies
+CREATE POLICY "Users can manage own user settings" ON public.user_settings
+  FOR ALL USING (user_id = auth.uid()::text OR auth.role() = 'service_role');
+
+-- 23. Custom Tags policies
+CREATE POLICY "Users can manage own custom tags" ON public.custom_tags
+  FOR ALL USING (user_id = auth.uid()::text OR auth.role() = 'service_role');
+
+-- 24. User Backups policies
+CREATE POLICY "Users can manage own user backups" ON public.user_backups
   FOR ALL USING (user_id = auth.uid()::text OR auth.role() = 'service_role');
 
 -- ========================================================================

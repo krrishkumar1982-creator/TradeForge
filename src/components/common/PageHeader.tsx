@@ -49,7 +49,7 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
         className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-5 rounded-xl border ${
           isLight
             ? 'bg-white border-zinc-200 shadow-xs'
-            : 'bg-[#12141A] border-[rgba(255,255,255,0.08)] shadow-[0_4px_16px_rgba(0,0,0,0.35)]'
+            : 'bg-[#0D1014] border-[rgba(255,255,255,0.055)] shadow-[0_4px_20px_rgba(0,0,0,0.25)]'
         }`}
       >
         <div className="flex items-start gap-3 min-w-0">
@@ -67,15 +67,15 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
           <div className="min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap">
               <h1
-                className={`text-lg sm:text-xl font-bold tracking-tight truncate ${
-                  isLight ? 'text-zinc-900' : 'text-white'
+                className={`text-xl sm:text-2xl font-semibold tracking-tight truncate ${
+                  isLight ? 'text-zinc-900' : 'text-[#F4F5F7]'
                 }`}
               >
                 {title}
               </h1>
               {badge && (
                 <span
-                  className={`text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded-full border ${badgeClasses[badgeVariant]}`}
+                  className={`text-xs font-medium px-2.5 py-0.5 rounded-full border ${badgeClasses[badgeVariant]}`}
                 >
                   {badge}
                 </span>
@@ -83,8 +83,8 @@ export const PageHeader: React.FC<PageHeaderProps> = ({
             </div>
             {subtitle && (
               <p
-                className={`text-xs mt-0.5 line-clamp-1 ${
-                  isLight ? 'text-zinc-500' : 'text-slate-400'
+                className={`text-sm mt-0.5 line-clamp-1 ${
+                  isLight ? 'text-zinc-500' : 'text-[#9CA3AF]'
                 }`}
               >
                 {subtitle}

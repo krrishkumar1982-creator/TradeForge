@@ -1,5 +1,36 @@
 @import "tailwindcss";
 
+@theme {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+
+  --color-tf-bg-primary: #030405;
+  --color-tf-bg-secondary: #07090C;
+  --color-tf-bg-tertiary: #0B0D10;
+
+  --color-tf-surface-1: #0B0D10;
+  --color-tf-surface-2: #0F1115;
+  --color-tf-surface-hover: #151820;
+  --color-tf-surface-modal: #0B0E12;
+  --color-tf-surface-input: #080A0D;
+
+  --color-tf-border-subtle: #1B1F27;
+  --color-tf-border-default: #1C2129;
+  --color-tf-border-strong: #282E38;
+  --color-tf-border-active: rgba(99, 102, 241, 0.35);
+
+  --color-tf-text-primary: #F3F4F6;
+  --color-tf-text-secondary: #A1A1AA;
+  --color-tf-text-tertiary: #71717A;
+  --color-tf-text-muted: #52525B;
+  --color-tf-text-labels: #71717A;
+
+  --color-tf-accent-blue: #3B82F6;
+  --color-tf-accent-indigo: #6366F1;
+  --color-tf-accent-purple: #7C3AED;
+}
+
 @layer base {
   html,
   body,
@@ -12,18 +43,54 @@
   body {
     @apply antialiased transition-colors duration-150;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11", "tnum" 1;
-    font-family: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    background-color: #07080B;
-    color: #F8FAFC;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-synthesis: none;
+    -webkit-text-size-adjust: 100%;
+    background-color: #030405;
+    color: #F3F4F6;
+    letter-spacing: -0.011em;
+    line-height: 1.5;
   }
 
-  /* Monospace tabular numeral defaults */
+  /* Form inputs, textareas, selects inherit exact global typography */
+  input,
+  textarea,
+  select,
+  button {
+    font-family: inherit;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Monospace tabular numeral defaults for financial & timestamp data */
   .font-mono,
   code,
   kbd,
   samp {
     font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     font-feature-settings: "tnum" 1, "zero" 1;
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Sharp institutional text rendering and subpixel anti-aliasing */
+  *, *::before, *::after {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Prevent blur on transform / modal overlays */
+  .transform-gpu,
+  [role="dialog"],
+  .modal-panel,
+  .drawer-panel {
+    transform: translateZ(0);
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    will-change: transform, opacity;
   }
 
   img,
@@ -36,6 +103,112 @@
 }
 
 /* ==========================================================================
+   GLOBAL TYPOGRAPHY SCALE & SYSTEM TOKENS (APPLE-INSPIRED INSTITUTIONAL TERMINAL)
+   ========================================================================== */
+.tf-display-hero {
+  font-size: clamp(2.5rem, 5vw, 3.5rem); /* 40px - 56px */
+  line-height: 1.12;
+  font-weight: 650;
+  letter-spacing: -0.035em;
+  color: #F3F4F6;
+}
+
+.tf-page-title {
+  font-size: 1.875rem; /* 30px */
+  line-height: 2.25rem; /* 36px */
+  font-weight: 600;
+  letter-spacing: -0.025em;
+  color: #F3F4F6;
+}
+
+.tf-section-title {
+  font-size: 1.3125rem; /* 21px */
+  line-height: 1.75rem; /* 28px */
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: #F3F4F6;
+}
+
+.tf-card-title {
+  font-size: 1rem; /* 16px */
+  line-height: 1.45rem; /* 23px */
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: #F3F4F6;
+}
+
+.tf-section-label {
+  font-size: 0.75rem; /* 12px */
+  line-height: 1rem; /* 16px */
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #71717A;
+}
+
+.tf-micro-label {
+  font-size: 0.75rem; /* 12px */
+  line-height: 1rem; /* 16px */
+  font-weight: 500;
+  color: #9CA3AF;
+}
+
+.tf-body {
+  font-size: 0.9375rem; /* 15px */
+  line-height: 1.55rem; /* 24px */
+  font-weight: 400;
+  color: #F3F4F6;
+}
+
+.tf-secondary-text {
+  font-size: 0.84375rem; /* 13.5px */
+  line-height: 1.35rem; /* 21px */
+  font-weight: 400;
+  color: #9CA3AF;
+}
+
+.tf-muted-text {
+  font-size: 0.78125rem; /* 12.5px */
+  line-height: 1.15rem; /* 18px */
+  font-weight: 400;
+  color: #6B7280;
+}
+
+.tf-table-header {
+  font-size: 0.75rem; /* 12px */
+  line-height: 1rem; /* 16px */
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: #9CA3AF;
+}
+
+.tf-table-body {
+  font-size: 0.84375rem; /* 13.5px */
+  line-height: 1.35rem; /* 21px */
+  font-weight: 400;
+  color: #F3F4F6;
+}
+
+.tf-metric-value {
+  font-family: "JetBrains Mono", ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.tf-btn-text {
+  font-size: 0.875rem; /* 14px */
+  font-weight: 500;
+  line-height: 1.25rem;
+}
+
+.tf-input-text {
+  font-size: 0.9375rem; /* 15px */
+  line-height: 1.375rem; /* 22px */
+  font-weight: 400;
+  color: #F3F4F6;
+}
+
+/* ==========================================================================
    CSS DESIGN TOKENS & SYSTEM VARIABLES (TRADEFORGE INSTITUTIONAL DESIGN SYSTEM)
    ========================================================================== */
 
@@ -45,56 +218,89 @@
 :root,
 .theme-dark,
 html.dark {
-  /* Exact Surface Hierarchy */
-  --bg-app: #07080B;
-  --bg-app-alt: #090A0E;
-  --bg-surface: #101116;
-  --bg-surface-card: #12141A;
-  --bg-surface-elevated: #181A21;
-  --bg-surface-modal: #1C1F27;
-  --bg-surface-subtle: #0C0D11;
-  --bg-surface-hover: #15171D;
-  --bg-surface-active: #181A21;
-  --bg-overlay: rgba(7, 8, 11, 0.85);
+  /* Exact Surface Hierarchy - Institutional Near Black */
+  --tf-bg-primary: #030405;
+  --tf-bg-secondary: #07090C;
+  --tf-bg-tertiary: #0B0D10;
 
-  --page-bg: #07080B;
-  --sidebar-bg: #090A0E;
-  --header-bg: rgba(9, 10, 14, 0.92);
-  --section-bg: #101116;
-  --surface: #12141A;
-  --surface-elevated: #181A21;
-  --surface-subtle: #0C0D11;
-  --surface-hover: #15171D;
-  --surface-active: #181A21;
-  --dropdown-bg: #15171D;
-  --modal-bg: #181A21;
-  --input-bg: #0C0D11;
+  --tf-surface-1: #0B0D10;
+  --tf-surface-2: #0F1115;
+  --tf-surface-hover: #151820;
+  --tf-surface-modal: #0B0E12;
+  --tf-surface-input: #080A0D;
 
-  /* Institutional Subtle Borders */
-  --border: rgba(255, 255, 255, 0.075);
-  --border-subtle: rgba(255, 255, 255, 0.055);
-  --border-default: rgba(255, 255, 255, 0.075);
-  --border-strong: rgba(255, 255, 255, 0.10);
-  --border-focus: rgba(59, 130, 246, 0.5);
-  --border-active: rgba(59, 130, 246, 0.35);
+  --tf-border-subtle: #1B1F27;
+  --tf-border-default: #1C2129;
+  --tf-border-strong: #282E38;
+  --tf-border-active: rgba(99, 102, 241, 0.35);
+
+  --tf-text-primary: #F3F4F6;
+  --tf-text-secondary: #A1A1AA;
+  --tf-text-tertiary: #71717A;
+  --tf-text-muted: #52525B;
+  --tf-text-disabled: #3F3F46;
+  --tf-text-labels: #71717A;
+
+  --tf-accent-blue: #3B82F6;
+  --tf-accent-indigo: #6366F1;
+  --tf-accent-purple: #7C3AED;
+
+  --tf-active-gradient: linear-gradient(90deg, rgba(59, 130, 246, 0.16), rgba(124, 58, 237, 0.18));
+  --tf-btn-primary-gradient: linear-gradient(135deg, #2563EB, #7C3AED);
+
+  /* Legacy mappings aligned to new pure system */
+  --tf-bg: #030405;
+  --tf-surface: #0B0D10;
+  --tf-surface-3: #151820;
+  --tf-border: #1C2129;
+  --tf-text: #F3F4F6;
+
+  --bg-app: #030405;
+  --bg-app-alt: #07090C;
+  --bg-surface: #0B0D10;
+  --bg-surface-card: #0B0D10;
+  --bg-surface-elevated: #0F1115;
+  --bg-surface-modal: #0B0E12;
+  --bg-surface-subtle: #07090C;
+  --bg-surface-hover: #151820;
+  --bg-surface-active: #181E27;
+  --bg-overlay: rgba(0, 0, 0, 0.75);
+
+  --background: #030405;
+  --surface: #0B0D10;
+  --page-bg: #030405;
+  --sidebar-bg: #030405;
+  --header-bg: #07090C;
+  --section-bg: #0B0D10;
+  --dropdown-bg: #0B0E12;
+  --modal-bg: #0B0E12;
+  --input-bg: #080A0D;
+
+  /* Institutional Neutral Borders */
+  --border: #1C2129;
+  --border-subtle: #1B1F27;
+  --border-default: #1C2129;
+  --border-strong: #282E38;
+  --border-focus: rgba(99, 102, 241, 0.5);
+  --border-active: rgba(99, 102, 241, 0.35);
 
   /* Restrained Accents */
   --accent-primary: #3B82F6;
   --accent-secondary: #6366F1;
-  --accent-tertiary: #8B5CF6;
+  --accent-tertiary: #7C3AED;
   --accent-glow: none;
 
   --primary: #3B82F6;
   --primary-bright: #60A5FA;
   --primary-hover: #2563EB;
-  --primary-subtle: rgba(59, 130, 246, 0.08);
-  --primary-active: rgba(59, 130, 246, 0.14);
+  --primary-subtle: rgba(59, 130, 246, 0.12);
+  --primary-active: rgba(59, 130, 246, 0.18);
 
   /* Precise Text Contrast */
-  --text-primary: #F8FAFC;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
-  --text-disabled: #475569;
+  --text-primary: #F3F4F6;
+  --text-secondary: #A1A1AA;
+  --text-muted: #52525B;
+  --text-disabled: #3F3F46;
 
   /* Semantic Status Colors */
   --success: #10B981;
@@ -114,13 +320,13 @@ html.dark {
   --info-border: rgba(59, 130, 246, 0.20);
 
   /* Controlled Shadows */
-  --card-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.25);
-  --dropdown-shadow: 0 10px 30px rgba(0, 0, 0, 0.65);
-  --modal-shadow: 0 20px 45px rgba(0, 0, 0, 0.8);
-  --overlay: rgba(7, 8, 11, 0.85);
+  --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  --dropdown-shadow: 0 12px 36px rgba(0, 0, 0, 0.65);
+  --modal-shadow: 0 20px 50px rgba(0, 0, 0, 0.72);
+  --overlay: rgba(0, 0, 0, 0.72);
 
-  background-color: #07080B;
-  color: #F8FAFC;
+  background-color: #030405;
+  color: #F4F5F7;
 }
 
 /* --------------------------------------------------------------------------
@@ -129,6 +335,27 @@ html.dark {
 .theme-light,
 html.theme-light,
 html.light {
+  --tf-bg-primary: #F8FAFC;
+  --tf-bg-secondary: #F1F5F9;
+  --tf-bg-tertiary: #E2E8F0;
+
+  --tf-surface-1: #FFFFFF;
+  --tf-surface-2: #FFFFFF;
+  --tf-surface-hover: #F8FAFC;
+  --tf-surface-modal: #FFFFFF;
+  --tf-surface-input: #FFFFFF;
+
+  --tf-border-subtle: #E2E8F0;
+  --tf-border-default: #CBD5E1;
+  --tf-border-strong: #94A3B8;
+  --tf-border-active: rgba(59, 130, 246, 0.5);
+
+  --tf-text-primary: #0F172A;
+  --tf-text-secondary: #475569;
+  --tf-text-muted: #64748B;
+  --tf-text-disabled: #94A3B8;
+  --tf-text-labels: #64748B;
+
   --bg-app: #F8FAFC;
   --bg-app-alt: #F1F5F9;
   --bg-surface: #FFFFFF;
@@ -204,28 +431,61 @@ html.light {
 /* --------------------------------------------------------------------------
    3. REUSABLE TRADEFORGE CARD & SURFACE UTILITY CLASSES
    -------------------------------------------------------------------------- */
+.tf-surface-1 {
+  background-color: #0B0D10;
+}
+.theme-light .tf-surface-1 {
+  background-color: #FFFFFF;
+}
+
+.tf-surface-2 {
+  background-color: #0F1115;
+}
+.theme-light .tf-surface-2 {
+  background-color: #FFFFFF;
+}
+
+.tf-surface-hover:hover {
+  background-color: #151820;
+}
+.theme-light .tf-surface-hover:hover {
+  background-color: #F8FAFC;
+}
+
+.tf-surface-modal {
+  background-color: #0B0E12;
+}
+.theme-light .tf-surface-modal {
+  background-color: #FFFFFF;
+}
+
+.tf-surface-input {
+  background-color: #080A0D;
+}
+.theme-light .tf-surface-input {
+  background-color: #FFFFFF;
+}
+
 .tf-card,
 .quantix-card {
-  background-color: #12141A;
-  border: 1px solid rgba(255, 255, 255, 0.075);
-  border-radius: 16px;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.05), var(--card-shadow);
-  transition: border-color 0.18s ease, background-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
+  background-color: #0B0D10;
+  border: 1px solid #1B1F27;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: border-color 0.15s ease, background-color 0.15s ease;
 }
 
 .theme-light .tf-card,
 .theme-light .quantix-card {
   background-color: #FFFFFF;
   border: 1px solid #E2E8F0;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.8), 0 1px 3px rgba(0, 0, 0, 0.04);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
 }
 
 .tf-card-hover:hover,
 .quantix-card-hover:hover {
-  border-color: rgba(255, 255, 255, 0.13);
-  background-color: #15171D;
-  transform: translateY(-1px);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), 0 8px 24px -4px rgba(0, 0, 0, 0.5);
+  border-color: #282E38;
+  background-color: #151820;
 }
 
 .theme-light .tf-card-hover:hover,
@@ -233,15 +493,14 @@ html.light {
   border-color: #CBD5E1;
   background-color: #FAFAFC;
   transform: translateY(-1px);
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 1), 0 8px 20px -4px rgba(0, 0, 0, 0.06);
 }
 
 .tf-card-elevated,
 .quantix-card-elevated {
-  background-color: #181A21;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  border-radius: 16px;
-  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.08), var(--dropdown-shadow);
+  background-color: #0F1115;
+  border: 1px solid #1C2129;
+  border-radius: 12px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.35);
 }
 
 .theme-light .tf-card-elevated,
@@ -253,11 +512,11 @@ html.light {
 
 /* Institutional Glass Tooltip */
 .glass-tooltip {
-  background: rgba(16, 20, 29, 0.92);
+  background: rgba(11, 14, 18, 0.95);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.65), inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  box-shadow: 0 16px 36px -4px rgba(0, 0, 0, 0.75);
 }
 
 .theme-light .glass-tooltip {
@@ -265,13 +524,13 @@ html.light {
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border: 1px solid #E2E8F0;
-  box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.10), inset 0 1px 0 0 rgba(255, 255, 255, 1);
+  box-shadow: 0 16px 32px -4px rgba(0, 0, 0, 0.10);
 }
 
 .tf-card-subtle {
-  background-color: #0C0D11;
+  background-color: #090C10;
   border: 1px solid rgba(255, 255, 255, 0.055);
-  border-radius: 12px;
+  border-radius: 10px;
 }
 
 .theme-light .tf-card-subtle {
@@ -279,12 +538,10 @@ html.light {
   border: 1px solid #E2E8F0;
 }
 
-/* Glass Header (Restrained blur, high opacity) */
+/* Glass Header */
 .tf-glass-header {
-  background-color: rgba(9, 10, 14, 0.92);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.075);
+  background-color: #06080B;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.055);
 }
 
 .theme-light .tf-glass-header {
@@ -296,9 +553,9 @@ html.light {
 
 /* Active Nav Item */
 .tf-active-nav {
-  background-color: #15171D;
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.09);
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.16), rgba(124, 58, 237, 0.18));
+  color: #F5F7FF;
+  border: 1px solid rgba(99, 102, 241, 0.35);
 }
 
 .theme-light .tf-active-nav {
@@ -332,12 +589,12 @@ button:not(:disabled):active {
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.10);
   border-radius: 9999px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.18);
 }
 
 .theme-light .custom-scrollbar::-webkit-scrollbar-thumb {

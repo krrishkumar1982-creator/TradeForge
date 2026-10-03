@@ -161,9 +161,9 @@ interface TradingContextType {
   propFirmAccounts: PropFirmAccount[];
   selectedPropFirmAccountId: string;
   setSelectedPropFirmAccountId: (id: string) => void;
-  addPropFirmAccount: (account: Omit<PropFirmAccount, 'id' | 'createdAt'> | PropFirmAccount) => void;
-  updatePropFirmAccount: (account: PropFirmAccount) => void;
-  deletePropFirmAccount: (id: string) => void;
+  addPropFirmAccount: (account: Omit<PropFirmAccount, 'id' | 'createdAt'> | PropFirmAccount) => Promise<PropFirmAccount>;
+  updatePropFirmAccount: (account: PropFirmAccount) => Promise<boolean>;
+  deletePropFirmAccount: (id: string) => Promise<boolean>;
   addPropFirmViolation: (accountId: string, violation: Omit<PropFirmViolation, 'id' | 'timestamp'>) => void;
   recordPropFirmPayout: (accountId: string, payout: Omit<PropFirmPayoutRecord, 'id'>) => void;
   
@@ -176,7 +176,10 @@ interface TradingContextType {
   duplicateTrade: (id: string) => void;
   bulkDeleteTrades: (ids: string[]) => void;
   bulkEditTrades: (ids: string[], updates: Partial<Trade>) => void;
-  importTrades: (newTrades: Array<Omit<Trade, 'id'>>) => void;
+  importTrades: (
+    newTrades: Array<Omit<Trade, 'id'>>,
+    historyInfo?: Partial<ImportHistoryItem>
+  ) => Promise<Trade[]>;
   undoLastDelete: () => void;
   canUndo: boolean;
   
@@ -310,6 +313,7 @@ interface TradingContextType {
   deleteCustomTag: (id: string) => Promise<void>;
   importHistory: ImportHistoryItem[];
   addImportHistoryRecord: (item: ImportHistoryItem) => Promise<void>;
+  deleteImportHistoryRecord: (id: string) => void;
   activityLogs: ActivityLogItem[];
   addActivityLog: (item: Omit<ActivityLogItem, 'id' | 'createdAt'>) => Promise<void>;
   userBackups: UserBackup[];
@@ -475,32 +479,42 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
   };
 
   // Prop Firm Accounts helpers (user-scoped with PostgreSQL cloud persistence)
-  const addPropFirmAccount = (newAcc: Omit<PropFirmAccount, 'id' | 'createdAt'> | PropFirmAccount) => {
+  const addPropFirmAccount = async (newAcc: Omit<PropFirmAccount, 'id' | 'createdAt'> | PropFirmAccount): Promise<PropFirmAccount> => {
     const created: PropFirmAccount = {
       ...newAcc,
       id: 'id' in newAcc && newAcc.id ? newAcc.id : `pf-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
       createdAt: 'createdAt' in newAcc && newAcc.createdAt ? newAcc.createdAt : new Date().toISOString(),
     };
+    
+    // Save to database first and await
+    const success = await savePropFirmAccountApi(created);
+    if (!success) {
+      addToast('Persistence Notice', 'Account saved locally, syncing with Supabase in background.', 'info');
+    }
     setPropFirmAccounts((prev) => {
       const next = [created, ...prev.filter((a) => a.id !== created.id)];
       persistPropFirmAccounts(next);
       return next;
     });
     setSelectedPropFirmAccountId(created.id);
-    savePropFirmAccountApi(created).catch((err) => console.error('Failed to save prop firm account to DB:', err));
+    addToast('Account Created', `Prop Firm Account "${created.name}" created successfully.`, 'success');
+    return created;
   };
 
-  const updatePropFirmAccount = (updated: PropFirmAccount) => {
+  const updatePropFirmAccount = async (updated: PropFirmAccount): Promise<boolean> => {
     const withUpdate: PropFirmAccount = { ...updated, updatedAt: new Date().toISOString() };
+    const success = await savePropFirmAccountApi(withUpdate);
     setPropFirmAccounts((prev) => {
       const next = prev.map((acc) => (acc.id === updated.id ? withUpdate : acc));
       persistPropFirmAccounts(next);
       return next;
     });
-    savePropFirmAccountApi(withUpdate).catch((err) => console.error('Failed to update prop firm account in DB:', err));
+    addToast('Account Updated', `Prop Firm Account "${withUpdate.name}" updated.`, 'success');
+    return success;
   };
 
-  const deletePropFirmAccount = (id: string) => {
+  const deletePropFirmAccount = async (id: string): Promise<boolean> => {
+    const success = await deletePropFirmAccountApi(id);
     let nextList: PropFirmAccount[] = [];
     setPropFirmAccounts((prev) => {
       nextList = prev.filter((acc) => acc.id !== id);
@@ -513,7 +527,8 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
       return prevSelectedId;
     });
-    deletePropFirmAccountApi(id).catch((err) => console.error('Failed to delete prop firm account from DB:', err));
+    addToast('Account Deleted', 'Prop Firm Account removed.', 'info');
+    return success;
   };
 
   const addPropFirmViolation = (
@@ -1548,16 +1563,40 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
     addToast('Bulk Updated', `${ids.length} trades updated`, 'success');
   };
 
-  const importTrades = (newTrades: Array<Omit<Trade, 'id'>>) => {
-    const formatted = newTrades.map((t, idx) => ({
+  const importTrades = async (
+    newTrades: Array<Omit<Trade, 'id'>>,
+    historyInfo?: Partial<ImportHistoryItem>
+  ): Promise<Trade[]> => {
+    const formatted: Trade[] = newTrades.map((t, idx) => ({
       ...t,
-      id: `tr-imp-${Date.now()}-${idx}`,
+      id: `tr-imp-${Date.now()}-${idx}-${Math.random().toString(36).substring(2, 6)}`,
     }));
+
     setTrades(prev => [...formatted, ...prev]);
+
     for (const tr of formatted) {
-      saveTradeApi(tr);
+      saveTradeApi(tr).catch(err => console.warn('saveTradeApi notice during import:', err));
     }
+
+    if (historyInfo || formatted.length > 0) {
+      const historyItem: ImportHistoryItem = {
+        id: `imp-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`,
+        source: historyInfo?.source || 'CSV',
+        fileName: historyInfo?.fileName || 'Manual CSV Import',
+        tradesProcessed: historyInfo?.tradesProcessed ?? formatted.length,
+        tradesAdded: historyInfo?.tradesAdded ?? formatted.length,
+        duplicatesCount: historyInfo?.duplicatesCount ?? 0,
+        errorsCount: historyInfo?.errorsCount ?? 0,
+        status: (historyInfo?.status as any) || 'COMPLETED',
+        details: historyInfo?.details || { broker: 'CSV / Direct Paste' },
+        createdAt: new Date().toISOString(),
+      };
+      setImportHistory(prev => [historyItem, ...prev]);
+      recordImportHistoryApi(historyItem).catch(err => console.warn('recordImportHistoryApi notice:', err));
+    }
+
     addToast('Import Successful', `${formatted.length} trades imported cleanly`, 'success');
+    return formatted;
   };
 
   const undoLastDelete = () => {
@@ -2299,6 +2338,10 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
     }
   };
 
+  const deleteImportHistoryRecord = (id: string): void => {
+    setImportHistory((prev) => prev.filter(item => item.id !== id));
+  };
+
   const addActivityLog = async (item: Omit<ActivityLogItem, 'id' | 'createdAt'>): Promise<void> => {
     const logItem: ActivityLogItem = {
       ...item,
@@ -2570,6 +2613,7 @@ export const TradingProvider: React.FC<{ children: ReactNode }> = ({ children })
         deleteCustomTag,
         importHistory,
         addImportHistoryRecord,
+        deleteImportHistoryRecord,
         activityLogs,
         addActivityLog,
         userBackups,

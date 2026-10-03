@@ -3771,8 +3771,8 @@ export class PropFirmEngine {
 
     // Determine Aggregated Risk State (Priority: BREACHED > CRITICAL > WARNING > PASSED > SAFE)
     let riskState: PropFirmRiskState = 'SAFE';
-    let statusMessage = 'Account comfortably within all risk parameters';
-    let actionableAdvice = 'Disciplined execution. Adhere to your risk management plan.';
+    let statusMessage = "You're within your account limits.";
+    let actionableAdvice = 'No rules currently breached. Keep risk consistent.';
 
     const hasBreach = maxDrawdown.isBreached || dailyLoss.isBreached || inactivity.isBreached || timeLimit.isExpired || !prohibitedStrategy.isCompliant || !weekendRule.isCompliant;
     const hasCritical = maxDrawdown.status === 'CRITICAL' || dailyLoss.status === 'CRITICAL';

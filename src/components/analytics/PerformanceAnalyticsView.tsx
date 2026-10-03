@@ -179,31 +179,44 @@ export const PerformanceAnalyticsView: React.FC = () => {
   // CSV Export
   const handleExportCSV = () => {
     const headers = ['ID', 'Date', 'Symbol', 'Market', 'Direction', 'Status', 'Entry', 'Exit', 'Qty', 'Gross PnL', 'Net PnL', 'R Multiple', 'Setup', 'Session', 'Rules Followed'];
+    
+    const escapeCsvValue = (val: any): string => {
+      if (val === null || val === undefined) return '';
+      const str = String(val);
+      if (str.includes(',') || str.includes('"') || str.includes('\n') || str.includes('\r')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
     const rows = filteredTrades.map(t => [
-      t.id,
-      t.entryDate,
-      t.symbol,
-      t.market,
-      t.direction,
-      t.status,
-      t.entryPrice,
-      t.exitPrice ?? '',
-      t.quantity,
-      t.grossPnl,
-      t.netPnl,
-      t.rMultiple,
-      `"${t.setupType || ''}"`,
-      t.session,
-      t.rulesFollowed ? 'YES' : 'NO'
+      escapeCsvValue(t.id),
+      escapeCsvValue(t.entryDate),
+      escapeCsvValue(t.symbol),
+      escapeCsvValue(t.market),
+      escapeCsvValue(t.direction),
+      escapeCsvValue(t.status),
+      escapeCsvValue(t.entryPrice),
+      escapeCsvValue(t.exitPrice ?? ''),
+      escapeCsvValue(t.quantity),
+      escapeCsvValue(t.grossPnl ?? t.netPnl),
+      escapeCsvValue(t.netPnl),
+      escapeCsvValue(t.rMultiple ?? ''),
+      escapeCsvValue(t.setupType || ''),
+      escapeCsvValue(t.session || ''),
+      escapeCsvValue(t.rulesFollowed ? 'YES' : 'NO')
     ]);
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
+
+    const csvContent = [headers.join(','), ...rows.map(e => e.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `duskflow_performance_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('href', url);
+    link.setAttribute('download', `TradeForge_Performance_${new Date().toISOString().split('T')[0]}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   // ==========================================
@@ -328,30 +341,30 @@ export const PerformanceAnalyticsView: React.FC = () => {
       {/* ========================================================================= */}
       {/* 1. HEADER & BREADCRUMB */}
       {/* ========================================================================= */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1C232E]">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[rgba(255,255,255,0.07)]">
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-blue-400 uppercase tracking-wider mb-1">
             <span>Analytics</span>
             <span>/</span>
-            <span className="text-slate-200">Performance Overview</span>
+            <span className="text-[#F5F5F5]">Performance Overview</span>
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-white flex items-center gap-2.5">
             <BarChart3 className="w-6 h-6 text-blue-400" />
             Performance Analytics
           </h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Real-time institutional trade execution analytics, drawdown tracking, and capital performance
+          <p className="text-xs text-[#A1A1AA] mt-1">
+            Review your trading performance, execution, and risk.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
           <button
             onClick={handleExportCSV}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#12161D] border border-[#1C232E] text-xs font-semibold text-slate-200 hover:bg-[#1A1F27] hover:border-[#273141] transition"
-            title="Export filtered trades to CSV"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[#0B0B0B] border border-[rgba(255,255,255,0.07)] text-xs font-semibold text-[#F5F5F5] hover:bg-[#101010] hover:border-[rgba(255,255,255,0.10)] transition cursor-pointer"
+            title="Export trades to CSV"
           >
             <Download className="w-3.5 h-3.5 text-blue-400" />
-            <span>Export CSV</span>
+            <span>Export</span>
           </button>
         </div>
       </div>
@@ -359,10 +372,10 @@ export const PerformanceAnalyticsView: React.FC = () => {
       {/* ========================================================================= */}
       {/* 2. FILTER TOOLBAR */}
       {/* ========================================================================= */}
-      <div className="rounded-2xl border border-[#1C232E] bg-[#12161D] p-4 shadow-xl backdrop-blur-sm space-y-3.5">
+      <div className="rounded-2xl border border-[rgba(255,255,255,0.07)] bg-[#0B0B0B] p-4 shadow-xl backdrop-blur-sm space-y-3.5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           {/* Time Range Pills */}
-          <div className="flex flex-wrap items-center gap-1.5 bg-[#0A0D14] p-1 rounded-xl border border-[#1C232E]">
+          <div className="flex flex-wrap items-center gap-1.5 bg-[#080808] p-1 rounded-xl border border-[rgba(255,255,255,0.07)]">
             {(['TODAY', '7D', '30D', '3M', '6M', '1Y', 'ALL', 'CUSTOM'] as TimeRangeFilter[]).map(tab => (
               <button
                 key={tab}
@@ -370,7 +383,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
                 className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition whitespace-nowrap cursor-pointer ${
                   timeRange === tab
                     ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
-                    : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
+                    : 'text-[#A1A1AA] hover:text-white hover:bg-[#0B0B0B]'
                 }`}
               >
                 {tab === 'TODAY' ? 'Today' : tab === 'ALL' ? 'All Time' : tab === 'CUSTOM' ? 'Custom' : tab}
@@ -379,7 +392,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
           </div>
 
           {/* Outcome Filter */}
-          <div className="flex items-center gap-1 bg-[#0A0D14] p-1 rounded-xl border border-[#1C232E]">
+          <div className="flex items-center gap-1 bg-[#080808] p-1 rounded-xl border border-[rgba(255,255,255,0.07)]">
             {(['ALL', 'WINNERS', 'LOSERS', 'BREAKEVEN'] as OutcomeFilter[]).map(outcome => (
               <button
                 key={outcome}
@@ -391,7 +404,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
                       : outcome === 'LOSERS'
                       ? 'bg-rose-600 text-white shadow-md shadow-rose-600/25'
                       : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
-                    : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
+                    : 'text-[#A1A1AA] hover:text-white hover:bg-[#0B0B0B]'
                 }`}
               >
                 {outcome === 'ALL' ? 'All Trades' : outcome === 'WINNERS' ? 'Winners' : outcome === 'LOSERS' ? 'Losers' : 'Break-even'}
@@ -401,14 +414,14 @@ export const PerformanceAnalyticsView: React.FC = () => {
         </div>
 
         {/* Second Filter Row (Dropdowns & Custom Date Range) */}
-        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-[#1C232E]">
+        <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-[rgba(255,255,255,0.07)]">
           {/* Account Selector */}
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-medium text-slate-400">Account:</span>
+            <span className="text-[11px] font-medium text-[#A1A1AA]">Account:</span>
             <select
               value={selectedAccountId}
               onChange={e => setSelectedAccountId(e.target.value)}
-              className="rounded-lg bg-[#0A0D14] border border-[#1C232E] px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+              className="rounded-lg bg-[#080808] border border-[rgba(255,255,255,0.07)] px-2.5 py-1 text-xs text-[#F5F5F5] focus:outline-none focus:border-blue-500"
             >
               <option value="all">All Accounts ({accounts.length})</option>
               {accounts.map(acc => (
@@ -421,11 +434,11 @@ export const PerformanceAnalyticsView: React.FC = () => {
 
           {/* Symbol Filter */}
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-medium text-slate-400">Symbol:</span>
+            <span className="text-[11px] font-medium text-[#A1A1AA]">Symbol:</span>
             <select
               value={selectedSymbol}
               onChange={e => setSelectedSymbol(e.target.value)}
-              className="rounded-lg bg-[#0A0D14] border border-[#1C232E] px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+              className="rounded-lg bg-[#080808] border border-[rgba(255,255,255,0.07)] px-2.5 py-1 text-xs text-[#F5F5F5] focus:outline-none focus:border-blue-500"
             >
               <option value="ALL">All Symbols ({availableSymbols.length})</option>
               {availableSymbols.map(s => (
@@ -436,11 +449,11 @@ export const PerformanceAnalyticsView: React.FC = () => {
 
           {/* Strategy Filter */}
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-medium text-slate-400">Setup:</span>
+            <span className="text-[11px] font-medium text-[#A1A1AA]">Setup:</span>
             <select
               value={selectedStrategy}
               onChange={e => setSelectedStrategy(e.target.value)}
-              className="rounded-lg bg-[#0A0D14] border border-[#1C232E] px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500"
+              className="rounded-lg bg-[#080808] border border-[rgba(255,255,255,0.07)] px-2.5 py-1 text-xs text-[#F5F5F5] focus:outline-none focus:border-blue-500"
             >
               <option value="ALL">All Setups ({availableStrategies.length})</option>
               {availableStrategies.map(strat => (
@@ -451,19 +464,19 @@ export const PerformanceAnalyticsView: React.FC = () => {
 
           {/* Custom Date Inputs */}
           {timeRange === 'CUSTOM' && (
-            <div className="flex items-center gap-2 bg-[#0A0D14] px-2.5 py-1 rounded-lg border border-[#1C232E]">
+            <div className="flex items-center gap-2 bg-[#080808] px-2.5 py-1 rounded-lg border border-[rgba(255,255,255,0.07)]">
               <input
                 type="date"
                 value={customStartDate}
                 onChange={e => setCustomStartDate(e.target.value)}
-                className="bg-transparent text-xs text-slate-200 focus:outline-none"
+                className="bg-transparent text-xs text-[#F5F5F5] focus:outline-none"
               />
-              <span className="text-slate-500 text-xs">to</span>
+              <span className="text-[#71717A] text-xs">to</span>
               <input
                 type="date"
                 value={customEndDate}
                 onChange={e => setCustomEndDate(e.target.value)}
-                className="bg-transparent text-xs text-slate-200 focus:outline-none"
+                className="bg-transparent text-xs text-[#F5F5F5] focus:outline-none"
               />
             </div>
           )}
@@ -471,7 +484,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
           {/* Reset Filters */}
           <button
             onClick={handleResetFilters}
-            className="ml-auto flex items-center gap-1.5 text-xs text-slate-400 hover:text-blue-400 transition"
+            className="ml-auto flex items-center gap-1.5 text-xs text-[#A1A1AA] hover:text-blue-400 transition"
           >
             <RefreshCw className="w-3 h-3" />
             <span>Reset Filters</span>
@@ -484,15 +497,15 @@ export const PerformanceAnalyticsView: React.FC = () => {
       {/* ========================================================================= */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3.5">
         {/* Total Net PnL */}
-        <div className="p-4 rounded-2xl bg-[#12161D] border border-[#1C232E] shadow-md space-y-1">
-          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase">
+        <div className="p-4 rounded-2xl bg-[#0B0B0B] border border-[rgba(255,255,255,0.07)] shadow-md space-y-1">
+          <div className="flex items-center justify-between text-[11px] font-semibold text-[#A1A1AA] uppercase">
             <span>Net Realized P&L</span>
             <DollarSign className={`w-3.5 h-3.5 ${metrics.totalNetPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`} />
           </div>
           <div className={`text-xl font-black font-mono tracking-tight ${metrics.totalNetPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
             {formatCurrency(metrics.totalNetPnl)}
           </div>
-          <div className="text-[10px] text-slate-400 flex items-center gap-1">
+          <div className="text-[10px] text-[#A1A1AA] flex items-center gap-1">
             <span>ROI:</span>
             <strong className={metrics.totalNetPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}>
               {metrics.totalNetPnl >= 0 ? '+' : ''}{((metrics.totalNetPnl / initialBalance) * 100).toFixed(1)}%
@@ -501,72 +514,72 @@ export const PerformanceAnalyticsView: React.FC = () => {
         </div>
 
         {/* Win Rate */}
-        <div className="p-4 rounded-2xl bg-[#12161D] border border-[#1C232E] shadow-md space-y-1">
-          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase">
+        <div className="p-4 rounded-2xl bg-[#0B0B0B] border border-[rgba(255,255,255,0.07)] shadow-md space-y-1">
+          <div className="flex items-center justify-between text-[11px] font-semibold text-[#A1A1AA] uppercase">
             <span>Win Rate</span>
             <Percent className="w-3.5 h-3.5 text-blue-400" />
           </div>
-          <div className="text-xl font-black font-mono tracking-tight text-slate-100">
+          <div className="text-xl font-black font-mono tracking-tight text-[#F5F5F5]">
             {metrics.winRate}%
           </div>
-          <div className="text-[10px] text-slate-400">
+          <div className="text-[10px] text-[#A1A1AA]">
             Loss Rate: <strong className="text-rose-400">{metrics.lossRate}%</strong>
           </div>
         </div>
 
         {/* Profit Factor */}
-        <div className="p-4 rounded-2xl bg-[#12161D] border border-[#1C232E] shadow-md space-y-1">
-          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase">
+        <div className="p-4 rounded-2xl bg-[#0B0B0B] border border-[rgba(255,255,255,0.07)] shadow-md space-y-1">
+          <div className="flex items-center justify-between text-[11px] font-semibold text-[#A1A1AA] uppercase">
             <span>Profit Factor</span>
             <Award className="w-3.5 h-3.5 text-amber-400" />
           </div>
-          <div className="text-xl font-black font-mono tracking-tight text-slate-100">
+          <div className="text-xl font-black font-mono tracking-tight text-[#F5F5F5]">
             {metrics.profitFactor > 0 ? metrics.profitFactor.toFixed(2) : '0.00'}
           </div>
-          <div className="text-[10px] text-slate-400">
+          <div className="text-[10px] text-[#A1A1AA]">
             Expectancy: <strong className="text-emerald-400">${metrics.expectancy}</strong>
           </div>
         </div>
 
         {/* Average Trade P&L */}
-        <div className="p-4 rounded-2xl bg-[#12161D] border border-[#1C232E] shadow-md space-y-1">
-          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase">
+        <div className="p-4 rounded-2xl bg-[#0B0B0B] border border-[rgba(255,255,255,0.07)] shadow-md space-y-1">
+          <div className="flex items-center justify-between text-[11px] font-semibold text-[#A1A1AA] uppercase">
             <span>Avg Trade P&L</span>
             <Activity className="w-3.5 h-3.5 text-cyan-400" />
           </div>
           <div className={`text-xl font-black font-mono tracking-tight ${metrics.avgTradePnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
             {formatCurrency(metrics.avgTradePnl)}
           </div>
-          <div className="text-[10px] text-slate-400">
+          <div className="text-[10px] text-[#A1A1AA]">
             Avg R: <strong className="text-blue-400">{formatRMultiple(metrics.avgRMultiple)}</strong>
           </div>
         </div>
 
         {/* Maximum Drawdown */}
-        <div className="p-4 rounded-2xl bg-[#12161D] border border-[#1C232E] shadow-md space-y-1">
-          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase">
+        <div className="p-4 rounded-2xl bg-[#0B0B0B] border border-[rgba(255,255,255,0.07)] shadow-md space-y-1">
+          <div className="flex items-center justify-between text-[11px] font-semibold text-[#A1A1AA] uppercase">
             <span>Max Drawdown</span>
             <ShieldAlert className="w-3.5 h-3.5 text-rose-400" />
           </div>
           <div className="text-xl font-black font-mono tracking-tight text-rose-400">
             -${Math.round(metrics.maxDrawdownDollar).toLocaleString()}
           </div>
-          <div className="text-[10px] text-slate-400">
+          <div className="text-[10px] text-[#A1A1AA]">
             Depth: <strong className="text-rose-400">-{metrics.maxDrawdownPercent}%</strong>
           </div>
         </div>
 
         {/* Streaks & Discipline */}
-        <div className="p-4 rounded-2xl bg-[#12161D] border border-[#1C232E] shadow-md space-y-1">
-          <div className="flex items-center justify-between text-[11px] font-semibold text-slate-400 uppercase">
+        <div className="p-4 rounded-2xl bg-[#0B0B0B] border border-[rgba(255,255,255,0.07)] shadow-md space-y-1">
+          <div className="flex items-center justify-between text-[11px] font-semibold text-[#A1A1AA] uppercase">
             <span>Win Streak</span>
             <Flame className="w-3.5 h-3.5 text-orange-400" />
           </div>
           <div className="text-xl font-black font-mono tracking-tight text-emerald-400">
-            {metrics.longestWinStreak} <span className="text-xs text-slate-400 font-normal">trades</span>
+            {metrics.longestWinStreak} <span className="text-xs text-[#A1A1AA] font-normal">trades</span>
           </div>
-          <div className="text-[10px] text-slate-400">
-            Current: <strong className={metrics.currentStreak.type === 'WIN' ? 'text-emerald-400' : metrics.currentStreak.type === 'LOSS' ? 'text-rose-400' : 'text-slate-300'}>
+          <div className="text-[10px] text-[#A1A1AA]">
+            Current: <strong className={metrics.currentStreak.type === 'WIN' ? 'text-emerald-400' : metrics.currentStreak.type === 'LOSS' ? 'text-rose-400' : 'text-[#D4D4D8]'}>
               {metrics.currentStreak.type === 'WIN' ? `+${metrics.currentStreak.count} Wins` : metrics.currentStreak.type === 'LOSS' ? `-${metrics.currentStreak.count} Losses` : 'Neutral'}
             </strong>
           </div>
@@ -576,110 +589,110 @@ export const PerformanceAnalyticsView: React.FC = () => {
       {/* ========================================================================= */}
       {/* 4. SECONDARY DETAILED PERFORMANCE METRIC GRID (18 Granular Stats) */}
       {/* ========================================================================= */}
-      <div className="rounded-2xl border border-[#1C232E] bg-[#12161D] p-5 shadow-xl backdrop-blur-sm space-y-4">
-        <div className="flex items-center justify-between pb-2 border-b border-[#1C232E]">
-          <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
+      <div className="rounded-2xl border border-[rgba(255,255,255,0.07)] bg-[#0B0B0B] p-5 shadow-xl backdrop-blur-sm space-y-4">
+        <div className="flex items-center justify-between pb-2 border-b border-[rgba(255,255,255,0.07)]">
+          <h3 className="text-xs font-bold text-[#F5F5F5] uppercase tracking-wider flex items-center gap-2">
             <SlidersHorizontal className="w-4 h-4 text-blue-400" />
             Executive Performance Roster
           </h3>
-          <span className="text-xs text-slate-400 font-mono">
+          <span className="text-xs text-[#A1A1AA] font-mono">
             {metrics.closedTrades} Closed / {metrics.totalTrades} Total Executions
           </span>
         </div>
 
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 text-xs">
           {/* Gross Profit */}
-          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
-            <span className="text-[10px] text-slate-500 font-medium uppercase">Gross Profit</span>
+          <div className="p-3 rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.07)]/70 space-y-1">
+            <span className="text-[10px] text-[#71717A] font-medium uppercase">Gross Profit</span>
             <div className="font-mono font-bold text-emerald-400 text-sm">+{formatCurrency(metrics.grossProfit)}</div>
-            <div className="text-[10px] text-slate-400">{metrics.winningTrades} winning trades</div>
+            <div className="text-[10px] text-[#A1A1AA]">{metrics.winningTrades} winning trades</div>
           </div>
 
           {/* Gross Loss */}
-          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
-            <span className="text-[10px] text-slate-500 font-medium uppercase">Gross Loss</span>
+          <div className="p-3 rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.07)]/70 space-y-1">
+            <span className="text-[10px] text-[#71717A] font-medium uppercase">Gross Loss</span>
             <div className="font-mono font-bold text-rose-400 text-sm">-{formatCurrency(metrics.grossLoss)}</div>
-            <div className="text-[10px] text-slate-400">{metrics.losingTrades} losing trades</div>
+            <div className="text-[10px] text-[#A1A1AA]">{metrics.losingTrades} losing trades</div>
           </div>
 
           {/* Average Win */}
-          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
-            <span className="text-[10px] text-slate-500 font-medium uppercase">Average Win</span>
+          <div className="p-3 rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.07)]/70 space-y-1">
+            <span className="text-[10px] text-[#71717A] font-medium uppercase">Average Win</span>
             <div className="font-mono font-bold text-emerald-400 text-sm">+{formatCurrency(metrics.avgWin)}</div>
-            <div className="text-[10px] text-slate-400">Ratio: {metrics.winLossRatio}x</div>
+            <div className="text-[10px] text-[#A1A1AA]">Ratio: {metrics.winLossRatio}x</div>
           </div>
 
           {/* Average Loss */}
-          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
-            <span className="text-[10px] text-slate-500 font-medium uppercase">Average Loss</span>
+          <div className="p-3 rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.07)]/70 space-y-1">
+            <span className="text-[10px] text-[#71717A] font-medium uppercase">Average Loss</span>
             <div className="font-mono font-bold text-rose-400 text-sm">-{formatCurrency(metrics.avgLoss)}</div>
-            <div className="text-[10px] text-slate-400">Risk controlled</div>
+            <div className="text-[10px] text-[#A1A1AA]">Risk controlled</div>
           </div>
 
           {/* Largest Win */}
-          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
-            <span className="text-[10px] text-slate-500 font-medium uppercase">Largest Win</span>
+          <div className="p-3 rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.07)]/70 space-y-1">
+            <span className="text-[10px] text-[#71717A] font-medium uppercase">Largest Win</span>
             <div className="font-mono font-bold text-emerald-400 text-sm">+{formatCurrency(metrics.largestWin)}</div>
-            <div className="text-[10px] text-slate-400">Peak single trade</div>
+            <div className="text-[10px] text-[#A1A1AA]">Peak single trade</div>
           </div>
 
           {/* Largest Loss */}
-          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
-            <span className="text-[10px] text-slate-500 font-medium uppercase">Largest Loss</span>
+          <div className="p-3 rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.07)]/70 space-y-1">
+            <span className="text-[10px] text-[#71717A] font-medium uppercase">Largest Loss</span>
             <div className="font-mono font-bold text-rose-400 text-sm">{formatCurrency(metrics.largestLoss)}</div>
-            <div className="text-[10px] text-slate-400">Max single risk</div>
+            <div className="text-[10px] text-[#A1A1AA]">Max single risk</div>
           </div>
 
           {/* Break-even Count */}
-          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
-            <span className="text-[10px] text-slate-500 font-medium uppercase">Break-even Trades</span>
-            <div className="font-mono font-bold text-slate-300 text-sm">{metrics.breakevenTrades}</div>
-            <div className="text-[10px] text-slate-400">{metrics.closedTrades ? ((metrics.breakevenTrades / metrics.closedTrades) * 100).toFixed(0) : 0}% of all trades</div>
+          <div className="p-3 rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.07)]/70 space-y-1">
+            <span className="text-[10px] text-[#71717A] font-medium uppercase">Break-even Trades</span>
+            <div className="font-mono font-bold text-[#D4D4D8] text-sm">{metrics.breakevenTrades}</div>
+            <div className="text-[10px] text-[#A1A1AA]">{metrics.closedTrades ? ((metrics.breakevenTrades / metrics.closedTrades) * 100).toFixed(0) : 0}% of all trades</div>
           </div>
 
           {/* Current Drawdown */}
-          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
-            <span className="text-[10px] text-slate-500 font-medium uppercase">Current Drawdown</span>
+          <div className="p-3 rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.07)]/70 space-y-1">
+            <span className="text-[10px] text-[#71717A] font-medium uppercase">Current Drawdown</span>
             <div className="font-mono font-bold text-amber-400 text-sm">
               -${Math.round(metrics.currentDrawdownDollar).toLocaleString()}
             </div>
-            <div className="text-[10px] text-slate-400">-{metrics.currentDrawdownPercent}% from peak</div>
+            <div className="text-[10px] text-[#A1A1AA]">-{metrics.currentDrawdownPercent}% from peak</div>
           </div>
 
           {/* Average Duration */}
-          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
-            <span className="text-[10px] text-slate-500 font-medium uppercase">Avg Holding Time</span>
-            <div className="font-mono font-bold text-slate-200 text-sm">
+          <div className="p-3 rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.07)]/70 space-y-1">
+            <span className="text-[10px] text-[#71717A] font-medium uppercase">Avg Holding Time</span>
+            <div className="font-mono font-bold text-[#F5F5F5] text-sm">
               {metrics.avgDurationMinutes >= 60
                 ? `${Math.floor(metrics.avgDurationMinutes / 60)}h ${metrics.avgDurationMinutes % 60}m`
                 : `${metrics.avgDurationMinutes} mins`}
             </div>
-            <div className="text-[10px] text-slate-400">Intraday execution</div>
+            <div className="text-[10px] text-[#A1A1AA]">Intraday execution</div>
           </div>
 
           {/* Best Trading Day */}
-          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
-            <span className="text-[10px] text-slate-500 font-medium uppercase">Best Trading Day</span>
+          <div className="p-3 rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.07)]/70 space-y-1">
+            <span className="text-[10px] text-[#71717A] font-medium uppercase">Best Trading Day</span>
             <div className="font-mono font-bold text-emerald-400 text-sm">
               +{formatCurrency(metrics.bestTradingDay.pnl)}
             </div>
-            <div className="text-[10px] text-slate-400 truncate">{metrics.bestTradingDay.date}</div>
+            <div className="text-[10px] text-[#A1A1AA] truncate">{metrics.bestTradingDay.date}</div>
           </div>
 
           {/* Worst Trading Day */}
-          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
-            <span className="text-[10px] text-slate-500 font-medium uppercase">Worst Trading Day</span>
+          <div className="p-3 rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.07)]/70 space-y-1">
+            <span className="text-[10px] text-[#71717A] font-medium uppercase">Worst Trading Day</span>
             <div className="font-mono font-bold text-rose-400 text-sm">
               {formatCurrency(metrics.worstTradingDay.pnl)}
             </div>
-            <div className="text-[10px] text-slate-400 truncate">{metrics.worstTradingDay.date}</div>
+            <div className="text-[10px] text-[#A1A1AA] truncate">{metrics.worstTradingDay.date}</div>
           </div>
 
           {/* Longest Loss Streak */}
-          <div className="p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E]/70 space-y-1">
-            <span className="text-[10px] text-slate-500 font-medium uppercase">Max Losing Streak</span>
+          <div className="p-3 rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.07)]/70 space-y-1">
+            <span className="text-[10px] text-[#71717A] font-medium uppercase">Max Losing Streak</span>
             <div className="font-mono font-bold text-rose-400 text-sm">{metrics.longestLossStreak} trades</div>
-            <div className="text-[10px] text-slate-400">Rules followed: {metrics.rulesFollowedRate}%</div>
+            <div className="text-[10px] text-[#A1A1AA]">Rules followed: {metrics.rulesFollowedRate}%</div>
           </div>
         </div>
       </div>
@@ -696,7 +709,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
               <BarChart3 className={`w-5 h-5 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />
               Dynamic Report Chart Builder
             </h2>
-            <p className={`text-xs ${isLight ? 'text-zinc-500' : 'text-slate-400'}`}>
+            <p className={`text-xs ${isLight ? 'text-zinc-500' : 'text-[#A1A1AA]'}`}>
               Click any metric name to open the categorized dropdown across Profitability, Time Analysis, Risk, Volume & Streaks.
             </p>
           </div>
@@ -727,16 +740,16 @@ export const PerformanceAnalyticsView: React.FC = () => {
       {/* ========================================================================= */}
       {/* 5. INTERACTIVE PERFORMANCE CHARTS */}
       {/* ========================================================================= */}
-      <div className="rounded-2xl border border-[#1C232E] bg-[#12161D] p-5 shadow-xl backdrop-blur-sm space-y-4">
+      <div className="rounded-2xl border border-[rgba(255,255,255,0.07)] bg-[#0B0B0B] p-5 shadow-xl backdrop-blur-sm space-y-4">
         {/* Chart Navigation Tabs */}
-        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#1C232E]">
-          <div className="flex flex-wrap items-center gap-1.5 bg-[#0A0D14] p-1 rounded-xl border border-[#1C232E]">
+        <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[rgba(255,255,255,0.07)]">
+          <div className="flex flex-wrap items-center gap-1.5 bg-[#080808] p-1 rounded-xl border border-[rgba(255,255,255,0.07)]">
             <button
               onClick={() => setActiveChartTab('EQUITY')}
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
                 activeChartTab === 'EQUITY'
                   ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
-                  : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
+                  : 'text-[#A1A1AA] hover:text-white hover:bg-[#0B0B0B]'
               }`}
             >
               Equity Curve & Growth
@@ -746,7 +759,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
                 activeChartTab === 'CUMULATIVE'
                   ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
-                  : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
+                  : 'text-[#A1A1AA] hover:text-white hover:bg-[#0B0B0B]'
               }`}
             >
               Cumulative Net P&L
@@ -756,7 +769,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
                 activeChartTab === 'DRAWDOWN'
                   ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
-                  : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
+                  : 'text-[#A1A1AA] hover:text-white hover:bg-[#0B0B0B]'
               }`}
             >
               Drawdown Curve (Underwater)
@@ -766,7 +779,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
                 activeChartTab === 'PERIODIC'
                   ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
-                  : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
+                  : 'text-[#A1A1AA] hover:text-white hover:bg-[#0B0B0B]'
               }`}
             >
               Periodic Realized P&L
@@ -776,7 +789,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
               className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition cursor-pointer ${
                 activeChartTab === 'DISTRIBUTION'
                   ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
-                  : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
+                  : 'text-[#A1A1AA] hover:text-white hover:bg-[#0B0B0B]'
               }`}
             >
               P&L & Win/Loss Distribution
@@ -784,7 +797,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
           </div>
 
           {activeChartTab === 'PERIODIC' && (
-            <div className="flex items-center gap-1 bg-[#0A0D14] p-1 rounded-xl border border-[#1C232E]">
+            <div className="flex items-center gap-1 bg-[#080808] p-1 rounded-xl border border-[rgba(255,255,255,0.07)]">
               {(['DAILY', 'WEEKLY', 'MONTHLY'] as PnlInterval[]).map(int => (
                 <button
                   key={int}
@@ -792,7 +805,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
                   className={`px-2.5 py-1 text-xs font-semibold rounded-lg transition cursor-pointer ${
                     pnlInterval === int
                       ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
-                      : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
+                      : 'text-[#A1A1AA] hover:text-white hover:bg-[#0B0B0B]'
                   }`}
                 >
                   {int}
@@ -802,10 +815,10 @@ export const PerformanceAnalyticsView: React.FC = () => {
           )}
 
           {hoverDataPoint && (
-            <div className="text-xs font-mono bg-[#0A0D14] px-3 py-1 rounded-lg border border-[#1C232E] text-slate-300">
-              <span className="text-slate-500">{hoverDataPoint.label}: </span>
+            <div className="text-xs font-mono bg-[#080808] px-3 py-1 rounded-lg border border-[rgba(255,255,255,0.07)] text-[#D4D4D8]">
+              <span className="text-[#71717A]">{hoverDataPoint.label}: </span>
               <span className="font-bold text-blue-400">{hoverDataPoint.value}</span>
-              {hoverDataPoint.sub && <span className="text-slate-500 ml-1">({hoverDataPoint.sub})</span>}
+              {hoverDataPoint.sub && <span className="text-[#71717A] ml-1">({hoverDataPoint.sub})</span>}
             </div>
           )}
         </div>
@@ -814,8 +827,8 @@ export const PerformanceAnalyticsView: React.FC = () => {
         <div className="h-[280px] w-full flex items-center justify-center">
           {chronoTrades.length === 0 ? (
             <div className="text-center space-y-2">
-              <Info className="w-8 h-8 text-slate-500 mx-auto opacity-50" />
-              <p className="text-sm text-slate-400">No closed trade executions match the active filter criteria.</p>
+              <Info className="w-8 h-8 text-[#71717A] mx-auto opacity-50" />
+              <p className="text-sm text-[#A1A1AA]">No closed trade executions match the active filter criteria.</p>
               <button
                 onClick={handleResetFilters}
                 className="text-xs text-blue-400 hover:underline"
@@ -1053,7 +1066,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
                             isWin ? 'bg-emerald-500 shadow-lg shadow-emerald-500/20' : 'bg-rose-500 shadow-lg shadow-rose-500/20'
                           }`}
                         />
-                        <span className="text-[10px] text-slate-400 font-mono mt-2 truncate w-full text-center">
+                        <span className="text-[10px] text-[#A1A1AA] font-mono mt-2 truncate w-full text-center">
                           {item.label}
                         </span>
                       </div>
@@ -1079,14 +1092,14 @@ export const PerformanceAnalyticsView: React.FC = () => {
                           sub: `Net: ${b.pnl >= 0 ? '+' : ''}$${Math.round(b.pnl)}`
                         })}
                       >
-                        <span className="text-[10px] font-mono font-bold text-slate-300 mb-1">
+                        <span className="text-[10px] font-mono font-bold text-[#D4D4D8] mb-1">
                           {b.count}
                         </span>
                         <div
                           style={{ height: `${heightPct * 0.75}%`, backgroundColor: b.color }}
                           className="w-full rounded-t-lg transition-all duration-300 group-hover:brightness-125 shadow-md"
                         />
-                        <span className="text-[9px] text-slate-400 font-mono mt-2 truncate w-full text-center">
+                        <span className="text-[9px] text-[#A1A1AA] font-mono mt-2 truncate w-full text-center">
                           {b.label}
                         </span>
                       </div>
@@ -1102,13 +1115,13 @@ export const PerformanceAnalyticsView: React.FC = () => {
       {/* ========================================================================= */}
       {/* 6. DETAILED EXECUTION AUDIT TABLE (Filtered Subset) */}
       {/* ========================================================================= */}
-      <div className="rounded-2xl border border-[#1C232E] bg-[#12161D] p-5 shadow-xl backdrop-blur-sm space-y-4">
-        <div className="flex items-center justify-between pb-2 border-b border-[#1C232E]">
+      <div className="rounded-2xl border border-[rgba(255,255,255,0.07)] bg-[#0B0B0B] p-5 shadow-xl backdrop-blur-sm space-y-4">
+        <div className="flex items-center justify-between pb-2 border-b border-[rgba(255,255,255,0.07)]">
           <div>
-            <h3 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
+            <h3 className="text-xs font-bold text-[#F5F5F5] uppercase tracking-wider">
               Filtered Execution Log ({filteredTrades.length} Trades)
             </h3>
-            <p className="text-[11px] text-slate-400 mt-0.5">
+            <p className="text-[11px] text-[#A1A1AA] mt-0.5">
               Click any execution row to view granular tick breakdown, R-multiple audit, and AI critique
             </p>
           </div>
@@ -1117,7 +1130,7 @@ export const PerformanceAnalyticsView: React.FC = () => {
         <div className="overflow-x-auto custom-scrollbar">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="border-b border-[#1C232E] text-[11px] font-bold uppercase text-slate-400 bg-[#0A0D14]">
+              <tr className="border-b border-[rgba(255,255,255,0.07)] text-[11px] font-bold uppercase text-[#A1A1AA] bg-[#080808]">
                 <th className="p-3">Date</th>
                 <th className="p-3">Asset / Symbol</th>
                 <th className="p-3">Direction</th>
@@ -1135,14 +1148,14 @@ export const PerformanceAnalyticsView: React.FC = () => {
                 <tr
                   key={trade.id}
                   onClick={() => setSelectedTrade(trade)}
-                  className="hover:bg-[#1A1F27]/50 cursor-pointer transition"
+                  className="hover:bg-[#101010]/50 cursor-pointer transition"
                 >
-                  <td className="p-3 text-slate-400 text-[11px]">
+                  <td className="p-3 text-[#A1A1AA] text-[11px]">
                     {safeFormatDate(trade.entryDate, '—', { month: 'short', day: 'numeric' })}
                   </td>
-                  <td className="p-3 font-bold text-slate-200">
+                  <td className="p-3 font-bold text-[#F5F5F5]">
                     {trade.symbol}
-                    <span className="ml-1 text-[10px] text-slate-500 uppercase">{trade.market}</span>
+                    <span className="ml-1 text-[10px] text-[#71717A] uppercase">{trade.market}</span>
                   </td>
                   <td className="p-3">
                     <span
@@ -1155,18 +1168,18 @@ export const PerformanceAnalyticsView: React.FC = () => {
                       {trade.direction}
                     </span>
                   </td>
-                  <td className="p-3 text-[11px] text-slate-400">{trade.status}</td>
-                  <td className="p-3 text-slate-300">
+                  <td className="p-3 text-[11px] text-[#A1A1AA]">{trade.status}</td>
+                  <td className="p-3 text-[#D4D4D8]">
                     ${trade.entryPrice.toFixed(2)} → ${trade.exitPrice ? trade.exitPrice.toFixed(2) : '—'}
                   </td>
-                  <td className="p-3 text-slate-300">{trade.quantity}</td>
+                  <td className="p-3 text-[#D4D4D8]">{trade.quantity}</td>
                   <td className={`p-3 text-right font-bold ${trade.netPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                     {trade.netPnl >= 0 ? '+' : ''}${trade.netPnl.toFixed(2)}
                   </td>
                   <td className="p-3 text-right font-bold text-indigo-300">
                     {formatRMultiple(trade.rMultiple)}
                   </td>
-                  <td className="p-3 text-slate-300 font-sans">{trade.setupType || 'Discretionary'}</td>
+                  <td className="p-3 text-[#D4D4D8] font-sans">{trade.setupType || 'Discretionary'}</td>
                   <td className="p-3 text-center">
                     {trade.rulesFollowed ? (
                       <span className="text-emerald-400 text-[10px] font-bold font-sans">✓ PASS</span>

@@ -72,13 +72,13 @@ export const NotificationsSettingsTab: React.FC = () => {
   return (
     <form onSubmit={handleSave} className="space-y-6 max-w-3xl">
       {/* Page Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#1C232E]">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[rgba(255,255,255,0.06)]">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <Bell className="w-4 h-4 text-blue-400" />
+          <h2 className="text-base font-semibold text-[#F4F5F7] flex items-center gap-2">
+            <Bell className="w-4 h-4 text-[#818CF8]" />
             Notifications & Sound Alerts
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#8A919D] mt-0.5">
             Configure trade execution notices, risk alerts, routine reminders, and sound effects.
           </p>
         </div>
@@ -86,7 +86,7 @@ export const NotificationsSettingsTab: React.FC = () => {
         <button
           type="submit"
           disabled={isSaving}
-          className="flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-sm border border-blue-500/50 transition disabled:opacity-50 cursor-pointer"
+          className="flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-semibold bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-xs border border-[#6366F1]/30 transition disabled:opacity-50 cursor-pointer"
         >
           {isSaving ? (
             <>
@@ -106,9 +106,9 @@ export const NotificationsSettingsTab: React.FC = () => {
       <FormSection
         title="Execution & Risk Alerts"
         description="Real-time alerts triggered by broker order events, risk boundaries, and prop rules."
-        icon={<ShieldAlert className="w-4 h-4 text-blue-400" />}
+        icon={<ShieldAlert className="w-4 h-4 text-[#818CF8]" />}
       >
-        <div className="space-y-3 divide-y divide-[#1C232E]/60">
+        <div className="space-y-3 divide-y divide-[rgba(255,255,255,0.055)]">
           <div className="pt-1">
             <ToggleSwitch
               checked={prefs.tradeAlerts}
@@ -151,9 +151,9 @@ export const NotificationsSettingsTab: React.FC = () => {
       <FormSection
         title="Discipline & Journaling Prompts"
         description="Scheduled prompts to maintain high-conviction journaling habits and weekly reviews."
-        icon={<Clock className="w-4 h-4 text-blue-400" />}
+        icon={<Clock className="w-4 h-4 text-[#818CF8]" />}
       >
-        <div className="space-y-3 divide-y divide-[#1C232E]/60">
+        <div className="space-y-3 divide-y divide-[rgba(255,255,255,0.055)]">
           <div className="pt-1">
             <ToggleSwitch
               checked={prefs.dailyJournalReminder}

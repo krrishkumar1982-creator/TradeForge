@@ -172,13 +172,13 @@ export const TagsSettingsTab: React.FC = () => {
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#1C232E]">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[rgba(255,255,255,0.06)]">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <Tag className="w-4 h-4 text-indigo-400" />
+          <h2 className="text-base font-semibold text-[#F4F5F7] flex items-center gap-2">
+            <Tag className="w-4 h-4 text-[#818CF8]" />
             Tags Management & Analytical Taxonomy
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#8A919D] mt-0.5">
             Organize high-confluence setups, psychological mistakes, and market conditions for deep quantitative filtering.
           </p>
         </div>
@@ -187,7 +187,7 @@ export const TagsSettingsTab: React.FC = () => {
           <button
             type="button"
             onClick={handleRestoreDefaults}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-[#1A1F27] hover:bg-[#232B36] text-slate-300 border border-[#1C232E] transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-[#11151A] hover:bg-[#151A20] text-[#C2C7D0] hover:text-[#F4F5F7] border border-[rgba(255,255,255,0.08)] transition cursor-pointer"
             title="Load default setups and mistake categories"
           >
             <RotateCcw className="w-3.5 h-3.5" />
@@ -196,7 +196,7 @@ export const TagsSettingsTab: React.FC = () => {
           <button
             type="button"
             onClick={handleOpenCreate}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-md shadow-indigo-600/25 border border-indigo-400/30 transition cursor-pointer active:scale-95"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-xs transition cursor-pointer"
           >
             <Plus className="w-3.5 h-3.5" />
             <span>Add New Tag</span>
@@ -205,7 +205,7 @@ export const TagsSettingsTab: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-[#12161D] border border-[#1C232E]">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-[#0D1014] border border-[rgba(255,255,255,0.055)]">
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
           {[
             { id: 'ALL', label: 'All Tags' },
@@ -220,10 +220,10 @@ export const TagsSettingsTab: React.FC = () => {
               key={tab.id}
               type="button"
               onClick={() => setActiveCategory(tab.id)}
-              className={`px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer border ${
+              className={`px-3 py-1.5 rounded-xl font-medium transition cursor-pointer border ${
                 activeCategory === tab.id
-                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
-                  : 'bg-[#0A0D14] text-slate-400 border-[#1C232E] hover:text-white hover:border-[#273141]'
+                  ? 'bg-[#11151A] text-[#F4F5F7] border-[rgba(99,102,241,0.35)] shadow-xs'
+                  : 'bg-[#080A0D] text-[#8A919D] border-[rgba(255,255,255,0.06)] hover:text-[#F4F5F7] hover:bg-[#151A20]'
               }`}
             >
               {tab.label}
@@ -232,13 +232,13 @@ export const TagsSettingsTab: React.FC = () => {
         </div>
 
         <div className="relative min-w-[220px]">
-          <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+          <Search className="w-3.5 h-3.5 text-[#5E6570] absolute left-3 top-2.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search tags..."
-            className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#F4F5F7] placeholder-[#5E6570] focus:outline-none focus:border-[#6366F1]"
           />
         </div>
       </div>
@@ -246,7 +246,7 @@ export const TagsSettingsTab: React.FC = () => {
       {/* Tags Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
         {filteredTags.length === 0 ? (
-          <div className="col-span-full text-center py-12 rounded-2xl bg-[#12161D] border border-[#1C232E] text-slate-500 text-xs font-mono">
+          <div className="col-span-full text-center py-12 rounded-2xl bg-[#0D1014] border border-[rgba(255,255,255,0.055)] text-[#5E6570] text-xs font-mono">
             No tags found matching criteria. Click "Add New Tag" to create one.
           </div>
         ) : (
@@ -337,20 +337,20 @@ export const TagsSettingsTab: React.FC = () => {
 
       {/* Modal for Create / Edit Tag */}
       {isCreating && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
           <form
             onSubmit={handleSaveTag}
-            className="w-full max-w-md rounded-2xl bg-[#12161D] border border-indigo-500/30 p-6 space-y-4 shadow-2xl"
+            className="w-full max-w-md rounded-2xl bg-[#0B0E12] border border-[rgba(255,255,255,0.08)] p-6 space-y-4 shadow-2xl"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-[#1C232E]">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <Tag className="w-4 h-4 text-indigo-400" />
+            <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.06)]">
+              <h3 className="text-sm font-semibold text-[#F4F5F7] flex items-center gap-2">
+                <Tag className="w-4 h-4 text-[#818CF8]" />
                 {editingTag ? 'Edit Quantitative Tag' : 'Create New Analytical Tag'}
               </h3>
               <button
                 type="button"
                 onClick={() => setIsCreating(false)}
-                className="text-slate-400 hover:text-slate-200"
+                className="text-[#8A919D] hover:text-[#F4F5F7] cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -358,36 +358,36 @@ export const TagsSettingsTab: React.FC = () => {
 
             <div className="space-y-3 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Tag Name</label>
+                <label className="block text-[#A7ADB7] font-medium mb-1">Tag Name</label>
                 <input
                   type="text"
                   required
                   value={tagName}
                   onChange={e => setTagName(e.target.value)}
                   placeholder="e.g. Liquidity Sweep, FOMO Entry"
-                  className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 text-[#F4F5F7] placeholder-[#5E6570] focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Taxonomy Category</label>
+                <label className="block text-[#A7ADB7] font-medium mb-1">Taxonomy Category</label>
                 <select
                   value={tagCategory}
                   onChange={e => setTagCategory(e.target.value as any)}
-                  className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 text-[#F4F5F7] focus:outline-none focus:border-[#6366F1] cursor-pointer"
                 >
-                  <option value="Setup">Setup (Confluence / Strategy Trigger)</option>
-                  <option value="Mistake">Mistake (Discipline / Execution Error)</option>
-                  <option value="Market">Market (Regime, Volatility, Session)</option>
-                  <option value="Psychology">Psychology (Mindset / Emotion)</option>
-                  <option value="Behavior">Behavior (Habit / Routine)</option>
-                  <option value="Execution">Execution (Order Entry / Slippage)</option>
-                  <option value="Custom">Custom (General Tag)</option>
+                  <option value="Setup" className="bg-[#0D1014] text-[#F4F5F7]">Setup (Confluence / Strategy Trigger)</option>
+                  <option value="Mistake" className="bg-[#0D1014] text-[#F4F5F7]">Mistake (Discipline / Execution Error)</option>
+                  <option value="Market" className="bg-[#0D1014] text-[#F4F5F7]">Market (Regime, Volatility, Session)</option>
+                  <option value="Psychology" className="bg-[#0D1014] text-[#F4F5F7]">Psychology (Mindset / Emotion)</option>
+                  <option value="Behavior" className="bg-[#0D1014] text-[#F4F5F7]">Behavior (Habit / Routine)</option>
+                  <option value="Execution" className="bg-[#0D1014] text-[#F4F5F7]">Execution (Order Entry / Slippage)</option>
+                  <option value="Custom" className="bg-[#0D1014] text-[#F4F5F7]">Custom (General Tag)</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1.5">Color Accent</label>
+                <label className="block text-[#A7ADB7] font-medium mb-1.5">Color Accent</label>
                 <div className="flex flex-wrap gap-2">
                   {COLOR_PALETTES.map(col => (
                     <button
@@ -406,28 +406,28 @@ export const TagsSettingsTab: React.FC = () => {
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Description & Trading Rules</label>
+                <label className="block text-[#A7ADB7] font-medium mb-1">Description & Trading Rules</label>
                 <textarea
                   rows={3}
                   value={tagDesc}
                   onChange={e => setTagDesc(e.target.value)}
                   placeholder="Define when this tag should be attributed..."
-                  className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl p-3 text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl p-3 text-[#F4F5F7] placeholder-[#5E6570] focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#1C232E]">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[rgba(255,255,255,0.06)]">
               <button
                 type="button"
                 onClick={() => setIsCreating(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#1A1F27] hover:bg-[#232B36] text-slate-300 border border-[#1C232E]"
+                className="px-4 py-2 rounded-xl text-xs font-medium bg-[#11151A] hover:bg-[#151A20] text-[#C2C7D0] hover:text-[#F4F5F7] border border-[rgba(255,255,255,0.08)] cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/25 border border-indigo-400/30"
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-xs cursor-pointer"
               >
                 {editingTag ? 'Save Changes' : 'Create Tag'}
               </button>

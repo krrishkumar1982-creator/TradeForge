@@ -35,7 +35,7 @@ export function Tabs<T extends string = string>({
         className={`flex items-center gap-1 p-1 rounded-xl overflow-x-auto custom-scrollbar ${
           isLight
             ? 'bg-zinc-100/90 border border-zinc-200'
-            : 'bg-[#090A0E] border border-[rgba(255,255,255,0.08)]'
+            : 'bg-[#06080B] border border-[rgba(255,255,255,0.055)]'
         } ${className}`}
       >
         {tabs.map((tab) => {
@@ -50,10 +50,10 @@ export function Tabs<T extends string = string>({
                 isActive
                   ? isLight
                     ? 'bg-white text-zinc-900 border border-zinc-200 shadow-xs'
-                    : 'bg-[#181A21] text-white border border-[rgba(255,255,255,0.12)] shadow-xs'
+                    : 'bg-[#11151A] text-[#F4F5F7] border border-[rgba(255,255,255,0.08)] shadow-xs font-semibold'
                   : isLight
                   ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60 border border-transparent'
-                  : 'text-slate-400 hover:text-slate-200 hover:bg-[#12141A] border border-transparent'
+                  : 'text-[#8A919D] hover:text-[#C2C7D0] hover:bg-[#151A20] border border-transparent'
               }`}
             >
               {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
@@ -64,10 +64,10 @@ export function Tabs<T extends string = string>({
                     isActive
                       ? isLight
                         ? 'bg-zinc-100 text-zinc-800'
-                        : 'bg-[#252833] text-slate-200'
+                        : 'bg-[#151A20] text-[#F4F5F7]'
                       : isLight
                       ? 'bg-zinc-200 text-zinc-600'
-                      : 'bg-[#12141A] text-slate-400'
+                      : 'bg-[#090C10] text-[#8A919D]'
                   }`}
                 >
                   {tab.count}
@@ -84,7 +84,7 @@ export function Tabs<T extends string = string>({
     return (
       <div
         className={`flex items-center gap-6 overflow-x-auto custom-scrollbar ${
-          isLight ? 'border-b border-zinc-200' : 'border-b border-[rgba(255,255,255,0.08)]'
+          isLight ? 'border-b border-zinc-200' : 'border-b border-[rgba(255,255,255,0.055)]'
         } ${className}`}
       >
         {tabs.map((tab) => {
@@ -99,10 +99,10 @@ export function Tabs<T extends string = string>({
                 isActive
                   ? isLight
                     ? 'border-blue-600 text-blue-600 font-semibold'
-                    : 'border-blue-500 text-white font-semibold'
+                    : 'border-blue-500 text-[#F4F5F7] font-semibold'
                   : isLight
                   ? 'border-transparent text-zinc-500 hover:text-zinc-900 hover:border-zinc-300'
-                  : 'border-transparent text-slate-400 hover:text-slate-200 hover:border-slate-600'
+                  : 'border-transparent text-[#8A919D] hover:text-[#C2C7D0] hover:border-slate-600'
               }`}
             >
               {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
@@ -116,7 +116,7 @@ export function Tabs<T extends string = string>({
                         : 'bg-blue-500/20 text-blue-300'
                       : isLight
                       ? 'bg-zinc-100 text-zinc-500'
-                      : 'bg-[#12141A] text-slate-400'
+                      : 'bg-[#090C10] text-[#8A919D]'
                   }`}
                 >
                   {tab.count}
@@ -148,10 +148,10 @@ export function Tabs<T extends string = string>({
               isActive
                 ? isLight
                   ? 'bg-white text-zinc-900 border-zinc-300 shadow-xs font-semibold'
-                  : 'bg-[#181A21] text-white border-[rgba(255,255,255,0.14)] shadow-xs'
+                  : 'bg-[linear-gradient(90deg,rgba(59,130,246,0.16),rgba(124,58,237,0.18))] text-[#F4F5F7] border-[rgba(99,102,241,0.35)] shadow-xs font-semibold'
                 : isLight
                 ? 'bg-zinc-100/80 border-zinc-200 text-zinc-600 hover:text-zinc-900 hover:border-zinc-300 hover:bg-zinc-100'
-                : 'bg-[#101116] border-[rgba(255,255,255,0.06)] text-slate-400 hover:text-white hover:border-[rgba(255,255,255,0.12)] hover:bg-[#15171D]'
+                : 'bg-[#0D1014] border-[rgba(255,255,255,0.055)] text-[#8A919D] hover:text-[#C2C7D0] hover:border-[rgba(255,255,255,0.09)] hover:bg-[#151A20]'
             }`}
           >
             {Icon && <Icon className="w-3.5 h-3.5 shrink-0" />}
@@ -162,10 +162,10 @@ export function Tabs<T extends string = string>({
                   isActive
                     ? isLight
                       ? 'bg-zinc-100 text-zinc-800 border-zinc-200'
-                      : 'bg-[#232733] text-slate-200 border-[rgba(255,255,255,0.12)]'
+                      : 'bg-[#151A20] text-[#F4F5F7] border-[rgba(255,255,255,0.08)]'
                     : isLight
                     ? 'bg-zinc-200/70 text-zinc-600 border-zinc-200'
-                    : 'bg-[#0A0D12] text-slate-400 border-[rgba(255,255,255,0.05)]'
+                    : 'bg-[#090C10] text-[#8A919D] border-[rgba(255,255,255,0.055)]'
                 }`}
               >
                 {tab.count}

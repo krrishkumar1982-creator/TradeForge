@@ -422,12 +422,12 @@ export const INITIAL_PLAYBOOKS: Playbook[] = [
     dailyLossLimit: 2.0,
     status: 'A_PLUS',
     rules: [
-      { id: 'r1', text: 'Clean pre-market structure break with volume > 1.5x avg', category: 'MARKET', required: true },
-      { id: 'r2', text: 'Entry on first 1-min pullback into VWAP / 9 EMA', category: 'ENTRY', required: true },
-      { id: 'r3', text: 'Stop Loss strictly below opening drive pivot low', category: 'RISK', required: true },
+      { id: 'r1', text: 'Price taps or sweeps the higher-timeframe level', category: 'MARKET', required: true },
+      { id: 'r2', text: '5m structure shift with volume confirmation', category: 'ENTRY', required: true },
+      { id: 'r3', text: 'Stop goes beyond the invalidation wick', category: 'RISK', required: true },
       { id: 'r4', text: 'Scale 50% at 2R, trail remaining stop to breakeven', category: 'EXIT', required: true },
       { id: 'r5-risk', text: 'Never exceed 1.0% account risk per execution', category: 'RISK', required: true },
-      { id: 'r6-inv', text: 'Exit immediately if 5M candle closes below opening range low', category: 'INVALIDATION', required: true },
+      { id: 'r6-inv', text: 'Exit immediately if 5m candle closes below invalidation wick', category: 'RISK', required: true },
     ],
     setups: [
       {

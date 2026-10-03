@@ -74,7 +74,7 @@ export const METRIC_CATEGORIES: MetricCategory[] = [
         id: 'net_pnl',
         name: 'Net P&L',
         category: 'Profitability',
-        description: 'Net realized profit and loss after fees and commissions',
+        description: 'Net realized profit and loss across closed trades',
         unit: 'currency',
         defaultChartType: 'green_red_bar',
       },

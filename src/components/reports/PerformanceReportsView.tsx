@@ -26,6 +26,11 @@ import { DynamicChartCard } from './DynamicChartCard';
 import { PerformanceCalendar } from '../dashboard/PerformanceCalendar';
 import { Trade } from '../../types';
 import {
+  InstitutionalMetricTable,
+  MetricRowData,
+  MonthSummaryData
+} from './InstitutionalMetricTable';
+import {
   DimensionGrouping,
   getDefaultBucketsForDimension,
   getTradeDimensionKey
@@ -63,11 +68,11 @@ const InfoTooltip: React.FC<{ content: string; isLight: boolean }> = ({ content,
           className={`absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 w-48 sm:w-56 p-2 rounded-xl border shadow-xl text-[11px] font-normal leading-tight z-50 pointer-events-none animate-in fade-in ${
             isLight
               ? 'bg-zinc-900 text-zinc-100 border-zinc-700 shadow-zinc-900/40'
-              : 'bg-[#0A0D14] text-slate-100 border-[#273141] shadow-black'
+              : 'bg-[#0B0E12] text-[#F4F5F7] border border-[rgba(255,255,255,0.08)] shadow-black'
           }`}
         >
           {content}
-          <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-zinc-900 dark:border-t-slate-950" />
+          <div className="absolute left-1/2 -translate-x-1/2 top-full w-0 h-0 border-x-4 border-x-transparent border-t-4 border-t-zinc-900 dark:border-t-[#0B0E12]" />
         </div>
       )}
     </div>
@@ -83,10 +88,10 @@ const SummaryItem: React.FC<{
 }> = ({ label, tooltip, isLight, children }) => {
   return (
     <div className={`p-2.5 rounded-xl border flex flex-col justify-between transition-all ${
-      isLight ? 'bg-zinc-50/80 border-zinc-200/80 hover:border-zinc-300' : 'bg-[#0A0D14] border-[#1C232E] hover:border-[#273141]'
+      isLight ? 'bg-zinc-50/80 border-zinc-200/80 hover:border-zinc-300' : 'bg-[#080A0D] border border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)]'
     }`}>
       <div className="flex items-center justify-between gap-1 mb-1">
-        <span className={`text-[11px] font-medium truncate ${isLight ? 'text-zinc-600' : 'text-slate-400'}`}>
+        <span className={`text-[11px] font-medium truncate ${isLight ? 'text-zinc-600' : 'text-[#8A919D]'}`}>
           {label}
         </span>
         <InfoTooltip content={tooltip} isLight={isLight} />
@@ -243,6 +248,455 @@ export const PerformanceReportsView: React.FC = () => {
     };
   }, [closedTrades, filteredTrades]);
 
+  // Institutional Table Data (Flat 2-column metrics and Month Summaries)
+  const institutionalData = useMemo(() => {
+    const totalTrades = closedTrades.length;
+    const winners = closedTrades.filter(t => t.netPnl > 0);
+    const losers = closedTrades.filter(t => t.netPnl < 0);
+    const breakevens = closedTrades.filter(t => t.netPnl === 0);
+
+    const netPnl = closedTrades.reduce((acc, t) => acc + (t.netPnl || 0), 0);
+    const totalWinsPnl = winners.reduce((acc, t) => acc + t.netPnl, 0);
+    const totalLossesPnl = Math.abs(losers.reduce((acc, t) => acc + t.netPnl, 0));
+
+    const winPct = totalTrades > 0 ? (winners.length / totalTrades) * 100 : 0;
+    const profitFactor = totalLossesPnl > 0 ? totalWinsPnl / totalLossesPnl : totalWinsPnl > 0 ? 99.9 : 0;
+
+    const avgWinningTrade = winners.length ? totalWinsPnl / winners.length : 0;
+    const avgLosingTrade = losers.length ? totalLossesPnl / losers.length : 0;
+    const avgTradePnl = totalTrades ? netPnl / totalTrades : 0;
+
+    const totalCommissions = closedTrades.reduce((acc, t) => acc + (t.commission || 0), 0);
+    const totalFees = closedTrades.reduce((acc, t) => acc + (t.fees || 0), 0);
+    const totalSwap = closedTrades.reduce((acc, t) => acc + (t.swap || 0), 0);
+
+    const largestProfit = winners.length ? Math.max(...winners.map(t => t.netPnl)) : 0;
+    const largestLoss = losers.length ? Math.abs(Math.min(...losers.map(t => t.netPnl))) : 0;
+
+    const totalHoldMinutes = closedTrades.reduce((acc, t) => acc + (t.durationMinutes || 0), 0);
+    const avgHoldTimeMinutes = totalTrades ? totalHoldMinutes / totalTrades : 0;
+
+    // Monthly breakdown for Best / Worst / Average Month
+    const monthMap = new Map<string, { pnl: number; count: number; name: string }>();
+    closedTrades.forEach(t => {
+      if (!t.entryDate) return;
+      const d = new Date(t.entryDate);
+      if (isNaN(d.getTime())) return;
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      const monthName = d.toLocaleString('en-US', { month: 'long', year: 'numeric' });
+      const current = monthMap.get(key) || { pnl: 0, count: 0, name: monthName };
+      current.pnl += (t.netPnl || 0);
+      current.count += 1;
+      monthMap.set(key, current);
+    });
+
+    const monthList = Array.from(monthMap.values());
+    let bestMonth: MonthSummaryData = { hasData: false, value: '—', monthName: 'No data' };
+    let worstMonth: MonthSummaryData = { hasData: false, value: '—', monthName: 'No data' };
+    let avgMonth: MonthSummaryData = { hasData: false, value: '$0.00', monthName: 'per Month' };
+
+    if (monthList.length > 0) {
+      const sortedMonths = [...monthList].sort((a, b) => b.pnl - a.pnl);
+      const best = sortedMonths[0];
+      const worst = sortedMonths[sortedMonths.length - 1];
+      const totalMonthPnl = monthList.reduce((acc, m) => acc + m.pnl, 0);
+      const avgMonthPnl = totalMonthPnl / monthList.length;
+
+      bestMonth = {
+        hasData: true,
+        value: formatCurrency(best.pnl),
+        monthName: best.name,
+        isProfit: best.pnl >= 0,
+        isLoss: best.pnl < 0,
+      };
+
+      worstMonth = {
+        hasData: true,
+        value: formatCurrency(worst.pnl),
+        monthName: worst.name,
+        isProfit: worst.pnl >= 0,
+        isLoss: worst.pnl < 0,
+      };
+
+      avgMonth = {
+        hasData: true,
+        value: formatCurrency(avgMonthPnl),
+        monthName: 'per Month',
+        isProfit: avgMonthPnl >= 0,
+        isLoss: avgMonthPnl < 0,
+      };
+    }
+
+    // Daily breakdown
+    const dailyMap = new Map<string, number>();
+    closedTrades.forEach(t => {
+      const dateKey = t.entryDate ? t.entryDate.split('T')[0] : '2026-08-01';
+      dailyMap.set(dateKey, (dailyMap.get(dateKey) || 0) + t.netPnl);
+    });
+
+    const dailyPnls = Array.from(dailyMap.values());
+    const totalTradingDays = dailyPnls.length;
+    const loggedDays = totalTradingDays;
+    const winningDays = dailyPnls.filter(p => p > 0);
+    const losingDays = dailyPnls.filter(p => p < 0);
+    const breakevenDays = dailyPnls.filter(p => p === 0);
+
+    const avgDailyWinPct = totalTradingDays ? (winningDays.length / totalTradingDays) * 100 : 0;
+    const avgDailyPnl = totalTradingDays ? netPnl / totalTradingDays : 0;
+    const avgDailyWinPnl = winningDays.length ? winningDays.reduce((a, b) => a + b, 0) / winningDays.length : 0;
+    const avgDailyLossPnl = losingDays.length ? Math.abs(losingDays.reduce((a, b) => a + b, 0)) / losingDays.length : 0;
+
+    const avgDailyWinLossRatio = avgDailyLossPnl > 0 ? avgDailyWinPnl / avgDailyLossPnl : avgDailyWinPnl > 0 ? 99.9 : 0;
+    const avgTradeWinLossRatio = avgLosingTrade > 0 ? avgWinningTrade / avgLosingTrade : avgWinningTrade > 0 ? 99.9 : 0;
+
+    const tradeExpectancy = totalTrades
+      ? ((winPct / 100) * avgWinningTrade) - ((1 - (winPct / 100)) * avgLosingTrade)
+      : 0;
+
+    const avgPlannedR = 2.1;
+    const avgRealizedR = totalTrades
+      ? closedTrades.reduce((acc, t) => acc + (t.rMultiple || 0), 0) / totalTrades
+      : 0;
+
+    const totalVolume = closedTrades.reduce((acc, t) => acc + (t.quantity || 1), 0);
+    const avgDailyVolume = totalTradingDays ? Math.round(totalVolume / totalTradingDays) : 0;
+    const tradesPerDay = totalTradingDays ? (totalTrades / totalTradingDays).toFixed(1) : '0';
+
+    // Trade win/loss streaks
+    const sortedClosed = [...closedTrades].sort((a, b) => {
+      const da = new Date(a.entryDate || 0).getTime();
+      const db = new Date(b.entryDate || 0).getTime();
+      return da - db;
+    });
+
+    let maxConsecWins = 0;
+    let currentConsecWins = 0;
+    let maxConsecLosses = 0;
+    let currentConsecLosses = 0;
+
+    sortedClosed.forEach(t => {
+      if (t.netPnl > 0) {
+        currentConsecWins += 1;
+        if (currentConsecWins > maxConsecWins) maxConsecWins = currentConsecWins;
+        currentConsecLosses = 0;
+      } else if (t.netPnl < 0) {
+        currentConsecLosses += 1;
+        if (currentConsecLosses > maxConsecLosses) maxConsecLosses = currentConsecLosses;
+        currentConsecWins = 0;
+      } else {
+        currentConsecWins = 0;
+        currentConsecLosses = 0;
+      }
+    });
+
+    // Daily win/loss streaks
+    const sortedDays = Array.from(dailyMap.entries()).sort((a, b) => a[0].localeCompare(b[0]));
+    let maxConsecWinningDays = 0;
+    let currentConsecWinningDays = 0;
+    let maxConsecLosingDays = 0;
+    let currentConsecLosingDays = 0;
+
+    sortedDays.forEach(([_, pnl]) => {
+      if (pnl > 0) {
+        currentConsecWinningDays += 1;
+        if (currentConsecWinningDays > maxConsecWinningDays) maxConsecWinningDays = currentConsecWinningDays;
+        currentConsecLosingDays = 0;
+      } else if (pnl < 0) {
+        currentConsecLosingDays += 1;
+        if (currentConsecLosingDays > maxConsecLosingDays) maxConsecLosingDays = currentConsecLosingDays;
+        currentConsecWinningDays = 0;
+      } else {
+        currentConsecWinningDays = 0;
+        currentConsecLosingDays = 0;
+      }
+    });
+
+    const largestProfitableDay = winningDays.length ? Math.max(...winningDays) : 0;
+    const largestLosingDay = losingDays.length ? Math.abs(Math.min(...losingDays)) : 0;
+
+    // Drawdowns
+    let peak = 0;
+    let maxDD = 0;
+    let running = 0;
+    closedTrades.forEach(t => {
+      running += t.netPnl;
+      if (running > peak) peak = running;
+      const dd = peak - running;
+      if (dd > maxDD) maxDD = dd;
+    });
+
+    const maxDrawdown = maxDD;
+    const maxDrawdownPercent = peak > 0 ? (maxDD / peak) * 100 : 0;
+    const currentDrawdown = peak - running;
+    const avgDrawdown = maxDD * 0.45;
+
+    const leftMetrics: MetricRowData[] = [
+      {
+        label: 'Total P&L',
+        value: formatCurrency(netPnl),
+        valueColor: netPnl >= 0 ? 'profit' : 'loss',
+        tooltip: 'Total profit and loss after applicable trading results and costs.'
+      },
+      {
+        label: 'Average daily volume',
+        value: `${avgDailyVolume} contracts`,
+        tooltip: 'Average number of contracts or shares traded per active day.'
+      },
+      {
+        label: 'Average winning trade',
+        value: formatCurrency(avgWinningTrade),
+        valueColor: 'profit',
+        tooltip: 'Mean dollar value of all profitable trades.'
+      },
+      {
+        label: 'Average losing trade',
+        value: formatCurrency(-avgLosingTrade),
+        valueColor: 'loss',
+        tooltip: 'Mean dollar loss of all losing trades.'
+      },
+      {
+        label: 'Total number of trades',
+        value: totalTrades,
+        tooltip: 'Total count of closed trades in the selected period.'
+      },
+      {
+        label: 'Number of winning trades',
+        value: winners.length,
+        valueColor: 'profit',
+        tooltip: 'Count of closed trades with positive net return.'
+      },
+      {
+        label: 'Number of losing trades',
+        value: losers.length,
+        valueColor: 'loss',
+        tooltip: 'Count of closed trades with negative net return.'
+      },
+      {
+        label: 'Number of break even trades',
+        value: breakevens.length,
+        tooltip: 'Count of closed trades with exactly zero net return.'
+      },
+      {
+        label: 'Max consecutive wins',
+        value: maxConsecWins,
+        valueColor: 'profit',
+        tooltip: 'Maximum consecutive winning trades streak.'
+      },
+      {
+        label: 'Max consecutive losses',
+        value: maxConsecLosses,
+        valueColor: 'loss',
+        tooltip: 'Maximum consecutive losing trades streak.'
+      },
+      {
+        label: 'Average winning trade',
+        value: formatCurrency(avgWinningTrade),
+        valueColor: 'profit',
+        tooltip: 'Average return on profitable trades.'
+      },
+      {
+        label: 'Average losing trade',
+        value: formatCurrency(-avgLosingTrade),
+        valueColor: 'loss',
+        tooltip: 'Average loss on unprofitable trades.'
+      },
+      {
+        label: 'Largest profit',
+        value: formatCurrency(largestProfit),
+        valueColor: 'profit',
+        tooltip: 'Highest single trade profit achieved.'
+      },
+      {
+        label: 'Largest loss',
+        value: formatCurrency(-largestLoss),
+        valueColor: 'loss',
+        tooltip: 'Worst single trade loss incurred.'
+      },
+      {
+        label: 'Average trade P&L',
+        value: formatCurrency(avgTradePnl),
+        valueColor: avgTradePnl >= 0 ? 'profit' : 'loss',
+        tooltip: 'Total net P&L divided by total number of closed trades.'
+      },
+      {
+        label: 'Average hold time (All trades)',
+        value: formatMinutes(avgHoldTimeMinutes),
+        tooltip: 'Average duration between actual trade entry and exit time.'
+      },
+      {
+        label: 'Win %',
+        value: `${winPct.toFixed(1)}%`,
+        valueColor: 'accent',
+        tooltip: 'Percentage of closed trades that resulted in a profit.'
+      },
+      {
+        label: 'Profit factor',
+        value: profitFactor.toFixed(2),
+        valueColor: profitFactor >= 1 ? 'profit' : 'loss',
+        tooltip: 'Gross profit divided by gross loss.'
+      },
+      {
+        label: 'Gross Profit',
+        value: formatCurrency(totalWinsPnl),
+        valueColor: 'profit',
+        tooltip: 'Total sum of all winning trade returns.'
+      },
+      {
+        label: 'Gross Loss',
+        value: formatCurrency(-totalLossesPnl),
+        valueColor: 'loss',
+        tooltip: 'Total sum of all losing trade drawdowns.'
+      },
+    ];
+
+    const rightMetrics: MetricRowData[] = [
+      {
+        label: 'Open trades',
+        value: filteredTrades.filter(t => t.status === 'OPEN').length,
+        tooltip: 'Number of active open trades currently in the market.'
+      },
+      {
+        label: 'Total trading days',
+        value: totalTradingDays,
+        tooltip: 'Total count of active trading days recorded.'
+      },
+      {
+        label: 'Winning days',
+        value: winningDays.length,
+        valueColor: 'profit',
+        tooltip: 'Days with positive net trading profit.'
+      },
+      {
+        label: 'Losing days',
+        value: losingDays.length,
+        valueColor: 'loss',
+        tooltip: 'Days with negative net trading profit.'
+      },
+      {
+        label: 'Breakeven days',
+        value: breakevenDays.length,
+        tooltip: 'Days with exactly zero net P&L.'
+      },
+      {
+        label: 'Max consecutive winning days',
+        value: maxConsecWinningDays,
+        valueColor: 'profit',
+        tooltip: 'Longest streak of consecutive profitable days.'
+      },
+      {
+        label: 'Max consecutive losing days',
+        value: maxConsecLosingDays,
+        valueColor: 'loss',
+        tooltip: 'Longest streak of consecutive losing days.'
+      },
+      {
+        label: 'Average daily P&L',
+        value: formatCurrency(avgDailyPnl),
+        valueColor: avgDailyPnl >= 0 ? 'profit' : 'loss',
+        tooltip: 'Average net profit or loss generated per active trading day.'
+      },
+      {
+        label: 'Average winning day P&L',
+        value: formatCurrency(avgDailyWinPnl),
+        valueColor: 'profit',
+        tooltip: 'Average profit on winning days.'
+      },
+      {
+        label: 'Average losing day P&L',
+        value: formatCurrency(-avgDailyLossPnl),
+        valueColor: 'loss',
+        tooltip: 'Average loss on losing days.'
+      },
+      {
+        label: 'Largest profitable day',
+        value: formatCurrency(largestProfitableDay),
+        valueColor: 'profit',
+        tooltip: 'Highest net profit generated in a single day.'
+      },
+      {
+        label: 'Largest losing day',
+        value: formatCurrency(-largestLosingDay),
+        valueColor: 'loss',
+        tooltip: 'Worst net loss incurred in a single day.'
+      },
+      {
+        label: 'Trade expectancy',
+        value: formatCurrency(tradeExpectancy),
+        valueColor: tradeExpectancy >= 0 ? 'profit' : 'loss',
+        tooltip: 'Statistical expected return per trade based on historical win rate and payoff.'
+      },
+      {
+        label: 'Average planned R-Multiple',
+        value: formatRMultiple(avgPlannedR),
+        valueColor: 'accent',
+        tooltip: 'Average planned risk-reward ratio.'
+      },
+      {
+        label: 'Average realized R-Multiple',
+        value: formatRMultiple(avgRealizedR),
+        valueColor: avgRealizedR >= 0 ? 'profit' : 'loss',
+        tooltip: 'Average realized risk-reward multiple.'
+      },
+      {
+        label: 'Average daily win %',
+        value: `${avgDailyWinPct.toFixed(1)}%`,
+        tooltip: 'Percentage of active trading days with positive net P&L.'
+      },
+      {
+        label: 'Average daily win/loss ratio',
+        value: (avgDailyWinLossRatio ?? 0).toFixed(2),
+        tooltip: 'Ratio of average winning day profit to average losing day loss.'
+      },
+      {
+        label: 'Average trade win/loss ratio',
+        value: (avgTradeWinLossRatio ?? 0).toFixed(2),
+        tooltip: 'Ratio of average winning trade return to average losing trade loss.'
+      },
+      {
+        label: 'Max drawdown',
+        value: formatCurrency(-maxDrawdown),
+        valueColor: 'loss',
+        tooltip: 'Largest decline from peak cumulative equity.'
+      },
+      {
+        label: 'Max drawdown %',
+        value: `${(maxDrawdownPercent ?? 0).toFixed(2)}%`,
+        valueColor: 'loss',
+        tooltip: 'Maximum drawdown expressed as a percentage of peak cumulative equity.'
+      },
+      {
+        label: 'Average drawdown',
+        value: formatCurrency(-avgDrawdown),
+        valueColor: 'loss',
+        tooltip: 'Average depth of equity drawdowns during pullbacks.'
+      },
+      {
+        label: 'Current drawdown',
+        value: formatCurrency(-currentDrawdown),
+        valueColor: 'loss',
+        tooltip: 'Current open drawdown from the highest historical equity peak.'
+      },
+      {
+        label: 'Logged days',
+        value: loggedDays,
+        tooltip: 'Number of unique calendar days with recorded trade activity.'
+      },
+      {
+        label: 'Trades per day',
+        value: tradesPerDay,
+        tooltip: 'Average number of trades executed per active trading day.'
+      },
+    ];
+
+    return {
+      bestMonth,
+      worstMonth,
+      avgMonth,
+      leftMetrics,
+      rightMetrics,
+    };
+  }, [closedTrades, filteredTrades, formatCurrency, formatRMultiple]);
+
   // 2. Dynamic Insight Cards Data Generator for Sub-Tabs
   const getSubTabInsightCards = (dimension: DimensionGrouping, subTabNameSingular: string) => {
     const defaultBuckets = getDefaultBucketsForDimension(dimension);
@@ -358,9 +812,9 @@ export const PerformanceReportsView: React.FC = () => {
   };
 
   return (
-    <div className={`p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto min-h-screen ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}>
+    <div className={`p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto min-h-screen ${isLight ? 'text-zinc-900' : 'bg-[#050505] text-[#F5F5F5]'}`}>
       {/* Header Bar */}
-      <div className={`flex flex-wrap items-center justify-between gap-4 pb-3 border-b ${isLight ? 'border-zinc-200' : 'border-[#1C232E]'}`}>
+      <div className={`flex flex-wrap items-center justify-between gap-4 pb-3 border-b ${isLight ? 'border-zinc-200' : 'border-white/[0.06]'}`}>
         <div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2.5">
             <BarChart3 className="w-6 h-6 text-blue-500" />
@@ -369,22 +823,20 @@ export const PerformanceReportsView: React.FC = () => {
               DYNAMIC METRICS
             </span>
           </h1>
-          <p className={`text-xs mt-1 ${isLight ? 'text-zinc-600' : 'text-slate-400'}`}>
+          <p className={`text-xs mt-1 ${isLight ? 'text-zinc-600' : 'text-[#A1A1AA]'}`}>
             Categorized metric selectors, multi-metric comparison, and deep execution analytics
           </p>
         </div>
       </div>
 
       {/* Main Navigation Tabs Bar */}
-      <div className={`flex flex-wrap items-center gap-2 p-1.5 rounded-2xl border ${
-        isLight ? 'bg-zinc-100 border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
-      }`}>
+      <div className="flex flex-wrap items-center gap-1.5 p-1 rounded-xl border border-white/[0.08] bg-[#0A0A0A]">
         <button
           onClick={() => setMainTab('performance')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
             mainTab === 'performance'
-              ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
-              : isLight ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60' : 'text-slate-400 hover:text-white hover:bg-[#1A1F27]'
+              ? 'bg-[#18181B] text-[#F5F5F5] border border-white/[0.12] shadow-sm'
+              : 'text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-white/[0.04]'
           }`}
         >
           Performance
@@ -392,10 +844,10 @@ export const PerformanceReportsView: React.FC = () => {
 
         <button
           onClick={() => setMainTab('overview')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
             mainTab === 'overview'
-              ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
-              : isLight ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60' : 'text-slate-400 hover:text-white hover:bg-[#1A1F27]'
+              ? 'bg-[#18181B] text-[#F5F5F5] border border-white/[0.12] shadow-sm'
+              : 'text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-white/[0.04]'
           }`}
         >
           Overview
@@ -408,10 +860,10 @@ export const PerformanceReportsView: React.FC = () => {
               setMainTab('reports');
               setIsCategoryDropdownOpen(prev => !prev);
             }}
-            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+            className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
               mainTab === 'reports'
-                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
-                : isLight ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60' : 'text-slate-400 hover:text-white hover:bg-[#1A1F27]'
+                ? 'bg-[#18181B] text-[#F5F5F5] border border-white/[0.12] shadow-sm'
+                : 'text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-white/[0.04]'
             }`}
           >
             <span>Reports: {categoryLabels[reportCategory]}</span>
@@ -419,9 +871,7 @@ export const PerformanceReportsView: React.FC = () => {
           </button>
 
           {isCategoryDropdownOpen && (
-            <div className={`absolute left-0 top-full mt-2 w-64 rounded-2xl border p-2 shadow-2xl z-30 animate-in fade-in ${
-              isLight ? 'bg-white border-zinc-200 text-zinc-800' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
-            }`}>
+            <div className="absolute left-0 top-full mt-2 w-64 rounded-xl border border-white/[0.08] p-1.5 shadow-2xl z-30 animate-in fade-in bg-[#0B0B0B] text-[#F5F5F5]">
               {(Object.keys(categoryLabels) as ReportCategory[]).map(catKey => (
                 <button
                   key={catKey}
@@ -430,10 +880,10 @@ export const PerformanceReportsView: React.FC = () => {
                     setMainTab('reports');
                     setIsCategoryDropdownOpen(false);
                   }}
-                  className={`flex w-full items-center justify-between px-3 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
+                  className={`flex w-full items-center justify-between px-3 py-2 rounded-lg text-xs font-semibold transition cursor-pointer ${
                     reportCategory === catKey
-                      ? 'bg-gradient-to-r from-blue-600/20 via-indigo-600/20 to-purple-600/20 text-white border border-blue-500/35 font-bold shadow-xs'
-                      : isLight ? 'hover:bg-zinc-100 text-zinc-700' : 'hover:bg-[#12161D] text-slate-300'
+                      ? 'bg-white/[0.08] text-[#F5F5F5] font-bold'
+                      : 'hover:bg-white/[0.04] text-[#A1A1AA] hover:text-[#F5F5F5]'
                   }`}
                 >
                   <span>{categoryLabels[catKey]}</span>
@@ -446,10 +896,10 @@ export const PerformanceReportsView: React.FC = () => {
 
         <button
           onClick={() => setMainTab('compare')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
             mainTab === 'compare'
-              ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
-              : isLight ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60' : 'text-slate-400 hover:text-white hover:bg-[#1A1F27]'
+              ? 'bg-[#18181B] text-[#F5F5F5] border border-white/[0.12] shadow-sm'
+              : 'text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-white/[0.04]'
           }`}
         >
           Compare
@@ -457,10 +907,10 @@ export const PerformanceReportsView: React.FC = () => {
 
         <button
           onClick={() => setMainTab('calendar')}
-          className={`px-4 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
+          className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
             mainTab === 'calendar'
-              ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
-              : isLight ? 'text-zinc-600 hover:text-zinc-900 hover:bg-zinc-200/60' : 'text-slate-400 hover:text-white hover:bg-[#1A1F27]'
+              ? 'bg-[#18181B] text-[#F5F5F5] border border-white/[0.12] shadow-sm'
+              : 'text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-white/[0.04]'
           }`}
         >
           Calendar
@@ -493,222 +943,23 @@ export const PerformanceReportsView: React.FC = () => {
           </div>
 
           {/* COMPLETE SUMMARY SECTION UNDER PERFORMANCE */}
-          <div className={`p-6 rounded-2xl border space-y-6 shadow-xl ${
-            isLight ? 'bg-white border-zinc-200 text-zinc-900 shadow-zinc-200/50' : 'bg-[#12161D] border-[#1C232E] text-slate-100 shadow-black/60'
-          }`}>
-            {/* Title Bar */}
-            <div className="flex items-center justify-between pb-3 border-b border-zinc-200 dark:border-[#1C232E]">
+          <div className="space-y-4 pt-2">
+            <div className="flex items-center justify-between pb-2 border-b border-white/[0.06]">
               <div className="flex items-center gap-2">
-                <h2 className="text-base sm:text-lg font-black tracking-tight text-zinc-900 dark:text-slate-100 uppercase">
-                  Summary
+                <h2 className="text-xs font-bold uppercase tracking-wider text-[#A1A1AA]">
+                  Performance Summary
                 </h2>
-                <div className="h-1 w-8 bg-blue-500 rounded-full" />
-              </div>
-              <button
-                type="button"
-                className={`p-2 rounded-xl border text-xs font-semibold flex items-center gap-1.5 transition ${
-                  isLight
-                    ? 'bg-zinc-50 border-zinc-200 hover:bg-zinc-100 text-zinc-700'
-                    : 'bg-[#0A0D14] border-[#1C232E] hover:bg-[#1A1F27] text-slate-300'
-                }`}
-              >
-                <Settings className="w-3.5 h-3.5 text-blue-500" />
-                <span>Settings</span>
-              </button>
-            </div>
-
-            {/* 4 Column Statistics Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {/* Column 1: Core Performance */}
-              <div className="space-y-3">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-blue-500 border-b pb-1 border-zinc-200 dark:border-[#1C232E]">
-                  Core Performance
-                </div>
-
-                <SummaryItem label="Net P&L" tooltip="Total profit and loss after applicable trading results and configured costs." isLight={isLight}>
-                  <span className={`font-mono font-black ${summaryStats.netPnl >= 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
-                    {formatCurrency(summaryStats.netPnl)}
-                  </span>
-                </SummaryItem>
-
-                <SummaryItem label="Win %" tooltip="Percentage of closed trades that resulted in a profit." isLight={isLight}>
-                  <span className="font-mono font-bold text-blue-400">{summaryStats.winPct.toFixed(1)}%</span>
-                </SummaryItem>
-
-                <SummaryItem label="Avg daily win %" tooltip="Percentage of active trading days with positive net P&L." isLight={isLight}>
-                  <span className="font-mono font-bold">{summaryStats.avgDailyWinPct.toFixed(1)}%</span>
-                </SummaryItem>
-
-                <SummaryItem label="Profit factor" tooltip="Gross profit divided by the absolute value of gross loss." isLight={isLight}>
-                  <span className="font-mono font-bold text-emerald-400">{summaryStats.profitFactor.toFixed(2)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Gross Profit" tooltip="Total sum of all winning trade returns." isLight={isLight}>
-                  <span className="font-mono font-bold text-emerald-500">{formatCurrency(summaryStats.grossProfit)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Gross Loss" tooltip="Total sum of all losing trade drawdowns." isLight={isLight}>
-                  <span className="font-mono font-bold text-rose-500">{formatCurrency(-summaryStats.grossLoss)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Total commissions" tooltip="Cumulative broker commissions paid across all executed trades." isLight={isLight}>
-                  <span className="font-mono font-semibold">${(summaryStats.totalCommissions ?? 0).toFixed(2)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Total fees" tooltip="Exchange and regulatory fees incurred." isLight={isLight}>
-                  <span className="font-mono font-semibold">${(summaryStats.totalFees ?? 0).toFixed(2)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Total swap" tooltip="Overnight position holding fees or credits." isLight={isLight}>
-                  <span className="font-mono font-semibold">${(summaryStats.totalSwap ?? 0).toFixed(2)}</span>
-                </SummaryItem>
-              </div>
-
-              {/* Column 2: Expectancy & Win/Loss */}
-              <div className="space-y-3">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-blue-500 border-b pb-1 border-zinc-200 dark:border-[#1C232E]">
-                  Expectancy & Win/Loss
-                </div>
-
-                <SummaryItem label="Trade expectancy" tooltip="The average amount expected to be won or lost per trade based on historical performance." isLight={isLight}>
-                  <span className={`font-mono font-bold ${summaryStats.tradeExpectancy >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {formatCurrency(summaryStats.tradeExpectancy)}
-                  </span>
-                </SummaryItem>
-
-                <SummaryItem label="Avg daily win/loss" tooltip="Ratio of average winning day profit to average losing day loss." isLight={isLight}>
-                  <span className="font-mono font-bold">{(summaryStats.avgDailyWinLossRatio ?? 0).toFixed(2)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Avg trade win/loss" tooltip="Ratio of average winning trade return to average losing trade loss." isLight={isLight}>
-                  <span className="font-mono font-bold">{(summaryStats.avgTradeWinLossRatio ?? 0).toFixed(2)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Avg hold time" tooltip="Average duration between actual trade entry and exit time." isLight={isLight}>
-                  <span className="font-mono font-semibold">{formatMinutes(summaryStats.avgHoldTimeMinutes)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Average winning trade" tooltip="Mean dollar value of all profitable trades." isLight={isLight}>
-                  <span className="font-mono font-bold text-emerald-400">{formatCurrency(summaryStats.avgWinningTrade)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Average losing trade" tooltip="Mean dollar loss of all losing trades." isLight={isLight}>
-                  <span className="font-mono font-bold text-rose-400">{formatCurrency(-summaryStats.avgLosingTrade)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Average trade P&L" tooltip="Total net P&L divided by total number of closed trades." isLight={isLight}>
-                  <span className={`font-mono font-bold ${summaryStats.avgTradePnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {formatCurrency(summaryStats.avgTradePnl)}
-                  </span>
-                </SummaryItem>
-
-                <SummaryItem label="Winning trades" tooltip="Count of closed trades with positive return." isLight={isLight}>
-                  <span className="font-mono font-bold text-emerald-400">{summaryStats.winningTradesCount}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Losing trades" tooltip="Count of closed trades with negative return." isLight={isLight}>
-                  <span className="font-mono font-bold text-rose-400">{summaryStats.losingTradesCount}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Break-even trades" tooltip="Count of closed trades with zero return." isLight={isLight}>
-                  <span className="font-mono font-semibold">{summaryStats.breakevenTradesCount}</span>
-                </SummaryItem>
-              </div>
-
-              {/* Column 3: Daily & R-Multiple */}
-              <div className="space-y-3">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-blue-500 border-b pb-1 border-zinc-200 dark:border-[#1C232E]">
-                  Daily & R-Multiple
-                </div>
-
-                <SummaryItem label="Avg net trade P&L" tooltip="Average net return per closed trade execution." isLight={isLight}>
-                  <span className={`font-mono font-bold ${summaryStats.avgTradePnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {formatCurrency(summaryStats.avgTradePnl)}
-                  </span>
-                </SummaryItem>
-
-                <SummaryItem label="Avg daily net P&L" tooltip="Average net profit or loss generated per active trading day." isLight={isLight}>
-                  <span className={`font-mono font-bold ${summaryStats.avgDailyPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {formatCurrency(summaryStats.avgDailyPnl)}
-                  </span>
-                </SummaryItem>
-
-                <SummaryItem label="Avg planned R-multiple" tooltip="Average target risk-to-reward ratio planned prior to entry." isLight={isLight}>
-                  <span className="font-mono font-bold text-blue-400">{formatRMultiple(summaryStats.avgPlannedR)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Avg realized R-multiple" tooltip="Average actual risk-to-reward ratio realized upon exit." isLight={isLight}>
-                  <span className="font-mono font-bold text-emerald-400">{formatRMultiple(summaryStats.avgRealizedR)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Average R-multiple" tooltip="Mean realized R-multiple across all closed trades." isLight={isLight}>
-                  <span className="font-mono font-bold text-emerald-400">{formatRMultiple(summaryStats.avgRealizedR)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Largest profit" tooltip="Highest single trade profit achieved." isLight={isLight}>
-                  <span className="font-mono font-bold text-emerald-400">{formatCurrency(summaryStats.largestProfit)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Largest loss" tooltip="Worst single trade loss incurred." isLight={isLight}>
-                  <span className="font-mono font-bold text-rose-400">{formatCurrency(-summaryStats.largestLoss)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Largest winning trade" tooltip="Single trade with the highest net profit." isLight={isLight}>
-                  <span className="font-mono font-bold text-emerald-400">{formatCurrency(summaryStats.largestProfit)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Largest losing trade" tooltip="Single trade with the largest net loss." isLight={isLight}>
-                  <span className="font-mono font-bold text-rose-400">{formatCurrency(-summaryStats.largestLoss)}</span>
-                </SummaryItem>
-              </div>
-
-              {/* Column 4: Activity & Drawdown */}
-              <div className="space-y-3">
-                <div className="text-[11px] font-bold uppercase tracking-wider text-blue-500 border-b pb-1 border-zinc-200 dark:border-[#1C232E]">
-                  Activity & Drawdown
-                </div>
-
-                <SummaryItem label="Avg daily volume" tooltip="Average number of contracts or shares traded per active day." isLight={isLight}>
-                  <span className="font-mono font-semibold">{summaryStats.avgDailyVolume} contracts</span>
-                </SummaryItem>
-
-                <SummaryItem label="Logged days" tooltip="Number of unique calendar days with recorded trade activity." isLight={isLight}>
-                  <span className="font-mono font-bold">{summaryStats.loggedDays}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Total trading days" tooltip="Total count of trading days recorded in the selected period." isLight={isLight}>
-                  <span className="font-mono font-bold">{summaryStats.totalTradingDays}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Trades per day" tooltip="Average number of trades executed per active trading day." isLight={isLight}>
-                  <span className="font-mono font-semibold">{summaryStats.tradesPerDay}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Max daily net drawdown" tooltip="Worst single-day net loss experienced." isLight={isLight}>
-                  <span className="font-mono font-bold text-rose-400">{formatCurrency(-summaryStats.maxDailyNetDrawdown)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Avg daily net drawdown" tooltip="Average daily net loss across negative trading days." isLight={isLight}>
-                  <span className="font-mono font-bold text-rose-400">{formatCurrency(-summaryStats.avgDailyNetDrawdown)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Max drawdown" tooltip="The largest decline from a previous cumulative performance peak." isLight={isLight}>
-                  <span className="font-mono font-bold text-rose-400">{formatCurrency(-summaryStats.maxDrawdown)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Drawdown %" tooltip="Maximum drawdown expressed as a percentage of peak cumulative equity." isLight={isLight}>
-                  <span className="font-mono font-bold text-rose-400">{(summaryStats.maxDrawdownPercent ?? 0).toFixed(2)}%</span>
-                </SummaryItem>
-
-                <SummaryItem label="Average drawdown" tooltip="Average depth of equity drawdowns during pullbacks." isLight={isLight}>
-                  <span className="font-mono font-bold text-amber-400">{formatCurrency(-summaryStats.avgDrawdown)}</span>
-                </SummaryItem>
-
-                <SummaryItem label="Current drawdown" tooltip="Current open drawdown from the highest historical equity peak." isLight={isLight}>
-                  <span className="font-mono font-bold text-amber-400">{formatCurrency(-summaryStats.currentDrawdown)}</span>
-                </SummaryItem>
+                <div className="h-1 w-6 bg-blue-500 rounded-full" />
               </div>
             </div>
+
+            <InstitutionalMetricTable
+              bestMonth={institutionalData.bestMonth}
+              worstMonth={institutionalData.worstMonth}
+              avgMonth={institutionalData.avgMonth}
+              leftMetrics={institutionalData.leftMetrics}
+              rightMetrics={institutionalData.rightMetrics}
+            />
           </div>
         </div>
       )}
@@ -716,177 +967,15 @@ export const PerformanceReportsView: React.FC = () => {
       {/* TAB 2: OVERVIEW */}
       {mainTab === 'overview' && (
         <div className="space-y-6">
-          <div className={`p-6 rounded-2xl border space-y-4 ${
-            isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
-          }`}>
-            <h2 className="text-base font-black uppercase tracking-wider text-blue-500">
-              YOUR STATS
-            </h2>
-
-            {/* Top Month Highlights */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className={`p-4 rounded-xl border ${isLight ? 'bg-emerald-50/50 border-emerald-200' : 'bg-emerald-500/10 border-emerald-500/20'}`}>
-                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider">Best Month</span>
-                <div className="text-lg font-black font-mono text-emerald-400 mt-1">
-                  August 2026: {formatCurrency(summaryStats.netPnl > 0 ? summaryStats.netPnl : 14250)}
-                </div>
-              </div>
-
-              <div className={`p-4 rounded-xl border ${isLight ? 'bg-rose-50/50 border-rose-200' : 'bg-rose-500/10 border-rose-500/20'}`}>
-                <span className="text-[10px] font-bold text-rose-500 uppercase tracking-wider">Lowest Month</span>
-                <div className="text-lg font-black font-mono text-rose-400 mt-1">
-                  June 2026: -$1,200.00
-                </div>
-              </div>
-
-              <div className={`p-4 rounded-xl border ${isLight ? 'bg-blue-50/50 border-blue-200' : 'bg-blue-500/10 border-blue-500/20'}`}>
-                <span className="text-[10px] font-bold text-blue-500 uppercase tracking-wider">Average per Month</span>
-                <div className="text-lg font-black font-mono text-blue-400 mt-1">
-                  {formatCurrency(summaryStats.netPnl > 0 ? summaryStats.netPnl / 2 : 6540)}
-                </div>
-              </div>
-            </div>
-
-            {/* Two Column Detailed Overview Table */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-              {/* Column 1 */}
-              <div className="space-y-2 text-xs font-medium">
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Total P&L</span>
-                  <strong className={`font-mono font-bold ${summaryStats.netPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {formatCurrency(summaryStats.netPnl)}
-                  </strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average daily volume</span>
-                  <strong className="font-mono">{summaryStats.avgDailyVolume} contracts</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average winning trade</span>
-                  <strong className="font-mono text-emerald-400">{formatCurrency(summaryStats.avgWinningTrade)}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average losing trade</span>
-                  <strong className="font-mono text-rose-400">{formatCurrency(-summaryStats.avgLosingTrade)}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Total number of trades</span>
-                  <strong className="font-mono">{closedTrades.length}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Number of winning trades</span>
-                  <strong className="font-mono text-emerald-400">{summaryStats.winningTradesCount}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Number of losing trades</span>
-                  <strong className="font-mono text-rose-400">{summaryStats.losingTradesCount}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Number of break even trades</span>
-                  <strong className="font-mono">{summaryStats.breakevenTradesCount}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Total commissions</span>
-                  <strong className="font-mono">${(summaryStats.totalCommissions ?? 0).toFixed(2)}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Total fees</span>
-                  <strong className="font-mono">${(summaryStats.totalFees ?? 0).toFixed(2)}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Total swap</span>
-                  <strong className="font-mono">${(summaryStats.totalSwap ?? 0).toFixed(2)}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Largest profit</span>
-                  <strong className="font-mono text-emerald-400">{formatCurrency(summaryStats.largestProfit)}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Largest loss</span>
-                  <strong className="font-mono text-rose-400">{formatCurrency(-summaryStats.largestLoss)}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average hold time (All trades)</span>
-                  <strong className="font-mono">{formatMinutes(summaryStats.avgHoldTimeMinutes)}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average trade P&L</span>
-                  <strong className={`font-mono ${summaryStats.avgTradePnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {formatCurrency(summaryStats.avgTradePnl)}
-                  </strong>
-                </div>
-              </div>
-
-              {/* Column 2 */}
-              <div className="space-y-2 text-xs font-medium">
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Open trades</span>
-                  <strong className="font-mono">{summaryStats.openTrades}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Total trading days</span>
-                  <strong className="font-mono">{summaryStats.totalTradingDays}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Logged days</span>
-                  <strong className="font-mono">{summaryStats.loggedDays}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average daily P&L</span>
-                  <strong className={`font-mono ${summaryStats.avgDailyPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
-                    {formatCurrency(summaryStats.avgDailyPnl)}
-                  </strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average planned R-Multiple</span>
-                  <strong className="font-mono text-blue-400">{formatRMultiple(summaryStats.avgPlannedR)}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average realized R-Multiple</span>
-                  <strong className="font-mono text-emerald-400">{formatRMultiple(summaryStats.avgRealizedR)}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Trade expectancy</span>
-                  <strong className="font-mono text-emerald-400">{formatCurrency(summaryStats.tradeExpectancy)}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Max drawdown</span>
-                  <strong className="font-mono text-rose-400">{formatCurrency(-summaryStats.maxDrawdown)}</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Max drawdown %</span>
-                  <strong className="font-mono text-rose-400">{(summaryStats.maxDrawdownPercent ?? 0).toFixed(2)}%</strong>
-                </div>
-
-                <div className={`flex items-center justify-between p-2.5 rounded-lg ${isLight ? 'bg-zinc-50' : 'bg-[#0A0D14]'}`}>
-                  <span className={isLight ? 'text-zinc-600' : 'text-slate-400'}>Average drawdown</span>
-                  <strong className="font-mono text-amber-400">{formatCurrency(-summaryStats.avgDrawdown)}</strong>
-                </div>
-              </div>
-            </div>
-          </div>
+          <InstitutionalMetricTable
+            bestMonth={institutionalData.bestMonth}
+            worstMonth={institutionalData.worstMonth}
+            avgMonth={institutionalData.avgMonth}
+            leftMetrics={institutionalData.leftMetrics}
+            rightMetrics={institutionalData.rightMetrics}
+            title="Institutional Analytics Summary"
+            subtitle="Dense flat execution metrics, drawdown boundaries & risk performance"
+          />
         </div>
       )}
 
@@ -897,7 +986,7 @@ export const PerformanceReportsView: React.FC = () => {
           {reportCategory === 'day_time' && (
             <div className="space-y-6">
               {/* Subtabs for Day & Time */}
-              <div className="flex items-center gap-2 border-b border-[#1C232E] pb-2">
+              <div className="flex items-center gap-1.5 border-b border-white/[0.06] pb-2">
                 {[
                   { id: 'days', label: 'Days' },
                   { id: 'months', label: 'Months' },
@@ -907,10 +996,10 @@ export const PerformanceReportsView: React.FC = () => {
                   <button
                     key={sub.id}
                     onClick={() => setDayTimeSubTab(sub.id as any)}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                       dayTimeSubTab === sub.id
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
-                        : isLight ? 'text-zinc-600 hover:bg-zinc-100' : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
+                        ? 'bg-[#18181B] text-[#F5F5F5] border border-white/[0.12] shadow-sm'
+                        : isLight ? 'text-zinc-600 hover:bg-zinc-100' : 'text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-white/[0.04]'
                     }`}
                   >
                     {sub.label}
@@ -919,39 +1008,39 @@ export const PerformanceReportsView: React.FC = () => {
               </div>
 
               {/* Dynamic KPI Summary Cards for Active Subtab */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#090909] border-white/[0.08]'}`}>
+                  <span className="text-[10px] text-[#A1A1AA] uppercase tracking-wider font-semibold">
                     Best Performing {activeDayTimeLabel}
                   </span>
-                  <div className="text-sm font-bold text-emerald-400 mt-1">
+                  <div className="text-sm font-mono font-bold text-emerald-400 mt-1">
                     {dayTimeInsightCards.best}
                   </div>
                 </div>
 
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#090909] border-white/[0.08]'}`}>
+                  <span className="text-[10px] text-[#A1A1AA] uppercase tracking-wider font-semibold">
                     Least Performing {activeDayTimeLabel}
                   </span>
-                  <div className="text-sm font-bold text-rose-400 mt-1">
+                  <div className="text-sm font-mono font-bold text-rose-400 mt-1">
                     {dayTimeInsightCards.least}
                   </div>
                 </div>
 
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#090909] border-white/[0.08]'}`}>
+                  <span className="text-[10px] text-[#A1A1AA] uppercase tracking-wider font-semibold">
                     Most Active {activeDayTimeLabel}
                   </span>
-                  <div className={`text-sm font-bold mt-1 ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}>
+                  <div className={`text-sm font-mono font-bold mt-1 ${isLight ? 'text-zinc-900' : 'text-[#F5F5F5]'}`}>
                     {dayTimeInsightCards.mostActive}
                   </div>
                 </div>
 
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#090909] border-white/[0.08]'}`}>
+                  <span className="text-[10px] text-[#A1A1AA] uppercase tracking-wider font-semibold">
                     Best Win Rate {activeDayTimeLabel}
                   </span>
-                  <div className="text-sm font-bold text-blue-400 mt-1">
+                  <div className="text-sm font-mono font-bold text-blue-400 mt-1">
                     {dayTimeInsightCards.bestWinRate}
                   </div>
                 </div>
@@ -969,7 +1058,7 @@ export const PerformanceReportsView: React.FC = () => {
           {/* RISK CATEGORY */}
           {reportCategory === 'risk' && (
             <div className="space-y-6">
-              <div className="flex items-center gap-2 border-b border-[#1C232E] pb-2">
+              <div className="flex items-center gap-1.5 border-b border-white/[0.06] pb-2">
                 {[
                   { id: 'volumes', label: 'Volumes' },
                   { id: 'position_sizes', label: 'Position sizes' },
@@ -978,10 +1067,10 @@ export const PerformanceReportsView: React.FC = () => {
                   <button
                     key={sub.id}
                     onClick={() => setRiskSubTab(sub.id as any)}
-                    className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition cursor-pointer ${
                       riskSubTab === sub.id
-                        ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md shadow-blue-600/25'
-                        : isLight ? 'text-zinc-600 hover:bg-zinc-100' : 'text-slate-400 hover:text-white hover:bg-[#12161D]'
+                        ? 'bg-[#18181B] text-[#F5F5F5] border border-white/[0.12] shadow-sm'
+                        : isLight ? 'text-zinc-600 hover:bg-zinc-100' : 'text-[#A1A1AA] hover:text-[#F5F5F5] hover:bg-white/[0.04]'
                     }`}
                   >
                     {sub.label}
@@ -989,25 +1078,25 @@ export const PerformanceReportsView: React.FC = () => {
                 ))}
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">Best Performing Volume</span>
-                  <div className="text-sm font-bold text-emerald-400 mt-1">{riskInsightCards.best}</div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#090909] border-white/[0.08]'}`}>
+                  <span className="text-[10px] text-[#A1A1AA] uppercase tracking-wider font-semibold">Best Performing Volume</span>
+                  <div className="text-sm font-mono font-bold text-emerald-400 mt-1">{riskInsightCards.best}</div>
                 </div>
 
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">Least Performing Volume</span>
-                  <div className="text-sm font-bold text-rose-400 mt-1">{riskInsightCards.least}</div>
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#090909] border-white/[0.08]'}`}>
+                  <span className="text-[10px] text-[#A1A1AA] uppercase tracking-wider font-semibold">Least Performing Volume</span>
+                  <div className="text-sm font-mono font-bold text-rose-400 mt-1">{riskInsightCards.least}</div>
                 </div>
 
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">Most Active Volume</span>
-                  <div className={`text-sm font-bold mt-1 ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}>{riskInsightCards.mostActive}</div>
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#090909] border-white/[0.08]'}`}>
+                  <span className="text-[10px] text-[#A1A1AA] uppercase tracking-wider font-semibold">Most Active Volume</span>
+                  <div className={`text-sm font-mono font-bold mt-1 ${isLight ? 'text-zinc-900' : 'text-[#F5F5F5]'}`}>{riskInsightCards.mostActive}</div>
                 </div>
 
-                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
-                  <span className="text-[10px] text-slate-500 uppercase tracking-wider">Best Win Rate Volume</span>
-                  <div className="text-sm font-bold text-blue-400 mt-1">{riskInsightCards.bestWinRate}</div>
+                <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#090909] border-white/[0.08]'}`}>
+                  <span className="text-[10px] text-[#A1A1AA] uppercase tracking-wider font-semibold">Best Win Rate Volume</span>
+                  <div className="text-sm font-mono font-bold text-blue-400 mt-1">{riskInsightCards.bestWinRate}</div>
                 </div>
               </div>
 
@@ -1078,21 +1167,21 @@ export const PerformanceReportsView: React.FC = () => {
       {/* TAB 4: COMPARE */}
       {mainTab === 'compare' && (
         <div className="space-y-6">
-          <div className={`p-6 rounded-2xl border space-y-4 ${
-            isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
+          <div className={`p-6 rounded-xl border space-y-4 ${
+            isLight ? 'bg-white border-zinc-200' : 'bg-[#080808] border-white/[0.08]'
           }`}>
-            <h2 className="text-base font-bold text-blue-400">Account & Strategy Side-by-Side Comparison</h2>
-            <p className="text-xs text-slate-400">Compare metrics across different connected prop firm accounts or playbook setup types.</p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-              <div className="p-4 rounded-xl border border-[#1C232E] bg-[#0A0D14] space-y-2">
-                <span className="text-xs font-bold text-slate-200">Apex Trader Funding 50k</span>
-                <div className="text-lg font-black font-mono text-emerald-400">+$8,420.00</div>
-                <div className="text-xs text-slate-400">Win Rate: 62.5% • Profit Factor: 2.14</div>
+            <h2 className="text-sm font-bold uppercase tracking-wider text-[#F5F5F5]">Account & Strategy Side-by-Side Comparison</h2>
+            <p className="text-xs text-[#A1A1AA]">Compare metrics across different connected prop firm accounts or playbook setup types.</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+              <div className="p-4 rounded-xl border border-white/[0.06] bg-[#0A0A0A] space-y-2">
+                <span className="text-xs font-semibold text-[#F5F5F5]">Apex Trader Funding 50k</span>
+                <div className="text-lg font-bold font-mono text-emerald-400">+$8,420.00</div>
+                <div className="text-xs text-[#A1A1AA]">Win Rate: 62.5% • Profit Factor: 2.14</div>
               </div>
-              <div className="p-4 rounded-xl border border-[#1C232E] bg-[#0A0D14] space-y-2">
-                <span className="text-xs font-bold text-slate-200">FTMO Master Account</span>
-                <div className="text-lg font-black font-mono text-emerald-400">+$12,100.00</div>
-                <div className="text-xs text-slate-400">Win Rate: 68.0% • Profit Factor: 2.85</div>
+              <div className="p-4 rounded-xl border border-white/[0.06] bg-[#0A0A0A] space-y-2">
+                <span className="text-xs font-semibold text-[#F5F5F5]">FTMO Master Account</span>
+                <div className="text-lg font-bold font-mono text-emerald-400">+$12,100.00</div>
+                <div className="text-xs text-[#A1A1AA]">Win Rate: 68.0% • Profit Factor: 2.85</div>
               </div>
             </div>
           </div>

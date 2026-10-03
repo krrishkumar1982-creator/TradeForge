@@ -91,7 +91,7 @@ export const AiPreferencesSettingsTab: React.FC = () => {
   return (
     <form onSubmit={handleSave} className="space-y-6 max-w-3xl">
       {/* Page Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#1C232E]">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[rgba(255,255,255,0.07)]">
         <div>
           <h2 className="text-base font-bold text-white flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-blue-400" />
@@ -127,7 +127,7 @@ export const AiPreferencesSettingsTab: React.FC = () => {
         description="Master toggles for the TradeForge AI coach and automated execution review."
         icon={<Brain className="w-4 h-4 text-blue-400" />}
       >
-        <div className="space-y-3 divide-y divide-[#1C232E]/60">
+        <div className="space-y-3 divide-y divide-[rgba(255,255,255,0.07)]/60">
           <div className="pt-1">
             <ToggleSwitch
               checked={settings.aiCoachEnabled}
@@ -166,7 +166,7 @@ export const AiPreferencesSettingsTab: React.FC = () => {
                 className={`p-4 rounded-xl text-left border transition-all cursor-pointer ${
                   isSelected
                     ? 'bg-blue-600/10 border-blue-500 text-white shadow-sm'
-                    : 'bg-[#0A0D14] border-[#1C232E] text-slate-300 hover:border-[#273141] hover:bg-[#161B23]'
+                    : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-slate-300 hover:border-[rgba(255,255,255,0.10)] hover:bg-[#161B23]'
                 }`}
               >
                 <div className="flex items-center justify-between mb-1.5">
@@ -194,7 +194,7 @@ export const AiPreferencesSettingsTab: React.FC = () => {
           <select
             value={settings.analysisScope}
             onChange={e => setSettings(prev => ({ ...prev, analysisScope: e.target.value as any }))}
-            className="w-full sm:w-80 px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
+            className="w-full sm:w-80 px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
           >
             <option value="active_account">Active Selected Account Only (Recommended)</option>
             <option value="filtered">Current Filtered View (Respect Date & Ticker Filters)</option>

@@ -69,9 +69,9 @@ export const DailyPnlBarChart: React.FC<DailyPnlBarChartProps> = ({ trades, form
 
   if (bars.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[210px] text-slate-500 text-xs">
-        <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center mb-2">
-          <span className="text-slate-400 font-mono">📊</span>
+      <div className="flex flex-col items-center justify-center h-[210px] text-[#71717A] text-xs">
+        <div className="w-8 h-8 rounded-full bg-[#101010] flex items-center justify-center mb-2">
+          <span className="text-[#A1A1AA] font-mono">📊</span>
         </div>
         <span>No daily trade distribution available</span>
       </div>
@@ -129,7 +129,7 @@ export const DailyPnlBarChart: React.FC<DailyPnlBarChartProps> = ({ trades, form
 
               {/* Date label */}
               {idx % labelInterval === 0 ? (
-                <span className={`text-[9px] mt-1 font-mono whitespace-nowrap ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+                <span className={`text-[9px] mt-1 font-mono whitespace-nowrap ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
                   {bar.displayDate}
                 </span>
               ) : (
@@ -146,23 +146,23 @@ export const DailyPnlBarChart: React.FC<DailyPnlBarChartProps> = ({ trades, form
           className="absolute top-1 right-4 px-3.5 py-2 rounded-xl text-xs z-20 pointer-events-none animate-in fade-in glass-tooltip"
         >
           <div className={`text-[10px] font-semibold flex items-center justify-between gap-4 border-b pb-1 ${
-            isLight ? 'border-slate-200 text-slate-500' : 'border-white/10 text-slate-400'
+            isLight ? 'border-slate-200 text-[#71717A]' : 'border-white/10 text-[#A1A1AA]'
           }`}>
             <span className="font-sans">{hoveredBar.dateKey}</span>
             <span className={`px-1.5 py-0.2 rounded font-mono text-[9px] font-semibold border ${
-              isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-white/[0.06] text-slate-300 border-white/10'
+              isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-white/[0.06] text-[#D4D4D8] border-white/10'
             }`}>
               {hoveredBar.tradeCount} trades
             </span>
           </div>
           <div className="mt-1.5 flex items-center justify-between gap-4 font-mono tabular-nums">
-            <span className={`text-[11px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Net P&L:</span>
+            <span className={`text-[11px] font-sans ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Net P&L:</span>
             <span className={`text-[12px] font-bold ${hoveredBar.pnl >= 0 ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')}`}>
               {hoveredBar.pnl >= 0 ? '+' : ''}{formatCurrency(hoveredBar.pnl)}
             </span>
           </div>
-          <div className="text-[10px] text-slate-400 mt-1 flex items-center justify-between gap-2 font-mono tabular-nums border-t pt-1 border-white/5">
-            <span className="text-[9px] font-sans text-slate-500">Record:</span>
+          <div className="text-[10px] text-[#A1A1AA] mt-1 flex items-center justify-between gap-2 font-mono tabular-nums border-t pt-1 border-white/5">
+            <span className="text-[9px] font-sans text-[#71717A]">Record:</span>
             <span className="space-x-1.5">
               <span className={isLight ? 'text-emerald-600 font-semibold' : 'text-emerald-400 font-semibold'}>{hoveredBar.wins}W</span>
               <span>•</span>
@@ -174,10 +174,10 @@ export const DailyPnlBarChart: React.FC<DailyPnlBarChartProps> = ({ trades, form
 
       {/* Bottom Summary Bar */}
       <div className={`flex justify-between px-3 text-[10px] border-t pt-1.5 font-mono tabular-nums ${
-        isLight ? 'text-slate-500 border-slate-100' : 'text-slate-400 border-[rgba(255,255,255,0.06)]'
+        isLight ? 'text-[#71717A] border-slate-100' : 'text-[#A1A1AA] border-[rgba(255,255,255,0.06)]'
       }`}>
         <span>{bars.length} Trading Days</span>
-        <span className={isLight ? 'text-slate-800' : 'text-slate-200'}>
+        <span className={isLight ? 'text-slate-800' : 'text-[#F5F5F5]'}>
           Peak Session Range: <strong className={isLight ? 'text-emerald-600' : 'text-emerald-400'}>+{formatCurrency(Math.round(maxAbs))}</strong>
         </span>
       </div>

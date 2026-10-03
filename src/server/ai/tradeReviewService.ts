@@ -1,4 +1,4 @@
-import { getGeminiClient, getGeminiModel } from './geminiClient';
+import { getGeminiClient, getGeminiModel, generateContentWithResilience } from './geminiClient';
 import { Trade, Playbook } from '../../types';
 import { roundMoney } from '../../lib/calcEngine';
 
@@ -79,8 +79,7 @@ export async function executeTradeReview(params: {
         2
       )}`;
 
-      const response = await gemini.models.generateContent({
-        model,
+      const response = await generateContentWithResilience(gemini, model, {
         contents: prompt,
         config: {
           systemInstruction: TRADE_REVIEW_SYSTEM_INSTRUCTION,

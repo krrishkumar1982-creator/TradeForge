@@ -37,19 +37,19 @@ export const Card: React.FC<CardProps> = ({
   const variantClasses: Record<CardVariant, string> = {
     default: isLight
       ? 'bg-white border-zinc-200 shadow-xs'
-      : 'bg-[#12141A] border-[rgba(255,255,255,0.08)] shadow-[0_4px_16px_rgba(0,0,0,0.35)]',
+      : 'bg-[#0D1014] border-[rgba(255,255,255,0.055)] shadow-[0_4px_20px_rgba(0,0,0,0.25)]',
     elevated: isLight
       ? 'bg-white border-zinc-200 shadow-sm'
-      : 'bg-[#181A21] border-[rgba(255,255,255,0.12)] shadow-[0_8px_30px_rgba(0,0,0,0.5)]',
+      : 'bg-[#11151A] border-[rgba(255,255,255,0.07)] shadow-[0_8px_30px_rgba(0,0,0,0.35)]',
     subtle: isLight
       ? 'bg-zinc-50/80 border-zinc-200'
-      : 'bg-[#0E1015] border-[rgba(255,255,255,0.05)]',
+      : 'bg-[#090C10] border-[rgba(255,255,255,0.055)]',
     interactive: isLight
       ? 'bg-white border-zinc-200 hover:border-zinc-300 hover:bg-zinc-50/60 cursor-pointer shadow-xs'
-      : 'bg-[#12141A] border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.14)] hover:bg-[#161821] cursor-pointer',
+      : 'bg-[#0D1014] border-[rgba(255,255,255,0.055)] hover:border-[rgba(255,255,255,0.09)] hover:bg-[#151A20] cursor-pointer',
     warning: isLight
       ? 'bg-amber-50/70 border-amber-200 shadow-amber-500/5'
-      : 'bg-[#14120E] border-amber-500/25 shadow-amber-500/5',
+      : 'bg-[#0D1014] border-amber-500/25 shadow-amber-500/5',
   };
 
   const paddingClasses: Record<CardPadding, string> = {
@@ -69,7 +69,7 @@ export const Card: React.FC<CardProps> = ({
         hoverable
           ? isLight
             ? 'hover:border-zinc-300 hover:bg-zinc-50/60'
-            : 'hover:border-[rgba(255,255,255,0.14)] hover:bg-[#161821]'
+            : 'hover:border-[rgba(255,255,255,0.09)] hover:bg-[#151A20]'
           : ''
       } ${className}`}
       {...props}
@@ -80,7 +80,7 @@ export const Card: React.FC<CardProps> = ({
             headerBorder
               ? isLight
                 ? 'border-b border-zinc-200'
-                : 'border-b border-[rgba(255,255,255,0.07)]'
+                : 'border-b border-[rgba(255,255,255,0.055)]'
               : ''
           }`}
         >
@@ -100,7 +100,7 @@ export const Card: React.FC<CardProps> = ({
               {typeof title === 'string' ? (
                 <h3
                   className={`text-xs sm:text-sm font-semibold truncate tracking-tight ${
-                    isLight ? 'text-zinc-900' : 'text-slate-100'
+                    isLight ? 'text-zinc-900' : 'text-[#F4F5F7]'
                   }`}
                 >
                   {title}
@@ -111,7 +111,7 @@ export const Card: React.FC<CardProps> = ({
               {subtitle && (
                 <p
                   className={`text-[11px] truncate mt-0.5 ${
-                    isLight ? 'text-zinc-500' : 'text-slate-400'
+                    isLight ? 'text-zinc-500' : 'text-[#8A919D]'
                   }`}
                 >
                   {subtitle}

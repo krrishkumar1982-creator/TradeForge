@@ -94,13 +94,13 @@ export const JournalTrashModal: React.FC<JournalTrashModalProps> = ({ isOpen, on
         className={`w-full max-w-2xl max-h-[88vh] rounded-2xl border flex flex-col shadow-2xl overflow-hidden transition-all ${
           isLight
             ? 'bg-white border-zinc-200 text-zinc-900'
-            : 'bg-[#12161D] border-[#1C232E] text-slate-100 shadow-2xl shadow-indigo-950/40'
+            : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)] text-slate-100 shadow-2xl shadow-indigo-950/40'
         }`}
       >
         {/* Header */}
         <div
           className={`flex items-center justify-between px-6 py-4 border-b shrink-0 ${
-            isLight ? 'border-zinc-200 bg-zinc-50' : 'border-[#1C232E] bg-[#12161D]'
+            isLight ? 'border-zinc-200 bg-zinc-50' : 'border-[rgba(255,255,255,0.07)] bg-[#0D0D0D]'
           }`}
         >
           <div className="flex items-center gap-2.5">
@@ -115,7 +115,7 @@ export const JournalTrashModal: React.FC<JournalTrashModalProps> = ({ isOpen, on
                 <span className={`text-xs px-2 py-0.5 rounded-full font-mono border ${
                   isLight
                     ? 'bg-zinc-200/80 border-zinc-300 text-zinc-700'
-                    : 'bg-[#1A1F27] border-[#1C232E] text-slate-300'
+                    : 'bg-[#141414] border-[rgba(255,255,255,0.07)] text-slate-300'
                 }`}>
                   {totalDeleted}
                 </span>
@@ -142,7 +142,7 @@ export const JournalTrashModal: React.FC<JournalTrashModalProps> = ({ isOpen, on
             <button
               onClick={onClose}
               className={`p-1.5 rounded-lg transition cursor-pointer ${
-                isLight ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100' : 'text-slate-400 hover:text-white hover:bg-[#1A1F27]'
+                isLight ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100' : 'text-slate-400 hover:text-white hover:bg-[#141414]'
               }`}
             >
               <X className="w-5 h-5" />
@@ -175,7 +175,7 @@ export const JournalTrashModal: React.FC<JournalTrashModalProps> = ({ isOpen, on
                 className={`px-3 py-1 rounded-lg text-xs font-medium transition cursor-pointer ${
                   isLight
                     ? 'bg-white hover:bg-zinc-100 border border-zinc-300 text-zinc-700'
-                    : 'bg-[#1A1F27] hover:bg-[#252D3A] text-slate-300'
+                    : 'bg-[#141414] hover:bg-[#252D3A] text-slate-300'
                 }`}
               >
                 Cancel
@@ -188,7 +188,7 @@ export const JournalTrashModal: React.FC<JournalTrashModalProps> = ({ isOpen, on
         <div className={`border-b px-6 py-2.5 flex items-center justify-between text-[11px] ${
           isLight
             ? 'bg-[#F8F9FB] border-zinc-200 text-zinc-600'
-            : 'bg-[#0A0D14]/70 border-[#1C232E] text-slate-400'
+            : 'bg-[#070707]/70 border-[rgba(255,255,255,0.07)] text-slate-400'
         }`}>
           <div className="flex items-center gap-1.5">
             <Clock className="w-3.5 h-3.5 text-amber-500" />
@@ -201,7 +201,7 @@ export const JournalTrashModal: React.FC<JournalTrashModalProps> = ({ isOpen, on
           <div className={`flex items-center gap-1 p-0.5 rounded-lg border ${
             isLight
               ? 'bg-white border-zinc-200 shadow-2xs'
-              : 'bg-[#12161D] border-[#1C232E]'
+              : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)]'
           }`}>
             <button
               onClick={() => setActiveTab('all')}
@@ -255,7 +255,7 @@ export const JournalTrashModal: React.FC<JournalTrashModalProps> = ({ isOpen, on
               <div className={`w-12 h-12 mx-auto rounded-full border flex items-center justify-center ${
                 isLight
                   ? 'bg-zinc-100 border-zinc-200 text-zinc-400'
-                  : 'bg-[#1A1F27] border-[#1C232E] text-slate-500'
+                  : 'bg-[#141414] border-[rgba(255,255,255,0.07)] text-slate-500'
               }`}>
                 <Trash2 className="w-6 h-6" />
               </div>
@@ -276,7 +276,7 @@ export const JournalTrashModal: React.FC<JournalTrashModalProps> = ({ isOpen, on
                       className={`p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition ${
                         isLight
                           ? 'bg-white border-zinc-200 shadow-2xs hover:border-zinc-300'
-                          : 'bg-[#0A0D14] border-[#1C232E] hover:border-[#2A3444]'
+                          : 'bg-[#070707] border-[rgba(255,255,255,0.07)] hover:border-[rgba(255,255,255,0.12)]'
                       }`}
                     >
                       <div className="space-y-1 min-w-0 flex-1">
@@ -339,7 +339,7 @@ export const JournalTrashModal: React.FC<JournalTrashModalProps> = ({ isOpen, on
                     className={`p-4 rounded-xl border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 transition ${
                       isLight
                         ? 'bg-white border-zinc-200 shadow-2xs hover:border-zinc-300'
-                        : 'bg-[#0A0D14] border-[#1C232E] hover:border-[#2A3444]'
+                        : 'bg-[#070707] border-[rgba(255,255,255,0.07)] hover:border-[rgba(255,255,255,0.12)]'
                     }`}
                   >
                     <div className="space-y-1 min-w-0 flex-1">
@@ -412,7 +412,7 @@ export const JournalTrashModal: React.FC<JournalTrashModalProps> = ({ isOpen, on
         {/* Footer */}
         <div
           className={`flex items-center justify-between px-6 py-3 border-t shrink-0 ${
-            isLight ? 'border-zinc-200 bg-zinc-50' : 'border-[#1C232E] bg-[#12161D]'
+            isLight ? 'border-zinc-200 bg-zinc-50' : 'border-[rgba(255,255,255,0.07)] bg-[#0D0D0D]'
           }`}
         >
           <span className="text-xs text-slate-500">
@@ -420,7 +420,7 @@ export const JournalTrashModal: React.FC<JournalTrashModalProps> = ({ isOpen, on
           </span>
           <button
             onClick={onClose}
-            className="px-4 py-1.5 rounded-xl bg-[#1A1F27] hover:bg-[#222936] border border-[#1C232E] text-white text-xs font-semibold transition cursor-pointer"
+            className="px-4 py-1.5 rounded-xl bg-[#141414] hover:bg-[#1A1A1A] border border-[rgba(255,255,255,0.07)] text-white text-xs font-semibold transition cursor-pointer"
           >
             Close
           </button>

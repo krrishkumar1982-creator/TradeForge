@@ -151,15 +151,15 @@ export const TradeTimePerformanceChart: React.FC<TradeTimePerformanceChartProps>
 
   return (
     <div
-      className={`rounded-xl border p-4 shadow-sm transition flex flex-col justify-between relative select-none ${
+      className={`rounded-2xl border p-4 sm:p-5 shadow-sm transition flex flex-col justify-between relative select-none ${
         theme === 'light'
           ? 'bg-white border-[#E5E7EB]'
-          : 'bg-[#0D111B] border-[#20283A]'
+          : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)] shadow-[0_2px_10px_rgba(0,0,0,0.6)]'
       }`}
     >
       {/* Widget Header */}
       <div className={`flex items-center justify-between pb-3 border-b mb-2 ${
-        theme === 'light' ? 'border-[#E5E7EB]' : 'border-[#20283A]'
+        theme === 'light' ? 'border-[#E5E7EB]' : 'border-[rgba(255,255,255,0.07)]'
       }`}>
         <div className="flex items-center gap-2">
           <h3 className={`text-xs sm:text-sm font-semibold flex items-center gap-1.5 ${
@@ -207,7 +207,7 @@ export const TradeTimePerformanceChart: React.FC<TradeTimePerformanceChartProps>
         <div className={`flex items-center justify-between gap-2 p-2 mb-2 rounded-lg border text-[11px] animate-in fade-in ${
           theme === 'light'
             ? 'bg-[#F8FAFC] border-[#E5E7EB]'
-            : 'bg-[#0A0E16] border-[#20283A]'
+            : 'bg-[#0A0E16] border-[rgba(255,255,255,0.07)]'
         }`}>
           <span className={theme === 'light' ? 'text-[#6B7280]' : 'text-[#8C97AB]'}>Filter Session:</span>
           <div className="flex items-center gap-1">
@@ -248,7 +248,7 @@ export const TradeTimePerformanceChart: React.FC<TradeTimePerformanceChartProps>
 
         {/* Chart Canvas Area with Background Grid */}
         <div className={`relative w-full h-full border-l border-b rounded-bl-sm overflow-visible ${
-          theme === 'light' ? 'border-[#E5E7EB]' : 'border-[#20283A]'
+          theme === 'light' ? 'border-[#E5E7EB]' : 'border-[rgba(255,255,255,0.07)]'
         }`}>
           {/* Horizontal Grid lines */}
           {yTicks.map((val, idx) => {
@@ -261,7 +261,7 @@ export const TradeTimePerformanceChart: React.FC<TradeTimePerformanceChartProps>
                 className={`absolute left-0 right-0 ${
                   isZero
                     ? theme === 'light' ? 'border-b border-[#9CA3AF]' : 'border-b border-[#374151]'
-                    : theme === 'light' ? 'border-b border-[#F1F5F9]' : 'border-b border-[#20283A]/50 border-dashed'
+                    : theme === 'light' ? 'border-b border-[#F1F5F9]' : 'border-b border-[rgba(255,255,255,0.07)]/50 border-dashed'
                 }`}
                 style={{ top: `${topPct}%` }}
               />
@@ -275,7 +275,7 @@ export const TradeTimePerformanceChart: React.FC<TradeTimePerformanceChartProps>
               <div
                 key={m}
                 className={`absolute top-0 bottom-0 border-r border-dashed pointer-events-none ${
-                  theme === 'light' ? 'border-[#F1F5F9]' : 'border-[#20283A]/40'
+                  theme === 'light' ? 'border-[#F1F5F9]' : 'border-[rgba(255,255,255,0.07)]/40'
                 }`}
                 style={{ left: `${leftPct}%` }}
               />
@@ -326,7 +326,7 @@ export const TradeTimePerformanceChart: React.FC<TradeTimePerformanceChartProps>
               className={`absolute z-40 transform -translate-x-1/2 -translate-y-full -mt-2.5 pointer-events-none p-2.5 rounded-lg shadow-xl border text-xs min-w-[160px] animate-in fade-in zoom-in-95 ${
                 theme === 'light'
                   ? 'bg-white border-[#E5E7EB] text-[#111827]'
-                  : 'bg-[#0D111B] border-[#28344A] text-[#F3F6FB]'
+                  : 'bg-[#0D0D0D] border-[#28344A] text-[#F3F6FB]'
               }`}
               style={{
                 left: `${hoveredPoint.x}%`,
@@ -334,7 +334,7 @@ export const TradeTimePerformanceChart: React.FC<TradeTimePerformanceChartProps>
               }}
             >
               <div className={`flex items-center justify-between pb-1 border-b mb-1 ${
-                theme === 'light' ? 'border-[#E5E7EB]' : 'border-[#20283A]'
+                theme === 'light' ? 'border-[#E5E7EB]' : 'border-[rgba(255,255,255,0.07)]'
               }`}>
                 <span className="font-bold text-[11px] flex items-center gap-1.5">
                   <span

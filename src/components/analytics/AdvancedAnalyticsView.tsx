@@ -437,22 +437,22 @@ export const AdvancedAnalyticsView: React.FC = () => {
       {/* 1. HEADER & BREADCRUMB */}
       {/* ========================================================================= */}
       <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b ${
-        isLight ? 'border-slate-200' : 'border-[#1C232E]'
+        isLight ? 'border-slate-200' : 'border-[rgba(255,255,255,0.07)]'
       }`}>
         <div>
           <div className="flex items-center gap-2 text-xs font-semibold text-indigo-500 uppercase tracking-wider mb-1">
             <span>Analytics</span>
             <span>/</span>
-            <span className={isLight ? 'text-slate-700 font-medium' : 'text-slate-200'}>Advanced Edge Diagnostics</span>
+            <span className={isLight ? 'text-slate-700 font-medium' : 'text-[#F5F5F5]'}>Breakdown</span>
           </div>
           <h1 className={`text-2xl font-bold tracking-tight flex items-center gap-2.5 ${
             isLight ? 'text-slate-900' : 'text-white'
           }`}>
             <TrendingUp className="w-6 h-6 text-indigo-500" />
-            Advanced Analytics
+            Analytics
           </h1>
-          <p className={`text-xs mt-1 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-            Deep causal breakdown: Uncover exactly why you win or lose across symbols, sessions, time of day, setups, and psychological patterns
+          <p className={`text-xs mt-1 ${isLight ? 'text-slate-600' : 'text-[#A1A1AA]'}`}>
+            Break down performance across instruments, setups, sessions, and trade duration.
           </p>
         </div>
       </div>
@@ -461,18 +461,18 @@ export const AdvancedAnalyticsView: React.FC = () => {
       {/* 2. NAVIGATION SUB-TABS */}
       {/* ========================================================================= */}
       <div className={`flex flex-wrap items-center gap-1.5 p-1.5 rounded-2xl border ${
-        isLight ? 'bg-slate-100/90 border-slate-300 shadow-sm' : 'bg-[#12161D] border-[#1C232E] shadow-lg'
+        isLight ? 'bg-slate-100/90 border-slate-300 shadow-sm' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)] shadow-lg'
       }`}>
         {[
-          { id: 'INSIGHTS', label: 'Key Smart Insights', icon: Brain },
-          { id: 'INSTRUMENT', label: 'By Instrument', icon: BarChart3 },
-          { id: 'STRATEGY', label: 'By Strategy / Setup', icon: Layers },
-          { id: 'DIRECTION', label: 'Long vs Short', icon: Compass },
-          { id: 'TIME_HEATMAP', label: 'Time & Heatmaps', icon: Calendar },
-          { id: 'MARKET_SESSION', label: 'Market Sessions', icon: Clock },
-          { id: 'DURATION', label: 'Holding Duration', icon: Zap },
-          { id: 'TAGS', label: 'Execution Tags', icon: Tag },
-          { id: 'PSYCHOLOGY', label: 'Psychology & Rules', icon: ShieldCheck },
+          { id: 'INSIGHTS', label: 'Insights', icon: Brain },
+          { id: 'INSTRUMENT', label: 'Instruments', icon: BarChart3 },
+          { id: 'STRATEGY', label: 'Strategies', icon: Layers },
+          { id: 'DIRECTION', label: 'Direction', icon: Compass },
+          { id: 'TIME_HEATMAP', label: 'Timing', icon: Calendar },
+          { id: 'MARKET_SESSION', label: 'Sessions', icon: Clock },
+          { id: 'DURATION', label: 'Duration', icon: Zap },
+          { id: 'TAGS', label: 'Tags', icon: Tag },
+          { id: 'PSYCHOLOGY', label: 'Execution', icon: ShieldCheck },
         ].map(tab => {
           const Icon = tab.icon;
           const isActive = activeTab === tab.id;
@@ -485,7 +485,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
                   ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
                   : isLight
                   ? 'text-slate-700 hover:text-slate-900 hover:bg-white border border-transparent hover:border-slate-200 shadow-none'
-                  : 'text-slate-400 hover:text-white hover:bg-[#1A1F27]'
+                  : 'text-[#A1A1AA] hover:text-white hover:bg-[#101010]'
               }`}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -503,21 +503,21 @@ export const AdvancedAnalyticsView: React.FC = () => {
           <div className={`rounded-2xl border p-5 space-y-3 ${
             isLight
               ? 'border-indigo-200 bg-indigo-50/70 text-slate-800 shadow-sm'
-              : 'border-indigo-500/20 bg-indigo-500/5 text-slate-300 shadow-xl'
+              : 'border-indigo-500/20 bg-indigo-500/5 text-[#D4D4D8] shadow-xl'
           }`}>
             <div className="flex items-center justify-between">
               <h2 className={`text-sm font-bold uppercase tracking-wider flex items-center gap-2 ${
                 isLight ? 'text-indigo-900' : 'text-indigo-300'
               }`}>
                 <Sparkles className="w-4 h-4 text-indigo-500" />
-                Algorithmic Alpha Insights (Auto-Generated from {closedTrades.length} Trades)
+                Performance Notes ({closedTrades.length} Trades)
               </h2>
               <span className={`text-xs font-mono ${isLight ? 'text-indigo-600 font-semibold' : 'text-indigo-300/70'}`}>
-                Edge Engine v4.2
+                Analytics
               </span>
             </div>
-            <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
-              These insights analyze statistical variance, edge clustering, emotional state attribution, and session drawdown risks computed directly from your closed trades.
+            <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>
+              Patterns, edge consistency, and session risk computed directly from your closed trades.
             </p>
           </div>
 
@@ -528,7 +528,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
                 className={`p-5 rounded-2xl border space-y-3 transition ${
                   isLight
                     ? 'bg-white border-slate-200 hover:border-slate-300 shadow-sm hover:shadow'
-                    : 'bg-[#12161D] border-[#1C232E] hover:border-[#273141] shadow-xl'
+                    : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)] hover:border-[rgba(255,255,255,0.10)] shadow-xl'
                 } ${
                   ins.type === 'POSITIVE'
                     ? isLight ? 'border-l-4 border-l-emerald-500' : 'border-emerald-500/30'
@@ -548,7 +548,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
                         ? isLight ? 'bg-amber-50 text-amber-700 border-amber-200' : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                         : ins.type === 'NEGATIVE'
                         ? isLight ? 'bg-rose-50 text-rose-700 border-rose-200' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'
-                        : isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-slate-800 text-slate-300 border-[#273141]'
+                        : isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-[#101010] text-[#D4D4D8] border-[rgba(255,255,255,0.10)]'
                     }`}
                   >
                     {ins.category}
@@ -563,7 +563,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
                 </div>
 
                 <h3 className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{ins.title}</h3>
-                <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>{ins.description}</p>
+                <p className={`text-xs leading-relaxed ${isLight ? 'text-slate-600' : 'text-[#D4D4D8]'}`}>{ins.description}</p>
               </div>
             ))}
           </div>
@@ -578,10 +578,10 @@ export const AdvancedAnalyticsView: React.FC = () => {
           {/* Executive Symbol Summary Cards */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div className={`p-4 rounded-2xl border space-y-1 ${
-              isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#12161D] border-[#1C232E]'
+              isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
             }`}>
               <div className={`flex items-center justify-between text-[11px] font-semibold uppercase ${
-                isLight ? 'text-slate-500' : 'text-slate-400'
+                isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'
               }`}>
                 <span>Most Profitable Symbol</span>
                 <Award className={`w-4 h-4 ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`} />
@@ -589,16 +589,16 @@ export const AdvancedAnalyticsView: React.FC = () => {
               <div className={`text-xl font-black font-mono ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`}>
                 {topSymbol ? topSymbol.symbol : '—'}
               </div>
-              <div className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+              <div className={`text-xs ${isLight ? 'text-slate-600' : 'text-[#D4D4D8]'}`}>
                 {topSymbol ? `+${formatCurrency(topSymbol.netPnl)} (${topSymbol.winRate}% WR)` : 'N/A'}
               </div>
             </div>
 
             <div className={`p-4 rounded-2xl border space-y-1 ${
-              isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#12161D] border-[#1C232E]'
+              isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
             }`}>
               <div className={`flex items-center justify-between text-[11px] font-semibold uppercase ${
-                isLight ? 'text-slate-500' : 'text-slate-400'
+                isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'
               }`}>
                 <span>Least Profitable Symbol</span>
                 <AlertTriangle className={`w-4 h-4 ${isLight ? 'text-rose-600' : 'text-rose-400'}`} />
@@ -606,24 +606,24 @@ export const AdvancedAnalyticsView: React.FC = () => {
               <div className={`text-xl font-black font-mono ${isLight ? 'text-rose-600' : 'text-rose-400'}`}>
                 {worstSymbol ? worstSymbol.symbol : '—'}
               </div>
-              <div className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+              <div className={`text-xs ${isLight ? 'text-slate-600' : 'text-[#D4D4D8]'}`}>
                 {worstSymbol ? `${formatCurrency(worstSymbol.netPnl)} (${worstSymbol.winRate}% WR)` : 'N/A'}
               </div>
             </div>
 
             <div className={`p-4 rounded-2xl border space-y-1 ${
-              isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#12161D] border-[#1C232E]'
+              isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
             }`}>
               <div className={`flex items-center justify-between text-[11px] font-semibold uppercase ${
-                isLight ? 'text-slate-500' : 'text-slate-400'
+                isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'
               }`}>
                 <span>Most Traded Symbol</span>
                 <BarChart3 className="w-4 h-4 text-indigo-500" />
               </div>
-              <div className={`text-xl font-black font-mono ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>
+              <div className={`text-xl font-black font-mono ${isLight ? 'text-slate-900' : 'text-[#F5F5F5]'}`}>
                 {mostTradedSymbol ? mostTradedSymbol.symbol : '—'}
               </div>
-              <div className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+              <div className={`text-xs ${isLight ? 'text-slate-600' : 'text-[#D4D4D8]'}`}>
                 {mostTradedSymbol ? `${mostTradedSymbol.count} Executions (${formatCurrency(mostTradedSymbol.netPnl)})` : 'N/A'}
               </div>
             </div>
@@ -631,10 +631,10 @@ export const AdvancedAnalyticsView: React.FC = () => {
 
           {/* Symbol Comparison Table */}
           <div className={`rounded-2xl border p-5 space-y-4 ${
-            isLight ? 'border-slate-200 bg-white shadow-sm' : 'border-[#1C232E] bg-[#12161D] shadow-xl backdrop-blur-sm'
+            isLight ? 'border-slate-200 bg-white shadow-sm' : 'border-[#1C2129] bg-[#0B0D10]'
           }`}>
-            <h3 className={`text-xs font-bold uppercase tracking-wider ${
-              isLight ? 'text-slate-800' : 'text-slate-200'
+            <h3 className={`text-xs font-semibold uppercase tracking-wider font-mono ${
+              isLight ? 'text-slate-800' : 'text-[#71717A]'
             }`}>
               Asset & Symbol Edge Roster ({instrumentData.length} Symbols)
             </h3>
@@ -642,55 +642,55 @@ export const AdvancedAnalyticsView: React.FC = () => {
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className={`border-b text-[11px] font-bold uppercase ${
+                  <tr className={`border-b text-[11px] font-semibold uppercase font-mono tracking-wider ${
                     isLight
                       ? 'border-slate-200 text-slate-600 bg-slate-50'
-                      : 'border-[#1C232E] text-slate-400 bg-[#0A0D14]'
+                      : 'border-[#1C2129] text-[#71717A] bg-[#07090C]'
                   }`}>
-                    <th className="p-3">Symbol</th>
-                    <th className="p-3">Market</th>
-                    <th className="p-3 text-center">Trades</th>
-                    <th className="p-3 text-center">Win Rate</th>
-                    <th className="p-3 text-right">Net Realized P&L</th>
-                    <th className="p-3 text-right">Profit Factor</th>
-                    <th className="p-3 text-right">Avg Win</th>
-                    <th className="p-3 text-right">Avg Loss</th>
-                    <th className="p-3 text-right">Avg R</th>
+                    <th className="px-4 py-3">Symbol</th>
+                    <th className="px-4 py-3">Market</th>
+                    <th className="px-4 py-3 text-center">Trades</th>
+                    <th className="px-4 py-3 text-center">Win Rate</th>
+                    <th className="px-4 py-3 text-right">Net Realized P&L</th>
+                    <th className="px-4 py-3 text-right">Profit Factor</th>
+                    <th className="px-4 py-3 text-right">Avg Win</th>
+                    <th className="px-4 py-3 text-right">Avg Loss</th>
+                    <th className="px-4 py-3 text-right">Avg R</th>
                   </tr>
                 </thead>
-                <tbody className={`font-mono divide-y ${
-                  isLight ? 'divide-slate-200 text-slate-700' : 'divide-slate-800/60 text-slate-300'
+                <tbody className={`divide-y text-xs ${
+                  isLight ? 'divide-slate-200 text-slate-700' : 'divide-[#1C2129]/60 text-[#F3F4F6]'
                 }`}>
                   {instrumentData.length === 0 ? (
                     <tr>
-                      <td colSpan={9} className="p-8 text-center text-slate-400 font-sans text-xs">
+                      <td colSpan={9} className="p-8 text-center text-[#71717A] font-sans text-xs">
                         No closed trades found matching the selected account and date filters.
                       </td>
                     </tr>
                   ) : (
                     instrumentData.map(sym => (
-                      <tr key={sym.symbol} className={`transition ${
-                        isLight ? 'hover:bg-slate-50/80' : 'hover:bg-[#1A1F27]/50'
+                      <tr key={sym.symbol} className={`transition-colors ${
+                        isLight ? 'hover:bg-slate-50/80' : 'hover:bg-[#151820]'
                       }`}>
-                        <td className={`p-3 font-bold text-sm font-sans ${isLight ? 'text-slate-900' : 'text-white'}`}>{sym.symbol}</td>
-                        <td className={`p-3 uppercase text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{sym.market}</td>
-                        <td className={`p-3 text-center ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>{sym.count}</td>
-                        <td className="p-3 text-center font-bold">
-                          <span className={sym.winRate >= 50 ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')}>
+                        <td className={`px-4 py-3 text-[14px] font-semibold font-sans ${isLight ? 'text-slate-900' : 'text-[#F3F4F6]'}`}>{sym.symbol}</td>
+                        <td className={`px-4 py-3 font-mono text-[11px] uppercase ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>{sym.market}</td>
+                        <td className={`px-4 py-3 text-center font-mono tabular-nums ${isLight ? 'text-slate-700' : 'text-[#A1A1AA]'}`}>{sym.count}</td>
+                        <td className="px-4 py-3 text-center font-mono font-medium tabular-nums">
+                          <span className={sym.winRate >= 50 ? (isLight ? 'text-emerald-600' : 'text-[#10B981]') : (isLight ? 'text-rose-600' : 'text-[#F43F5E]')}>
                             {sym.winRate}%
                           </span>
                         </td>
-                        <td className={`p-3 text-right font-bold text-sm ${
-                          sym.netPnl >= 0 ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')
+                        <td className={`px-4 py-3 text-right font-mono font-semibold tabular-nums ${
+                          sym.netPnl >= 0 ? (isLight ? 'text-emerald-600' : 'text-[#10B981]') : (isLight ? 'text-rose-600' : 'text-[#F43F5E]')
                         }`}>
                           {sym.netPnl >= 0 ? '+' : ''}${Math.round(sym.netPnl).toLocaleString()}
                         </td>
-                        <td className={`p-3 text-right font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                        <td className={`px-4 py-3 text-right font-mono font-medium tabular-nums ${isLight ? 'text-slate-800' : 'text-[#F3F4F6]'}`}>
                           {sym.profitFactor > 0 ? sym.profitFactor.toFixed(2) : '0.00'}
                         </td>
-                        <td className={`p-3 text-right ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`}>+${Math.round(sym.avgWin)}</td>
-                        <td className={`p-3 text-right ${isLight ? 'text-rose-600' : 'text-rose-400'}`}>-${Math.round(sym.avgLoss)}</td>
-                        <td className={`p-3 text-right font-bold ${isLight ? 'text-indigo-600' : 'text-indigo-300'}`}>{formatRMultiple(sym.avgR)}</td>
+                        <td className={`px-4 py-3 text-right font-mono tabular-nums ${isLight ? 'text-emerald-600' : 'text-[#10B981]'}`}>+${Math.round(sym.avgWin)}</td>
+                        <td className={`px-4 py-3 text-right font-mono tabular-nums ${isLight ? 'text-rose-600' : 'text-[#F43F5E]'}`}>-${Math.round(sym.avgLoss)}</td>
+                        <td className={`px-4 py-3 text-right font-mono font-medium tabular-nums ${isLight ? 'text-indigo-600' : 'text-[#818CF8]'}`}>{formatRMultiple(sym.avgR)}</td>
                       </tr>
                     ))
                   )}
@@ -708,7 +708,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
         <div className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className={`p-5 rounded-2xl border space-y-2 ${
-              isLight ? 'bg-emerald-50/50 border-emerald-200 shadow-sm' : 'bg-[#12161D] border-emerald-500/30'
+              isLight ? 'bg-emerald-50/50 border-emerald-200 shadow-sm' : 'bg-[#0B0B0B] border-emerald-500/30'
             }`}>
               <span className={`text-[10px] font-bold uppercase tracking-wider ${
                 isLight ? 'text-emerald-700' : 'text-emerald-400'
@@ -718,15 +718,15 @@ export const AdvancedAnalyticsView: React.FC = () => {
               <div className={`text-xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 {bestStrategy ? bestStrategy.name : '—'}
               </div>
-              <div className={`flex items-center gap-4 text-xs font-mono pt-1 ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+              <div className={`flex items-center gap-4 text-xs font-mono pt-1 ${isLight ? 'text-slate-600' : 'text-[#D4D4D8]'}`}>
                 <span>Net P&L: <strong className={isLight ? 'text-emerald-600 font-bold' : 'text-emerald-400'}>+{formatCurrency(bestStrategy ? bestStrategy.netPnl : 0)}</strong></span>
                 <span>Win Rate: <strong className={isLight ? 'text-emerald-600 font-bold' : 'text-emerald-400'}>{bestStrategy ? bestStrategy.winRate : 0}%</strong></span>
-                <span>PF: <strong className={isLight ? 'text-slate-800' : 'text-slate-200'}>{bestStrategy ? bestStrategy.profitFactor : 0}</strong></span>
+                <span>PF: <strong className={isLight ? 'text-slate-800' : 'text-[#F5F5F5]'}>{bestStrategy ? bestStrategy.profitFactor : 0}</strong></span>
               </div>
             </div>
 
             <div className={`p-5 rounded-2xl border space-y-2 ${
-              isLight ? 'bg-rose-50/50 border-rose-200 shadow-sm' : 'bg-[#12161D] border-rose-500/30'
+              isLight ? 'bg-rose-50/50 border-rose-200 shadow-sm' : 'bg-[#0B0B0B] border-rose-500/30'
             }`}>
               <span className={`text-[10px] font-bold uppercase tracking-wider ${
                 isLight ? 'text-rose-700' : 'text-rose-400'
@@ -736,73 +736,73 @@ export const AdvancedAnalyticsView: React.FC = () => {
               <div className={`text-xl font-black ${isLight ? 'text-slate-900' : 'text-white'}`}>
                 {worstStrategy ? worstStrategy.name : '—'}
               </div>
-              <div className={`flex items-center gap-4 text-xs font-mono pt-1 ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+              <div className={`flex items-center gap-4 text-xs font-mono pt-1 ${isLight ? 'text-slate-600' : 'text-[#D4D4D8]'}`}>
                 <span>Net P&L: <strong className={isLight ? 'text-rose-600 font-bold' : 'text-rose-400'}>{formatCurrency(worstStrategy ? worstStrategy.netPnl : 0)}</strong></span>
                 <span>Win Rate: <strong className={isLight ? 'text-rose-600 font-bold' : 'text-rose-400'}>{worstStrategy ? worstStrategy.winRate : 0}%</strong></span>
-                <span>PF: <strong className={isLight ? 'text-slate-800' : 'text-slate-200'}>{worstStrategy ? worstStrategy.profitFactor : 0}</strong></span>
+                <span>PF: <strong className={isLight ? 'text-slate-800' : 'text-[#F5F5F5]'}>{worstStrategy ? worstStrategy.profitFactor : 0}</strong></span>
               </div>
             </div>
           </div>
 
           <div className={`rounded-2xl border p-5 space-y-4 ${
-            isLight ? 'border-slate-200 bg-white shadow-sm' : 'border-[#1C232E] bg-[#12161D] shadow-xl backdrop-blur-sm'
+            isLight ? 'border-slate-200 bg-white shadow-sm' : 'border-[#1C2129] bg-[#0B0D10]'
           }`}>
-            <h3 className={`text-xs font-bold uppercase tracking-wider ${
-              isLight ? 'text-slate-800' : 'text-slate-200'
+            <h3 className={`text-xs font-semibold uppercase tracking-wider font-mono ${
+              isLight ? 'text-slate-800' : 'text-[#71717A]'
             }`}>
-              Setup & Playbook Compliance Matrix
+              Setup & Playbook Performance
             </h3>
 
             <div className="overflow-x-auto custom-scrollbar">
               <table className="w-full text-left text-xs border-collapse">
                 <thead>
-                  <tr className={`border-b text-[11px] font-bold uppercase ${
+                  <tr className={`border-b text-[11px] font-semibold uppercase font-mono tracking-wider ${
                     isLight
                       ? 'border-slate-200 text-slate-600 bg-slate-50'
-                      : 'border-[#1C232E] text-slate-400 bg-[#0A0D14]'
+                      : 'border-[#1C2129] text-[#71717A] bg-[#07090C]'
                   }`}>
-                    <th className="p-3">Strategy / Setup</th>
-                    <th className="p-3 text-center">Trades</th>
-                    <th className="p-3 text-center">Win Rate</th>
-                    <th className="p-3 text-right">Realized Net P&L</th>
-                    <th className="p-3 text-right">Profit Factor</th>
-                    <th className="p-3 text-right">Average R</th>
-                    <th className="p-3 text-center">Rule Compliance</th>
+                    <th className="px-4 py-3">Strategy / Setup</th>
+                    <th className="px-4 py-3 text-center">Trades</th>
+                    <th className="px-4 py-3 text-center">Win Rate</th>
+                    <th className="px-4 py-3 text-right">Realized Net P&L</th>
+                    <th className="px-4 py-3 text-right">Profit Factor</th>
+                    <th className="px-4 py-3 text-right">Average R</th>
+                    <th className="px-4 py-3 text-center">Rule Compliance</th>
                   </tr>
                 </thead>
-                <tbody className={`font-mono divide-y ${
-                  isLight ? 'divide-slate-200 text-slate-700' : 'divide-slate-800/60 text-slate-300'
+                <tbody className={`divide-y text-xs ${
+                  isLight ? 'divide-slate-200 text-slate-700' : 'divide-[#1C2129]/60 text-[#F3F4F6]'
                 }`}>
                   {strategyData.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="p-8 text-center text-slate-400 font-sans text-xs">
+                      <td colSpan={7} className="p-8 text-center text-[#71717A] font-sans text-xs">
                         No strategy setup data recorded for closed trades matching current filters.
                       </td>
                     </tr>
                   ) : (
                     strategyData.map(st => (
-                      <tr key={st.name} className={`transition ${
-                        isLight ? 'hover:bg-slate-50/80' : 'hover:bg-[#1A1F27]/50'
+                      <tr key={st.name} className={`transition-colors ${
+                        isLight ? 'hover:bg-slate-50/80' : 'hover:bg-[#151820]'
                       }`}>
-                        <td className={`p-3 font-bold text-sm font-sans ${isLight ? 'text-slate-900' : 'text-white'}`}>{st.name}</td>
-                        <td className={`p-3 text-center ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>{st.count}</td>
-                        <td className="p-3 text-center font-bold">
-                          <span className={st.winRate >= 50 ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')}>
+                        <td className={`px-4 py-3 text-[14px] font-semibold font-sans ${isLight ? 'text-slate-900' : 'text-[#F3F4F6]'}`}>{st.name}</td>
+                        <td className={`px-4 py-3 text-center font-mono tabular-nums ${isLight ? 'text-slate-700' : 'text-[#A1A1AA]'}`}>{st.count}</td>
+                        <td className="px-4 py-3 text-center font-mono font-medium tabular-nums">
+                          <span className={st.winRate >= 50 ? (isLight ? 'text-emerald-600' : 'text-[#10B981]') : (isLight ? 'text-rose-600' : 'text-[#F43F5E]')}>
                             {st.winRate}%
                           </span>
                         </td>
-                        <td className={`p-3 text-right font-bold ${
-                          st.netPnl >= 0 ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')
+                        <td className={`px-4 py-3 text-right font-mono font-semibold tabular-nums ${
+                          st.netPnl >= 0 ? (isLight ? 'text-emerald-600' : 'text-[#10B981]') : (isLight ? 'text-rose-600' : 'text-[#F43F5E]')
                         }`}>
                           {st.netPnl >= 0 ? '+' : ''}${Math.round(st.netPnl).toLocaleString()}
                         </td>
-                        <td className={`p-3 text-right font-bold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>{st.profitFactor.toFixed(2)}</td>
-                        <td className={`p-3 text-right font-bold ${isLight ? 'text-indigo-600' : 'text-indigo-300'}`}>{formatRMultiple(st.avgR)}</td>
-                        <td className="p-3 text-center">
-                          <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                        <td className={`px-4 py-3 text-right font-mono font-medium tabular-nums ${isLight ? 'text-slate-800' : 'text-[#F3F4F6]'}`}>{st.profitFactor.toFixed(2)}</td>
+                        <td className={`px-4 py-3 text-right font-mono font-medium tabular-nums ${isLight ? 'text-indigo-600' : 'text-[#818CF8]'}`}>{formatRMultiple(st.avgR)}</td>
+                        <td className="px-4 py-3 text-center">
+                          <span className={`px-2 py-0.5 rounded text-[11px] font-mono font-semibold ${
                             st.complianceRate >= 80
-                              ? isLight ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-emerald-500/15 text-emerald-400'
-                              : isLight ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-amber-500/15 text-amber-400'
+                              ? isLight ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-[#10B981]/15 text-[#10B981] border border-[#10B981]/30'
+                              : isLight ? 'bg-amber-50 text-amber-700 border border-amber-200' : 'bg-[#F59E0B]/15 text-[#F59E0B] border border-[#F59E0B]/30'
                           }`}>
                             {st.complianceRate}%
                           </span>
@@ -824,10 +824,10 @@ export const AdvancedAnalyticsView: React.FC = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* Long Card */}
           <div className={`rounded-2xl border p-6 space-y-5 ${
-            isLight ? 'border-emerald-200 bg-white shadow-sm' : 'border-emerald-500/30 bg-[#12161D] shadow-xl'
+            isLight ? 'border-emerald-200 bg-white shadow-sm' : 'border-emerald-500/30 bg-[#0B0B0B] shadow-xl'
           }`}>
             <div className={`flex items-center justify-between pb-3 border-b ${
-              isLight ? 'border-slate-200' : 'border-[#1C232E]'
+              isLight ? 'border-slate-200' : 'border-[rgba(255,255,255,0.07)]'
             }`}>
               <div className="flex items-center gap-2">
                 <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
@@ -837,7 +837,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
                 }`}>
                   BUY / LONG POSITIONS
                 </span>
-                <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>({directionData.long.count} Trades)</span>
+                <span className={`text-xs ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>({directionData.long.count} Trades)</span>
               </div>
               <span className={`text-sm font-mono font-bold ${isLight ? 'text-emerald-700' : 'text-emerald-400'}`}>
                 {directionData.long.winRate}% Win Rate
@@ -846,7 +846,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Net Realized P&L:</span>
+                <span className={`text-xs ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Net Realized P&L:</span>
                 <span className={`text-2xl font-black font-mono ${
                   directionData.long.netPnl >= 0 ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')
                 }`}>
@@ -856,27 +856,27 @@ export const AdvancedAnalyticsView: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3 pt-2 text-xs font-mono">
                 <div className={`p-3 rounded-xl border ${
-                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                 }`}>
-                  <span className={`text-[10px] uppercase block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Profit Factor</span>
-                  <strong className={isLight ? 'text-slate-900 font-bold' : 'text-slate-100'}>{directionData.long.profitFactor}</strong>
+                  <span className={`text-[10px] uppercase block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Profit Factor</span>
+                  <strong className={isLight ? 'text-slate-900 font-bold' : 'text-[#F5F5F5]'}>{directionData.long.profitFactor}</strong>
                 </div>
                 <div className={`p-3 rounded-xl border ${
-                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                 }`}>
-                  <span className={`text-[10px] uppercase block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Average R</span>
+                  <span className={`text-[10px] uppercase block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Average R</span>
                   <strong className={isLight ? 'text-indigo-600 font-bold' : 'text-indigo-400'}>{formatRMultiple(directionData.long.avgR)}</strong>
                 </div>
                 <div className={`p-3 rounded-xl border ${
-                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                 }`}>
-                  <span className={`text-[10px] uppercase block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Avg Winner</span>
+                  <span className={`text-[10px] uppercase block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Avg Winner</span>
                   <strong className={isLight ? 'text-emerald-600 font-bold' : 'text-emerald-400'}>+{formatCurrency(directionData.long.avgWin)}</strong>
                 </div>
                 <div className={`p-3 rounded-xl border ${
-                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                 }`}>
-                  <span className={`text-[10px] uppercase block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Avg Loser</span>
+                  <span className={`text-[10px] uppercase block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Avg Loser</span>
                   <strong className={isLight ? 'text-rose-600 font-bold' : 'text-rose-400'}>-{formatCurrency(directionData.long.avgLoss)}</strong>
                 </div>
               </div>
@@ -885,10 +885,10 @@ export const AdvancedAnalyticsView: React.FC = () => {
 
           {/* Short Card */}
           <div className={`rounded-2xl border p-6 space-y-5 ${
-            isLight ? 'border-rose-200 bg-white shadow-sm' : 'border-rose-500/30 bg-[#12161D] shadow-xl'
+            isLight ? 'border-rose-200 bg-white shadow-sm' : 'border-rose-500/30 bg-[#0B0B0B] shadow-xl'
           }`}>
             <div className={`flex items-center justify-between pb-3 border-b ${
-              isLight ? 'border-slate-200' : 'border-[#1C232E]'
+              isLight ? 'border-slate-200' : 'border-[rgba(255,255,255,0.07)]'
             }`}>
               <div className="flex items-center gap-2">
                 <span className={`px-2.5 py-1 rounded-lg text-xs font-bold border ${
@@ -898,7 +898,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
                 }`}>
                   SELL / SHORT POSITIONS
                 </span>
-                <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>({directionData.short.count} Trades)</span>
+                <span className={`text-xs ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>({directionData.short.count} Trades)</span>
               </div>
               <span className={`text-sm font-mono font-bold ${isLight ? 'text-rose-700' : 'text-rose-400'}`}>
                 {directionData.short.winRate}% Win Rate
@@ -907,7 +907,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
 
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Net Realized P&L:</span>
+                <span className={`text-xs ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Net Realized P&L:</span>
                 <span className={`text-2xl font-black font-mono ${
                   directionData.short.netPnl >= 0 ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')
                 }`}>
@@ -917,27 +917,27 @@ export const AdvancedAnalyticsView: React.FC = () => {
 
               <div className="grid grid-cols-2 gap-3 pt-2 text-xs font-mono">
                 <div className={`p-3 rounded-xl border ${
-                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                 }`}>
-                  <span className={`text-[10px] uppercase block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Profit Factor</span>
-                  <strong className={isLight ? 'text-slate-900 font-bold' : 'text-slate-100'}>{directionData.short.profitFactor}</strong>
+                  <span className={`text-[10px] uppercase block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Profit Factor</span>
+                  <strong className={isLight ? 'text-slate-900 font-bold' : 'text-[#F5F5F5]'}>{directionData.short.profitFactor}</strong>
                 </div>
                 <div className={`p-3 rounded-xl border ${
-                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                 }`}>
-                  <span className={`text-[10px] uppercase block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Average R</span>
+                  <span className={`text-[10px] uppercase block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Average R</span>
                   <strong className={isLight ? 'text-indigo-600 font-bold' : 'text-indigo-400'}>{formatRMultiple(directionData.short.avgR)}</strong>
                 </div>
                 <div className={`p-3 rounded-xl border ${
-                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                 }`}>
-                  <span className={`text-[10px] uppercase block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Avg Winner</span>
+                  <span className={`text-[10px] uppercase block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Avg Winner</span>
                   <strong className={isLight ? 'text-emerald-600 font-bold' : 'text-emerald-400'}>+{formatCurrency(directionData.short.avgWin)}</strong>
                 </div>
                 <div className={`p-3 rounded-xl border ${
-                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                 }`}>
-                  <span className={`text-[10px] uppercase block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Avg Loser</span>
+                  <span className={`text-[10px] uppercase block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Avg Loser</span>
                   <strong className={isLight ? 'text-rose-600 font-bold' : 'text-rose-400'}>-{formatCurrency(directionData.short.avgLoss)}</strong>
                 </div>
               </div>
@@ -953,18 +953,18 @@ export const AdvancedAnalyticsView: React.FC = () => {
         <div className="space-y-6">
           {/* Day of Week Heatmap */}
           <div className={`rounded-2xl border p-5 space-y-4 ${
-            isLight ? 'border-slate-200 bg-white shadow-sm' : 'border-[#1C232E] bg-[#12161D] shadow-xl backdrop-blur-sm'
+            isLight ? 'border-slate-200 bg-white shadow-sm' : 'border-[rgba(255,255,255,0.07)] bg-[#0B0B0B] shadow-xl backdrop-blur-sm'
           }`}>
             <div className={`flex items-center justify-between pb-2 border-b ${
-              isLight ? 'border-slate-200' : 'border-[#1C232E]'
+              isLight ? 'border-slate-200' : 'border-[rgba(255,255,255,0.07)]'
             }`}>
               <h3 className={`text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${
-                isLight ? 'text-slate-800' : 'text-slate-200'
+                isLight ? 'text-slate-800' : 'text-[#F5F5F5]'
               }`}>
                 <Calendar className="w-4 h-4 text-indigo-500" />
                 Day of Week Performance Heatmap
               </h3>
-              <div className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+              <div className={`text-xs font-mono ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
                 Best: <strong className={isLight ? 'text-emerald-600 font-bold' : 'text-emerald-400'}>{bestTradingDay?.name || 'N/A'}</strong> | Worst: <strong className={isLight ? 'text-rose-600 font-bold' : 'text-rose-400'}>{worstTradingDay?.name || 'N/A'}</strong>
               </div>
             </div>
@@ -979,17 +979,17 @@ export const AdvancedAnalyticsView: React.FC = () => {
                     key={d.name}
                     className={`p-4 rounded-xl border space-y-2 transition ${
                       d.count === 0
-                        ? isLight ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-[#0A0D14]/40 border-[#1C232E]/40 opacity-60'
+                        ? isLight ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-[#080808]/40 border-[rgba(255,255,255,0.07)]/40 opacity-60'
                         : isProfitable
                         ? isLight ? 'bg-emerald-50/70 border-emerald-200' : 'bg-emerald-950/20 border-emerald-500/30'
                         : isLoss
                         ? isLight ? 'bg-rose-50/70 border-rose-200' : 'bg-rose-950/20 border-rose-500/30'
-                        : isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                        : isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                     }`}
                   >
                     <div className="flex items-center justify-between">
-                      <span className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>{d.name}</span>
-                      <span className={`text-[10px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>{d.count} trades</span>
+                      <span className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-[#F5F5F5]'}`}>{d.name}</span>
+                      <span className={`text-[10px] font-mono ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>{d.count} trades</span>
                     </div>
 
                     <div className={`text-base font-black font-mono ${
@@ -997,16 +997,16 @@ export const AdvancedAnalyticsView: React.FC = () => {
                         ? isLight ? 'text-emerald-600' : 'text-emerald-400'
                         : isLoss
                         ? isLight ? 'text-rose-600' : 'text-rose-400'
-                        : isLight ? 'text-slate-500' : 'text-slate-400'
+                        : isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'
                     }`}>
                       {d.count > 0 ? `${isProfitable ? '+' : ''}$${Math.round(d.netPnl).toLocaleString()}` : '$0'}
                     </div>
 
                     <div className={`flex items-center justify-between text-[11px] pt-1 border-t font-mono ${
-                      isLight ? 'border-slate-200 text-slate-500' : 'border-[#1C232E] text-slate-400'
+                      isLight ? 'border-slate-200 text-[#71717A]' : 'border-[rgba(255,255,255,0.07)] text-[#A1A1AA]'
                     }`}>
                       <span>Win Rate:</span>
-                      <strong className={d.winRate >= 50 ? (isLight ? 'text-emerald-600 font-bold' : 'text-emerald-400') : (isLight ? 'text-slate-700' : 'text-slate-300')}>
+                      <strong className={d.winRate >= 50 ? (isLight ? 'text-emerald-600 font-bold' : 'text-emerald-400') : (isLight ? 'text-slate-700' : 'text-[#D4D4D8]')}>
                         {d.count > 0 ? `${d.winRate}%` : '—'}
                       </strong>
                     </div>
@@ -1018,18 +1018,18 @@ export const AdvancedAnalyticsView: React.FC = () => {
 
           {/* Hour of Day Hourly Grid */}
           <div className={`rounded-2xl border p-5 space-y-4 ${
-            isLight ? 'border-slate-200 bg-white shadow-sm' : 'border-[#1C232E] bg-[#12161D] shadow-xl backdrop-blur-sm'
+            isLight ? 'border-slate-200 bg-white shadow-sm' : 'border-[rgba(255,255,255,0.07)] bg-[#0B0B0B] shadow-xl backdrop-blur-sm'
           }`}>
             <div className={`flex items-center justify-between pb-2 border-b ${
-              isLight ? 'border-slate-200' : 'border-[#1C232E]'
+              isLight ? 'border-slate-200' : 'border-[rgba(255,255,255,0.07)]'
             }`}>
               <h3 className={`text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${
-                isLight ? 'text-slate-800' : 'text-slate-200'
+                isLight ? 'text-slate-800' : 'text-[#F5F5F5]'
               }`}>
                 <Clock className="w-4 h-4 text-indigo-500" />
                 24-Hour Execution Distribution (UTC)
               </h3>
-              <div className={`text-xs font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+              <div className={`text-xs font-mono ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
                 Prime Hour: <strong className={isLight ? 'text-emerald-600 font-bold' : 'text-emerald-400'}>{bestTradingHour?.label || 'N/A'}</strong>
               </div>
             </div>
@@ -1053,13 +1053,13 @@ export const AdvancedAnalyticsView: React.FC = () => {
                       style={{ height: `${heightPct * 0.7}%` }}
                       className={`w-full rounded-t-md transition-all duration-300 group-hover:brightness-125 ${
                         h.count === 0
-                          ? isLight ? 'bg-slate-200' : 'bg-slate-800/40'
+                          ? isLight ? 'bg-slate-200' : 'bg-[#101010]/40'
                           : isWin
                           ? 'bg-emerald-500 shadow-md shadow-emerald-500/20'
                           : 'bg-rose-500 shadow-md shadow-rose-500/20'
                       }`}
                     />
-                    <span className={`text-[9px] font-mono mt-1 ${isLight ? 'text-slate-500 font-semibold' : 'text-slate-500'}`}>
+                    <span className={`text-[9px] font-mono mt-1 ${isLight ? 'text-[#71717A] font-semibold' : 'text-[#71717A]'}`}>
                       {h.hour % 3 === 0 ? `${h.hour}h` : ''}
                     </span>
                   </div>
@@ -1069,7 +1069,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
 
             {hoverDetail && (
               <div className={`text-xs font-mono p-2.5 rounded-lg border text-center ${
-                isLight ? 'bg-slate-100 border-slate-300 text-slate-800 font-medium' : 'bg-[#0A0D14] border-[#1C232E] text-slate-300'
+                isLight ? 'bg-slate-100 border-slate-300 text-slate-800 font-medium' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#D4D4D8]'
               }`}>
                 <strong>{hoverDetail.title}</strong> — {hoverDetail.subtitle}
               </div>
@@ -1088,15 +1088,15 @@ export const AdvancedAnalyticsView: React.FC = () => {
               <div
                 key={sess.id}
                 className={`p-5 rounded-2xl border space-y-4 ${
-                  isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#12161D] border-[#1C232E] shadow-xl'
+                  isLight ? 'bg-white border-slate-200 shadow-sm' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)] shadow-xl'
                 }`}
               >
                 <div className={`flex items-center justify-between pb-2 border-b ${
-                  isLight ? 'border-slate-200' : 'border-[#1C232E]'
+                  isLight ? 'border-slate-200' : 'border-[rgba(255,255,255,0.07)]'
                 }`}>
                   <div>
                     <h4 className={`text-sm font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{sess.name}</h4>
-                    <span className={`text-[10px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{sess.desc}</span>
+                    <span className={`text-[10px] font-mono ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>{sess.desc}</span>
                   </div>
                   <span className={`text-xs font-mono font-bold px-2 py-0.5 rounded border ${
                     isLight
@@ -1108,7 +1108,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
                 </div>
 
                 <div className="flex items-center justify-between">
-                  <span className={`text-xs ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Net Realized P&L:</span>
+                  <span className={`text-xs ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Net Realized P&L:</span>
                   <span className={`text-xl font-black font-mono ${
                     sess.netPnl >= 0 ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')
                   }`}>
@@ -1118,29 +1118,29 @@ export const AdvancedAnalyticsView: React.FC = () => {
 
                 <div className="grid grid-cols-2 gap-2 text-xs font-mono pt-1">
                   <div className={`p-2.5 rounded-lg border ${
-                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                   }`}>
-                    <span className={`text-[10px] uppercase block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Win Rate</span>
+                    <span className={`text-[10px] uppercase block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Win Rate</span>
                     <strong className={sess.winRate >= 50 ? (isLight ? 'text-emerald-600 font-bold' : 'text-emerald-400') : (isLight ? 'text-rose-600 font-bold' : 'text-rose-400')}>
                       {sess.winRate}%
                     </strong>
                   </div>
                   <div className={`p-2.5 rounded-lg border ${
-                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                   }`}>
-                    <span className={`text-[10px] uppercase block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Profit Factor</span>
-                    <strong className={isLight ? 'text-slate-900 font-bold' : 'text-slate-100'}>{sess.profitFactor}</strong>
+                    <span className={`text-[10px] uppercase block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Profit Factor</span>
+                    <strong className={isLight ? 'text-slate-900 font-bold' : 'text-[#F5F5F5]'}>{sess.profitFactor}</strong>
                   </div>
                   <div className={`p-2.5 rounded-lg border ${
-                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                   }`}>
-                    <span className={`text-[10px] uppercase block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Average Win</span>
+                    <span className={`text-[10px] uppercase block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Average Win</span>
                     <strong className={isLight ? 'text-emerald-600 font-bold' : 'text-emerald-400'}>+{formatCurrency(sess.avgWin)}</strong>
                   </div>
                   <div className={`p-2.5 rounded-lg border ${
-                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                    isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                   }`}>
-                    <span className={`text-[10px] uppercase block ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>Average R</span>
+                    <span className={`text-[10px] uppercase block ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>Average R</span>
                     <strong className={isLight ? 'text-indigo-600 font-bold' : 'text-indigo-400'}>{formatRMultiple(sess.avgR)}</strong>
                   </div>
                 </div>
@@ -1155,18 +1155,18 @@ export const AdvancedAnalyticsView: React.FC = () => {
       {/* ========================================================================= */}
       {activeTab === 'DURATION' && (
         <div className={`rounded-2xl border p-5 space-y-5 ${
-          isLight ? 'border-slate-200 bg-white shadow-sm' : 'border-[#1C232E] bg-[#12161D] shadow-xl backdrop-blur-sm'
+          isLight ? 'border-slate-200 bg-white shadow-sm' : 'border-[rgba(255,255,255,0.07)] bg-[#0B0B0B] shadow-xl backdrop-blur-sm'
         }`}>
           <div className={`flex items-center justify-between pb-2 border-b ${
-            isLight ? 'border-slate-200' : 'border-[#1C232E]'
+            isLight ? 'border-slate-200' : 'border-[rgba(255,255,255,0.07)]'
           }`}>
             <div>
               <h3 className={`text-xs font-bold uppercase tracking-wider ${
-                isLight ? 'text-slate-800' : 'text-slate-200'
+                isLight ? 'text-slate-800' : 'text-[#F5F5F5]'
               }`}>
                 Holding Time vs Realized Alpha
               </h3>
-              <p className={`text-[11px] mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+              <p className={`text-[11px] mt-0.5 ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
                 Understand if quick scalps or patient multi-hour swings generate your highest edge
               </p>
             </div>
@@ -1178,11 +1178,11 @@ export const AdvancedAnalyticsView: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {durationData.map(d => (
               <div key={d.id} className={`p-4 rounded-xl border space-y-3 ${
-                isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
               }`}>
                 <div className="flex items-center justify-between">
-                  <span className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>{d.label}</span>
-                  <span className={`text-[10px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>{d.count} trades</span>
+                  <span className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-[#F5F5F5]'}`}>{d.label}</span>
+                  <span className={`text-[10px] font-mono ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>{d.count} trades</span>
                 </div>
 
                 <div className={`text-lg font-black font-mono ${
@@ -1192,10 +1192,10 @@ export const AdvancedAnalyticsView: React.FC = () => {
                 </div>
 
                 <div className={`flex items-center justify-between text-xs pt-1 border-t font-mono ${
-                  isLight ? 'border-slate-200 text-slate-600' : 'border-[#1C232E] text-slate-400'
+                  isLight ? 'border-slate-200 text-slate-600' : 'border-[rgba(255,255,255,0.07)] text-[#A1A1AA]'
                 }`}>
-                  <span>Win Rate: <strong className={isLight ? 'text-slate-900' : 'text-slate-200'}>{d.winRate}%</strong></span>
-                  <span>PF: <strong className={isLight ? 'text-slate-900' : 'text-slate-200'}>{d.profitFactor}</strong></span>
+                  <span>Win Rate: <strong className={isLight ? 'text-slate-900' : 'text-[#F5F5F5]'}>{d.winRate}%</strong></span>
+                  <span>PF: <strong className={isLight ? 'text-slate-900' : 'text-[#F5F5F5]'}>{d.profitFactor}</strong></span>
                 </div>
               </div>
             ))}
@@ -1208,10 +1208,10 @@ export const AdvancedAnalyticsView: React.FC = () => {
       {/* ========================================================================= */}
       {activeTab === 'TAGS' && (
         <div className={`rounded-2xl border p-5 space-y-4 ${
-          isLight ? 'border-slate-200 bg-white shadow-sm' : 'border-[#1C232E] bg-[#12161D] shadow-xl backdrop-blur-sm'
+          isLight ? 'border-slate-200 bg-white shadow-sm' : 'border-[rgba(255,255,255,0.07)] bg-[#0B0B0B] shadow-xl backdrop-blur-sm'
         }`}>
           <h3 className={`text-xs font-bold uppercase tracking-wider ${
-            isLight ? 'text-slate-800' : 'text-slate-200'
+            isLight ? 'text-slate-800' : 'text-[#F5F5F5]'
           }`}>
             Execution Tag Statistical Breakdown ({tagsData.length} Tags)
           </h3>
@@ -1219,7 +1219,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {tagsData.map(t => (
               <div key={t.name} className={`p-3.5 rounded-xl border space-y-2 ${
-                isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
               }`}>
                 <div className="flex items-center justify-between">
                   <span className={`px-2 py-0.5 rounded text-xs font-bold border ${
@@ -1229,7 +1229,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
                   }`}>
                     #{t.name}
                   </span>
-                  <span className={`text-[10px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>{t.count} trades</span>
+                  <span className={`text-[10px] font-mono ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>{t.count} trades</span>
                 </div>
 
                 <div className="flex items-center justify-between font-mono pt-1">
@@ -1238,7 +1238,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
                   }`}>
                     {t.netPnl >= 0 ? '+' : ''}${Math.round(t.netPnl).toLocaleString()}
                   </span>
-                  <span className={`text-xs ${isLight ? 'text-slate-600' : 'text-slate-300'}`}>
+                  <span className={`text-xs ${isLight ? 'text-slate-600' : 'text-[#D4D4D8]'}`}>
                     WR: <strong className={isLight ? 'text-slate-900' : ''}>{t.winRate}%</strong>
                   </span>
                 </div>
@@ -1268,7 +1268,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
                 +{formatCurrency(psychologyData.ruleAdherence.followed.netPnl)}
               </div>
               <div className={`flex items-center justify-between text-xs font-mono pt-1 ${
-                isLight ? 'text-slate-600' : 'text-slate-300'
+                isLight ? 'text-slate-600' : 'text-[#D4D4D8]'
               }`}>
                 <span>Total Trades: <strong>{psychologyData.ruleAdherence.followed.count}</strong></span>
                 <span>Win Rate: <strong className={isLight ? 'text-emerald-700' : ''}>{psychologyData.ruleAdherence.followed.winRate}%</strong></span>
@@ -1288,7 +1288,7 @@ export const AdvancedAnalyticsView: React.FC = () => {
                 {formatCurrency(psychologyData.ruleAdherence.broken.netPnl)}
               </div>
               <div className={`flex items-center justify-between text-xs font-mono pt-1 ${
-                isLight ? 'text-slate-600' : 'text-slate-300'
+                isLight ? 'text-slate-600' : 'text-[#D4D4D8]'
               }`}>
                 <span>Total Trades: <strong>{psychologyData.ruleAdherence.broken.count}</strong></span>
                 <span>Win Rate: <strong className={isLight ? 'text-rose-700' : ''}>{psychologyData.ruleAdherence.broken.winRate}%</strong></span>
@@ -1298,10 +1298,10 @@ export const AdvancedAnalyticsView: React.FC = () => {
 
           {/* Emotional State Matrix */}
           <div className={`rounded-2xl border p-5 space-y-4 ${
-            isLight ? 'border-slate-200 bg-white shadow-sm' : 'border-[#1C232E] bg-[#12161D] shadow-xl'
+            isLight ? 'border-slate-200 bg-white shadow-sm' : 'border-[rgba(255,255,255,0.07)] bg-[#0B0B0B] shadow-xl'
           }`}>
             <h3 className={`text-xs font-bold uppercase tracking-wider flex items-center gap-2 ${
-              isLight ? 'text-slate-800' : 'text-slate-200'
+              isLight ? 'text-slate-800' : 'text-[#F5F5F5]'
             }`}>
               <Smile className="w-4 h-4 text-indigo-500" />
               Emotional Mindset Attribution
@@ -1310,19 +1310,19 @@ export const AdvancedAnalyticsView: React.FC = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
               {psychologyData.emotionStats.map(em => (
                 <div key={em.emotion} className={`p-3.5 rounded-xl border space-y-1.5 ${
-                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                  isLight ? 'bg-slate-50 border-slate-200' : 'bg-[#080808] border-[rgba(255,255,255,0.07)]'
                 }`}>
                   <div className="flex items-center justify-between">
                     <span className={`text-xs font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{em.emotion}</span>
-                    <span className={`text-[10px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>{em.count}</span>
+                    <span className={`text-[10px] font-mono ${isLight ? 'text-[#71717A]' : 'text-[#71717A]'}`}>{em.count}</span>
                   </div>
                   <div className={`text-sm font-black font-mono ${
                     em.netPnl >= 0 ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')
                   }`}>
                     {em.netPnl >= 0 ? '+' : ''}${Math.round(em.netPnl).toLocaleString()}
                   </div>
-                  <div className={`text-[10px] font-mono ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
-                    WR: <strong className={isLight ? 'text-slate-900' : 'text-slate-200'}>{em.winRate}%</strong>
+                  <div className={`text-[10px] font-mono ${isLight ? 'text-slate-600' : 'text-[#A1A1AA]'}`}>
+                    WR: <strong className={isLight ? 'text-slate-900' : 'text-[#F5F5F5]'}>{em.winRate}%</strong>
                   </div>
                 </div>
               ))}

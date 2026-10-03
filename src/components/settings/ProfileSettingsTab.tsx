@@ -280,13 +280,13 @@ export const ProfileSettingsTab: React.FC = () => {
       />
 
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#1C232E]">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[rgba(255,255,255,0.06)]">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <User className="w-4 h-4 text-blue-400" />
+          <h2 className="text-base font-semibold text-[#F4F5F7] flex items-center gap-2">
+            <User className="w-4 h-4 text-[#818CF8]" />
             Trader Profile & Identity
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#8A919D] mt-0.5">
             Manage your trader desk handle, avatar, credentials, and institutional bio.
           </p>
         </div>
@@ -294,7 +294,7 @@ export const ProfileSettingsTab: React.FC = () => {
         <button
           type="submit"
           disabled={isSaving || isUploadingAvatar || !!accountCodeError}
-          className="flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-sm border border-blue-500/50 transition disabled:opacity-50 cursor-pointer"
+          className="flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-semibold bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-xs transition disabled:opacity-50 cursor-pointer"
         >
           {isSaving ? (
             <>
@@ -315,10 +315,10 @@ export const ProfileSettingsTab: React.FC = () => {
         onDragOver={handleDragOver}
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
-        className={`p-5 sm:p-6 rounded-2xl bg-[#12161D] border transition-all flex flex-col sm:flex-row items-center gap-5 ${
+        className={`p-5 sm:p-6 rounded-2xl bg-[#0D1014] border transition-all flex flex-col sm:flex-row items-center gap-5 ${
           isDraggingOver
-            ? 'border-blue-500 bg-blue-950/20'
-            : 'border-[#1C232E]'
+            ? 'border-[#6366F1] bg-[#6366F1]/10'
+            : 'border-[rgba(255,255,255,0.055)]'
         }`}
       >
         <div className="relative group shrink-0">
@@ -327,17 +327,17 @@ export const ProfileSettingsTab: React.FC = () => {
               src={avatarUrl}
               alt={name || 'Trader Avatar'}
               referrerPolicy="no-referrer"
-              className="w-18 h-18 rounded-2xl object-cover border border-blue-500/40 shadow-sm"
+              className="w-18 h-18 rounded-2xl object-cover border border-[#6366F1]/40 shadow-sm"
             />
           ) : (
-            <div className="w-18 h-18 rounded-2xl bg-blue-600/10 border border-blue-500/30 flex items-center justify-center text-blue-300 text-xl font-bold">
+            <div className="w-18 h-18 rounded-2xl bg-[#6366F1]/10 border border-[#6366F1]/30 flex items-center justify-center text-[#818CF8] text-xl font-bold">
               {userInitials}
             </div>
           )}
 
           {isUploadingAvatar && (
             <div className="absolute inset-0 bg-black/70 rounded-2xl flex items-center justify-center">
-              <Loader2 className="w-5 h-5 text-blue-400 animate-spin" />
+              <Loader2 className="w-5 h-5 text-[#818CF8] animate-spin" />
             </div>
           )}
 
@@ -345,7 +345,7 @@ export const ProfileSettingsTab: React.FC = () => {
             type="button"
             onClick={() => fileInputRef.current?.click()}
             disabled={isUploadingAvatar}
-            className="absolute -bottom-1 -right-1 p-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white border border-blue-400/40 shadow cursor-pointer transition disabled:opacity-50"
+            className="absolute -bottom-1 -right-1 p-1.5 rounded-lg bg-[#6366F1] hover:bg-[#4F46E5] text-white border border-[#6366F1]/40 shadow cursor-pointer transition disabled:opacity-50"
             title="Upload Profile Picture"
           >
             <Camera className="w-3.5 h-3.5" />
@@ -354,15 +354,15 @@ export const ProfileSettingsTab: React.FC = () => {
 
         <div className="space-y-1.5 text-center sm:text-left flex-1 min-w-0">
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
-            <h3 className="text-sm font-bold text-white truncate max-w-xs">{name || 'Trader'}</h3>
+            <h3 className="text-sm font-semibold text-[#F4F5F7] truncate max-w-xs">{name || 'Trader'}</h3>
             <span className="inline-flex items-center gap-1 text-[11px] font-semibold px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
               <BadgeCheck className="w-3 h-3" />
               Verified Trader
             </span>
           </div>
 
-          <p className="text-xs text-slate-400">
-            Handle: <span className="text-blue-400 font-mono font-medium">@{accountCode || 'trader'}</span> • <span className="text-slate-300">{professionalTitle}</span>
+          <p className="text-xs text-[#8A919D]">
+            Handle: <span className="text-[#818CF8] font-mono font-medium">@{accountCode || 'trader'}</span> • <span className="text-[#C2C7D0]">{professionalTitle}</span>
           </p>
 
           <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 pt-1">
@@ -370,9 +370,9 @@ export const ProfileSettingsTab: React.FC = () => {
               type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={isUploadingAvatar}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#1C232E] hover:bg-[#252D3B] text-slate-200 border border-[#2B3545] transition cursor-pointer"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium bg-[#11151A] hover:bg-[#151A20] text-[#C2C7D0] hover:text-[#F4F5F7] border border-[rgba(255,255,255,0.08)] transition cursor-pointer"
             >
-              <Upload className="w-3 h-3 text-blue-400" />
+              <Upload className="w-3 h-3 text-[#818CF8]" />
               <span>Upload Photo</span>
             </button>
 
@@ -388,7 +388,7 @@ export const ProfileSettingsTab: React.FC = () => {
               </button>
             )}
 
-            <span className="text-xs text-slate-500 sm:ml-2">
+            <span className="text-xs text-[#5E6570] sm:ml-2">
               PNG, JPG, WebP up to 5MB
             </span>
           </div>
@@ -396,34 +396,34 @@ export const ProfileSettingsTab: React.FC = () => {
       </div>
 
       {/* Group 2: Personal & Desk Information */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-4">
+      <div className="p-5 sm:p-6 rounded-2xl bg-[#0D1014] border border-[rgba(255,255,255,0.055)] space-y-4">
         <div>
-          <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
-            <Briefcase className="w-4 h-4 text-blue-400" />
+          <h3 className="text-sm font-semibold text-[#F4F5F7] tracking-tight flex items-center gap-2">
+            <Briefcase className="w-4 h-4 text-[#818CF8]" />
             Personal & Desk Information
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#8A919D] mt-0.5">
             Basic identity displayed across your journal, community lounge, and reports.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">Full Name</label>
+            <label className="block text-xs font-medium text-[#A7ADB7]">Full Name</label>
             <input
               type="text"
               required
               value={name}
               onChange={e => setName(e.target.value)}
               placeholder="e.g. Marcus Vance"
-              className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3.5 py-2.5 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+              className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3.5 py-2.5 text-[#F4F5F7] text-xs placeholder-[#5E6570] focus:outline-none focus:border-[#6366F1] transition"
             />
           </div>
 
           <div className="space-y-1.5">
             <div className="flex items-center justify-between">
-              <label className="block text-xs font-semibold text-slate-200">Email Address</label>
-              <span className="text-[10px] text-slate-400 flex items-center gap-1">
+              <label className="block text-xs font-medium text-[#A7ADB7]">Email Address</label>
+              <span className="text-[10px] text-[#8A919D] flex items-center gap-1">
                 <Lock className="w-2.5 h-2.5 text-amber-400" />
                 Verified
               </span>
@@ -433,32 +433,32 @@ export const ProfileSettingsTab: React.FC = () => {
               readOnly
               disabled
               value={authenticatedEmail || 'Authenticated Session'}
-              className="w-full bg-[#080B10] border border-[#1C232E] rounded-xl px-3.5 py-2.5 text-slate-400 text-xs font-mono cursor-not-allowed opacity-80"
+              className="w-full bg-[#06080B] border border-[rgba(255,255,255,0.06)] rounded-xl px-3.5 py-2.5 text-[#8A919D] text-xs font-mono cursor-not-allowed opacity-80"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">Professional Title</label>
+            <label className="block text-xs font-medium text-[#A7ADB7]">Professional Title</label>
             <input
               type="text"
               value={professionalTitle}
               onChange={e => setProfessionalTitle(e.target.value)}
               placeholder="e.g. Senior Quantitative Futures Trader"
-              className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3.5 py-2.5 text-white text-xs placeholder-slate-500 focus:outline-none focus:border-blue-500 transition"
+              className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3.5 py-2.5 text-[#F4F5F7] text-xs placeholder-[#5E6570] focus:outline-none focus:border-[#6366F1] transition"
             />
           </div>
 
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">Trader Handle / Code</label>
+            <label className="block text-xs font-medium text-[#A7ADB7]">Trader Handle / Code</label>
             <div className="relative">
-              <span className="absolute left-3.5 top-2.5 text-slate-500 font-mono text-xs">@</span>
+              <span className="absolute left-3.5 top-2.5 text-[#5E6570] font-mono text-xs">@</span>
               <input
                 type="text"
                 value={accountCode}
                 onChange={e => handleAccountCodeChange(e.target.value)}
                 placeholder="TF-QUANT-892"
-                className={`w-full bg-[#0A0D14] border rounded-xl pl-8 pr-3.5 py-2.5 text-white text-xs font-mono focus:outline-none transition ${
-                  accountCodeError ? 'border-rose-500' : 'border-[#1C232E] focus:border-blue-500'
+                className={`w-full bg-[#080A0D] border rounded-xl pl-8 pr-3.5 py-2.5 text-[#F4F5F7] text-xs font-mono focus:outline-none transition ${
+                  accountCodeError ? 'border-rose-500' : 'border-[rgba(255,255,255,0.08)] focus:border-[#6366F1]'
                 }`}
               />
             </div>
@@ -470,64 +470,64 @@ export const ProfileSettingsTab: React.FC = () => {
       </div>
 
       {/* Group 3: Experience & Residence */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-4">
+      <div className="p-5 sm:p-6 rounded-2xl bg-[#0D1014] border border-[rgba(255,255,255,0.055)] space-y-4">
         <div>
-          <h3 className="text-sm font-bold text-white tracking-tight flex items-center gap-2">
-            <Globe className="w-4 h-4 text-blue-400" />
+          <h3 className="text-sm font-semibold text-[#F4F5F7] tracking-tight flex items-center gap-2">
+            <Globe className="w-4 h-4 text-[#818CF8]" />
             Experience & Regional Settings
           </h3>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#8A919D] mt-0.5">
             Configure your trading tenure, primary country, and desk timezone.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="space-y-1.5">
-            <label className="block text-xs font-semibold text-slate-200">Experience Level</label>
+            <label className="block text-xs font-medium text-[#A7ADB7]">Experience Level</label>
             <select
               value={experienceLevel}
               onChange={e => setExperienceLevel(e.target.value)}
-              className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
+              className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3.5 py-2.5 text-[#F4F5F7] text-xs focus:outline-none focus:border-[#6366F1] cursor-pointer"
             >
-              <option value="Beginner (< 1 Year)">Beginner (&lt; 1 Year)</option>
-              <option value="Developing (1 - 3 Years)">Developing (1 - 3 Years)</option>
-              <option value="Proficient (3 - 5 Years)">Proficient (3 - 5 Years)</option>
-              <option value="5+ Years (Full-Time Funded)">5+ Years (Full-Time Funded)</option>
-              <option value="Institutional Fund Trader">Institutional Fund Trader</option>
+              <option value="Beginner (< 1 Year)" className="bg-[#0D1014] text-[#F4F5F7]">Beginner (&lt; 1 Year)</option>
+              <option value="Developing (1 - 3 Years)" className="bg-[#0D1014] text-[#F4F5F7]">Developing (1 - 3 Years)</option>
+              <option value="Proficient (3 - 5 Years)" className="bg-[#0D1014] text-[#F4F5F7]">Proficient (3 - 5 Years)</option>
+              <option value="5+ Years (Full-Time Funded)" className="bg-[#0D1014] text-[#F4F5F7]">5+ Years (Full-Time Funded)</option>
+              <option value="Institutional Fund Trader" className="bg-[#0D1014] text-[#F4F5F7]">Institutional Fund Trader</option>
             </select>
           </div>
 
           <div className="relative space-y-1.5" ref={countryDropdownRef}>
-            <label className="block text-xs font-semibold text-slate-200">Country / Tax Residence</label>
+            <label className="block text-xs font-medium text-[#A7ADB7]">Country / Tax Residence</label>
             <button
               type="button"
               onClick={() => setIsCountryDropdownOpen(prev => !prev)}
-              className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3.5 py-2.5 text-white text-xs flex items-center justify-between hover:border-blue-500/50 transition cursor-pointer text-left"
+              className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3.5 py-2.5 text-[#F4F5F7] text-xs flex items-center justify-between hover:border-[rgba(99,102,241,0.35)] transition cursor-pointer text-left"
             >
               <span className="flex items-center gap-2 truncate">
                 <span className="text-base">{selectedCountryObj.flag}</span>
                 <span className="truncate">{selectedCountryObj.name}</span>
               </span>
-              <ChevronDown className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+              <ChevronDown className="w-3.5 h-3.5 text-[#8A919D] shrink-0" />
             </button>
 
             {isCountryDropdownOpen && (
-              <div className="absolute z-50 left-0 right-0 mt-1.5 bg-[#12161D] border border-[#1C232E] rounded-xl shadow-2xl p-2 max-h-60 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100">
+              <div className="absolute z-50 left-0 right-0 mt-1.5 bg-[#0B0E12] border border-[rgba(255,255,255,0.08)] rounded-xl shadow-2xl p-2 max-h-60 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-100">
                 <div className="relative mb-2 shrink-0">
-                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+                  <Search className="w-3.5 h-3.5 text-[#5E6570] absolute left-2.5 top-1/2 -translate-y-1/2" />
                   <input
                     type="text"
                     value={countrySearch}
                     onChange={e => setCountrySearch(e.target.value)}
                     placeholder="Search countries..."
                     autoFocus
-                    className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-lg pl-8 pr-2.5 py-1.5 text-xs text-[#F4F5F7] placeholder-[#5E6570] focus:outline-none focus:border-[#6366F1]"
                   />
                 </div>
 
                 <div className="overflow-y-auto space-y-0.5 flex-1 pr-1 custom-scrollbar">
                   {filteredCountries.length === 0 ? (
-                    <div className="text-slate-500 text-center py-3 text-xs">
+                    <div className="text-[#5E6570] text-center py-3 text-xs">
                       No matching countries found
                     </div>
                   ) : (
@@ -544,15 +544,15 @@ export const ProfileSettingsTab: React.FC = () => {
                           }}
                           className={`w-full flex items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer ${
                             isSelected
-                              ? 'bg-blue-600/20 text-blue-300 font-semibold'
-                              : 'text-slate-300 hover:bg-[#1C232E]'
+                              ? 'bg-[#6366F1]/15 text-[#818CF8] font-semibold'
+                              : 'text-[#C2C7D0] hover:bg-[#151A20] hover:text-[#F4F5F7]'
                           }`}
                         >
                           <span className="flex items-center gap-2 truncate">
                             <span className="text-base">{c.flag}</span>
                             <span className="truncate">{c.name}</span>
                           </span>
-                          {isSelected && <Check className="w-3.5 h-3.5 text-blue-400 shrink-0" />}
+                          {isSelected && <Check className="w-3.5 h-3.5 text-[#818CF8] shrink-0" />}
                         </button>
                       );
                     })
@@ -565,10 +565,10 @@ export const ProfileSettingsTab: React.FC = () => {
       </div>
 
       {/* Group 4: Trading Philosophy & Bio */}
-      <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-3">
+      <div className="p-5 sm:p-6 rounded-2xl bg-[#0D1014] border border-[rgba(255,255,255,0.055)] space-y-3">
         <div>
-          <h3 className="text-sm font-bold text-white tracking-tight">Trading Philosophy & Edge Bio</h3>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <h3 className="text-sm font-semibold text-[#F4F5F7] tracking-tight">Trading Philosophy & Edge Bio</h3>
+          <p className="text-xs text-[#8A919D] mt-0.5">
             Outline your primary edges, session habits, and market philosophy.
           </p>
         </div>
@@ -578,7 +578,7 @@ export const ProfileSettingsTab: React.FC = () => {
           value={bio}
           onChange={e => setBio(e.target.value)}
           placeholder="Outline your primary edges, core session habits, and market philosophy..."
-          className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl p-3 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition leading-relaxed"
+          className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl p-3 text-xs text-[#F4F5F7] placeholder-[#5E6570] focus:outline-none focus:border-[#6366F1] transition leading-relaxed"
         />
       </div>
     </form>

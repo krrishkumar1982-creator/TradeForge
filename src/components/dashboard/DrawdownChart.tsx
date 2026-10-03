@@ -313,7 +313,7 @@ export const DrawdownChart: React.FC<DrawdownChartProps> = ({ trades, formatCurr
                   </span>
                 </div>
                 <div className={`flex items-center justify-between text-[10px] pt-1 border-t ${
-                  theme === 'light' ? 'border-slate-100 text-slate-500' : 'border-white/5 text-slate-400'
+                  theme === 'light' ? 'border-slate-100 text-[#71717A]' : 'border-white/5 text-[#A1A1AA]'
                 }`}>
                   <span>Account Equity:</span>
                   <span className="font-semibold">{formatCurrency(hoveredPoint.currentEquity)}</span>

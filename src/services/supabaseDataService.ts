@@ -430,6 +430,54 @@ export async function bulkDeleteTradesFromSupabase(tradeIds: string[], userId: s
   }
 }
 
+export async function clearAllTradesInSupabase(userId: string): Promise<boolean> {
+  const cacheKey = `trades_${userId}`;
+  setLocalCache(cacheKey, []);
+
+  if (!isSupabaseConfigured()) return true;
+
+  try {
+    const { error } = await supabase
+      .from('trades')
+      .delete()
+      .eq('user_id', userId);
+
+    if (error) {
+      console.warn('[Supabase Trades] Clear all notice:', error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn('[Supabase Trades] Clear all error:', err);
+    return false;
+  }
+}
+
+export async function bulkInsertTradesToSupabase(newTrades: Trade[], userId: string): Promise<boolean> {
+  const cacheKey = `trades_${userId}`;
+  const existing = getLocalCache<Trade[]>(cacheKey, []);
+  const newIds = new Set(newTrades.map(t => t.id));
+  setLocalCache(cacheKey, [...newTrades, ...existing.filter(t => !newIds.has(t.id))]);
+
+  if (!isSupabaseConfigured() || newTrades.length === 0) return true;
+
+  try {
+    const rows = newTrades.map(t => mapTradeToRow(t, userId));
+    const { error } = await supabase
+      .from('trades')
+      .upsert(rows, { onConflict: 'id' });
+
+    if (error) {
+      console.warn('[Supabase Trades] Bulk insert notice:', error.message);
+      return false;
+    }
+    return true;
+  } catch (err) {
+    console.warn('[Supabase Trades] Bulk insert error:', err);
+    return false;
+  }
+}
+
 export async function bulkEditTradesInSupabase(
   tradeIds: string[],
   updates: Partial<Trade>,
@@ -493,20 +541,75 @@ export async function fetchPropFirmAccountsFromSupabase(userId: string): Promise
         id: row.id,
         name: row.name,
         firmName: row.firm_name || row.firm || 'Apex Trader Funding',
+        tradingBrand: row.trading_brand,
+        legalEntity: row.legal_entity,
+        registrationNumber: row.registration_number,
+        jurisdiction: row.jurisdiction,
+        termsEffectiveDate: row.terms_effective_date,
+        rulesVersion: row.rules_version,
+        accountNumber: row.account_number,
         accountSize: Number(row.account_size || row.starting_balance || 50000),
         startingBalance: Number(row.starting_balance || 50000),
         currentBalance: Number(row.current_balance || row.starting_balance || 50000),
         equity: Number(row.equity || row.current_balance || row.starting_balance || 50000),
-        highWaterMark: Number(row.high_watermark || row.high_water_mark || row.current_balance || 50000),
-        phase: (row.phase as any) || 'EVALUATION',
-        status: (row.status as any) || 'ACTIVE',
-        riskState: (row.risk_state as any) || 'NORMAL',
-        drawdownModel: (row.drawdown_model as any) || 'TRAILING_END_OF_DAY',
-        dailyDrawdownModel: (row.daily_drawdown_model as any) || 'STATIC_BALANCE',
-        sessionTimezone: row.session_timezone || 'America/New_York',
+        highWaterMark: Number(row.high_water_mark || row.high_watermark || row.current_balance || 50000),
         currency: row.currency || 'USD',
+        programModel: (row.program_model as any) || 'TWO_STEP',
+        phases: Array.isArray(row.phases) ? row.phases : [],
+        activePhaseIndex: typeof row.active_phase_index === 'number' ? row.active_phase_index : 0,
+        phase: (row.phase as any) || 'PHASE_1',
+        phaseName: row.phase_name,
+        status: (row.status as any) || 'ACTIVE',
+        riskState: (row.risk_state as any) || 'SAFE',
+        enforcementMode: (row.enforcement_mode as any) || 'MONITOR',
+        drawdownModel: (row.drawdown_model as any) || 'STATIC',
+        dailyDrawdownModel: (row.daily_drawdown_model as any) || 'START_OF_DAY_BALANCE',
+        dailyLossMethod: (row.daily_loss_method as any) || 'REALIZED_ONLY',
+        maxRiskPerSymbolPercent: row.max_risk_per_symbol_percent !== null ? Number(row.max_risk_per_symbol_percent) : undefined,
+        minTradeDurationSec: row.min_trade_duration_sec !== null ? Number(row.min_trade_duration_sec) : undefined,
+        avgTradeDurationSec: row.avg_trade_duration_sec !== null ? Number(row.avg_trade_duration_sec) : undefined,
+        minTradingDays: Number(row.min_trading_days || 0),
+        maxTradingDays: Number(row.max_trading_days || 0),
+        startDate: row.start_date,
+        deadline: row.deadline,
+        qualifyingDayProfitPercent: row.qualifying_day_profit_percent !== null ? Number(row.qualifying_day_profit_percent) : undefined,
+        profitTargetPercent: Number(row.profit_target_percent || 0),
+        dailyLossPercent: Number(row.daily_loss_percent || 0),
+        totalLossPercent: Number(row.total_loss_percent || 0),
+        profitTargetAmount: row.profit_target_amount !== null ? Number(row.profit_target_amount) : undefined,
+        dailyLossAmount: row.daily_loss_amount !== null ? Number(row.daily_loss_amount) : undefined,
+        totalLossAmount: row.total_loss_amount !== null ? Number(row.total_loss_amount) : undefined,
+        consistencyMaxDayPercent: row.consistency_max_day_percent !== null ? Number(row.consistency_max_day_percent) : undefined,
+        maxProfitConcentrationPercent: row.max_profit_concentration_percent !== null ? Number(row.max_profit_concentration_percent) : undefined,
+        newsTradingAllowed: row.news_trading_allowed || 'ALLOWED',
+        weekendHoldingAllowed: row.weekend_holding_allowed !== false,
+        overnightHoldingAllowed: row.overnight_holding_allowed !== false,
+        eaAllowed: row.ea_allowed || 'ALLOWED',
+        copyTradingAllowed: row.copy_trading_allowed || 'ALLOWED',
+        hedgingAllowed: row.hedging_allowed || 'ALLOWED',
+        maxLotSize: row.max_lot_size !== null ? Number(row.max_lot_size) : undefined,
+        minLotSize: row.min_lot_size !== null ? Number(row.min_lot_size) : undefined,
+        maxPositions: row.max_positions !== null ? Number(row.max_positions) : undefined,
+        maxLeverage: Number(row.max_leverage || 100),
+        ipRestrictions: row.ip_restrictions || {},
+        prohibitedStrategies: Array.isArray(row.prohibited_strategies) ? row.prohibited_strategies : [],
+        rewardBufferPercent: row.reward_buffer_percent !== null ? Number(row.reward_buffer_percent) : undefined,
+        rewardSplitPercent: Number(row.reward_split_percent || 80),
+        profitSplitTraderPercent: Number(row.profit_split_trader_percent || 80),
+        profitSplitFirmPercent: Number(row.profit_split_firm_percent || 20),
+        minRewardRequest: row.min_reward_request !== null ? Number(row.min_reward_request) : undefined,
+        payoutFrequency: (row.payout_frequency as any) || 'BIWEEKLY',
+        activationFee: row.activation_fee !== null ? Number(row.activation_fee) : undefined,
+        inactivityMaxDays: Number(row.inactivity_max_days || 30),
+        newsWindowMinutes: Number(row.news_window_minutes || 5),
+        sessionTimezone: row.session_timezone || 'America/New_York',
+        scalingRules: row.scaling_rules || {},
         rules: Array.isArray(row.rules) ? row.rules : [],
         violations: Array.isArray(row.violations) ? row.violations : [],
+        timeline: Array.isArray(row.timeline) ? row.timeline : [],
+        payoutInfo: row.payout_info || {},
+        tradingAccountLink: row.trading_account_link,
+        notes: row.notes,
         createdAt: row.created_at || new Date().toISOString(),
         updatedAt: row.updated_at,
       }));
@@ -531,19 +634,76 @@ export async function upsertPropFirmAccountToSupabase(account: PropFirmAccount, 
       id: account.id,
       user_id: userId,
       name: account.name,
-      firm_name: account.firmName,
-      account_size: account.accountSize || account.startingBalance,
-      starting_balance: account.startingBalance,
-      current_balance: account.currentBalance,
-      equity: account.equity || account.currentBalance,
-      high_watermark: account.highWaterMark || account.currentBalance,
-      phase: account.phase,
-      status: account.status,
-      risk_state: account.riskState,
-      drawdown_model: account.drawdownModel,
-      daily_drawdown_model: account.dailyDrawdownModel,
-      session_timezone: account.sessionTimezone || 'America/New_York',
+      firm_name: account.firmName || 'Prop Firm',
+      trading_brand: account.tradingBrand || null,
+      legal_entity: account.legalEntity || null,
+      registration_number: account.registrationNumber || null,
+      jurisdiction: account.jurisdiction || null,
+      terms_effective_date: account.termsEffectiveDate || null,
+      rules_version: account.rulesVersion || null,
+      account_number: account.accountNumber || null,
+      account_size: account.accountSize || account.startingBalance || 50000,
+      starting_balance: account.startingBalance || 50000,
+      current_balance: account.currentBalance || account.startingBalance || 50000,
+      equity: account.equity || account.currentBalance || account.startingBalance || 50000,
+      high_water_mark: account.highWaterMark || account.currentBalance || account.startingBalance || 50000,
       currency: account.currency || 'USD',
+      program_model: account.programModel || 'TWO_STEP',
+      phases: account.phases || [],
+      active_phase_index: account.activePhaseIndex || 0,
+      phase: account.phase || 'PHASE_1',
+      phase_name: account.phaseName || null,
+      status: account.status || 'ACTIVE',
+      risk_state: account.riskState || 'SAFE',
+      enforcement_mode: account.enforcementMode || 'MONITOR',
+      drawdown_model: account.drawdownModel || 'STATIC',
+      daily_drawdown_model: account.dailyDrawdownModel || 'START_OF_DAY_BALANCE',
+      daily_loss_method: account.dailyLossMethod || 'REALIZED_ONLY',
+      max_risk_per_symbol_percent: account.maxRiskPerSymbolPercent ?? null,
+      min_trade_duration_sec: account.minTradeDurationSec ?? null,
+      avg_trade_duration_sec: account.avgTradeDurationSec ?? null,
+      min_trading_days: account.minTradingDays ?? 0,
+      max_trading_days: account.maxTradingDays ?? 0,
+      start_date: account.startDate || null,
+      deadline: account.deadline || null,
+      qualifying_day_profit_percent: account.qualifyingDayProfitPercent ?? null,
+      profit_target_percent: account.profitTargetPercent ?? 0,
+      daily_loss_percent: account.dailyLossPercent ?? 0,
+      total_loss_percent: account.totalLossPercent ?? 0,
+      profit_target_amount: account.profitTargetAmount ?? null,
+      daily_loss_amount: account.dailyLossAmount ?? null,
+      total_loss_amount: account.totalLossAmount ?? null,
+      consistency_max_day_percent: account.consistencyMaxDayPercent ?? null,
+      max_profit_concentration_percent: account.maxProfitConcentrationPercent ?? null,
+      news_trading_allowed: account.newsTradingAllowed || 'ALLOWED',
+      weekend_holding_allowed: account.weekendHoldingAllowed ?? true,
+      overnight_holding_allowed: account.overnightHoldingAllowed ?? true,
+      ea_allowed: account.eaAllowed || 'ALLOWED',
+      copy_trading_allowed: account.copyTradingAllowed || 'ALLOWED',
+      hedging_allowed: account.hedgingAllowed || 'ALLOWED',
+      max_lot_size: account.maxLotSize ?? null,
+      min_lot_size: account.minLotSize ?? null,
+      max_positions: account.maxPositions ?? null,
+      max_leverage: account.maxLeverage ?? 100,
+      ip_restrictions: account.ipRestrictions || {},
+      prohibited_strategies: account.prohibitedStrategies || [],
+      reward_buffer_percent: account.rewardBufferPercent ?? null,
+      reward_split_percent: account.rewardSplitPercent ?? 80,
+      profit_split_trader_percent: account.profitSplitTraderPercent ?? 80,
+      profit_split_firm_percent: account.profitSplitFirmPercent ?? 20,
+      min_reward_request: account.minRewardRequest ?? null,
+      payout_frequency: account.payoutFrequency || 'BIWEEKLY',
+      activation_fee: account.activationFee ?? null,
+      inactivity_max_days: account.inactivityMaxDays ?? 30,
+      news_window_minutes: account.newsWindowMinutes ?? 5,
+      session_timezone: account.sessionTimezone || 'America/New_York',
+      scaling_rules: account.scalingRules || {},
+      rules: account.rules || [],
+      violations: account.violations || [],
+      timeline: account.timeline || [],
+      payout_info: account.payoutInfo || {},
+      trading_account_link: account.tradingAccountLink || null,
+      notes: account.notes || null,
       updated_at: new Date().toISOString(),
     };
 
@@ -1909,3 +2069,75 @@ export async function clearAllNotificationsInSupabase(userId: string): Promise<b
     return false;
   }
 }
+
+// ==========================================
+// 19. Import History
+// ==========================================
+export async function fetchImportHistoryFromSupabase(userId: string): Promise<ImportHistoryItem[]> {
+  const cacheKey = `import_history_${userId}`;
+  try {
+    if (!isSupabaseConfigured()) return getLocalCache(cacheKey, []);
+
+    const { data, error } = await supabase
+      .from('import_history')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.warn('[Supabase Import History] Fetch notice:', error.message);
+      return getLocalCache(cacheKey, []);
+    }
+
+    if (data && Array.isArray(data)) {
+      const history: ImportHistoryItem[] = data.map((row) => ({
+        id: row.id,
+        source: row.source || 'CSV',
+        fileName: row.file_name || 'Import Batch',
+        tradesProcessed: Number(row.trades_processed || 0),
+        tradesAdded: Number(row.trades_added || 0),
+        duplicatesCount: Number(row.duplicates_count || 0),
+        errorsCount: Number(row.errors_count || 0),
+        status: row.status || 'COMPLETED',
+        details: row.details || {},
+        createdAt: row.created_at || new Date().toISOString(),
+      }));
+      setLocalCache(cacheKey, history);
+      return history;
+    }
+  } catch (err) {
+    console.warn('[Supabase Import History] Network notice:', err);
+  }
+  return getLocalCache(cacheKey, []);
+}
+
+export async function insertImportHistoryToSupabase(item: ImportHistoryItem, userId: string): Promise<boolean> {
+  const cacheKey = `import_history_${userId}`;
+  const existing = getLocalCache<ImportHistoryItem[]>(cacheKey, []);
+  setLocalCache(cacheKey, [item, ...existing.filter((h) => h.id !== item.id)]);
+
+  if (!isSupabaseConfigured()) return true;
+
+  try {
+    const { error } = await supabase
+      .from('import_history')
+      .insert({
+        id: item.id,
+        user_id: userId,
+        source: item.source,
+        file_name: item.fileName,
+        trades_processed: item.tradesProcessed,
+        trades_added: item.tradesAdded,
+        duplicates_count: item.duplicatesCount,
+        errors_count: item.errorsCount,
+        status: item.status,
+        details: item.details || {},
+        created_at: item.createdAt,
+      });
+
+    return !error;
+  } catch {
+    return false;
+  }
+}
+

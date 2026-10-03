@@ -79,7 +79,7 @@ export const Badge: React.FC<BadgeProps> = ({
       : 'bg-blue-500/10 text-blue-400 border border-blue-500/25',
     neutral: isLight
       ? 'bg-zinc-100 text-zinc-700 border border-zinc-200'
-      : 'bg-[#181A21] text-slate-300 border border-[rgba(255,255,255,0.08)]',
+      : 'bg-[#11151A] text-[#C2C7D0] border border-[rgba(255,255,255,0.07)]',
     success: isLight
       ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
       : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/25',

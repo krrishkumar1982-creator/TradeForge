@@ -156,6 +156,17 @@ export interface TradeForgeIntelligenceResult {
   actionablePrescriptions?: string[];
 }
 
+export type CoachRole = 'lead_coach' | 'trade_reviewer' | 'psychologist' | 'prop_firm_officer' | 'playbook_architect';
+
+export interface AskIntelligenceOptions {
+  activeAccountId?: string;
+  activePropFirmAccountId?: string;
+  coachRole?: CoachRole;
+  model?: string;
+  focusTrade?: Trade;
+  focusTradeId?: string;
+}
+
 /**
  * Ask TradeForge Institutional AI Intelligence (Server-authoritative, powered by Google Gemini API)
  */
@@ -164,9 +175,17 @@ export async function askTradeForgeIntelligence(
   trades: Trade[] = [],
   playbooks: Playbook[] = [],
   conversationHistory: ChatMessageItem[] = [],
-  activeAccountId?: string,
+  optionsOrAccountId?: string | AskIntelligenceOptions,
   activePropFirmAccountId?: string
 ): Promise<TradeForgeIntelligenceResult> {
+  const options: AskIntelligenceOptions =
+    typeof optionsOrAccountId === 'object' && optionsOrAccountId !== null
+      ? optionsOrAccountId
+      : {
+          activeAccountId: typeof optionsOrAccountId === 'string' ? optionsOrAccountId : undefined,
+          activePropFirmAccountId,
+        };
+
   try {
     const res = await authenticatedFetch('/api/ai/coach', {
       method: 'POST',
@@ -177,8 +196,12 @@ export async function askTradeForgeIntelligence(
         conversationHistory,
         trades,
         playbooks,
-        activeAccountId,
-        activePropFirmAccountId,
+        activeAccountId: options.activeAccountId,
+        activePropFirmAccountId: options.activePropFirmAccountId,
+        coachRole: options.coachRole,
+        model: options.model,
+        focusTrade: options.focusTrade,
+        focusTradeId: options.focusTradeId,
       }),
     });
 
@@ -215,8 +238,8 @@ export async function askTradeForgeIntelligence(
     trades,
     playbooks,
     conversationHistory,
-    activeAccountId,
-    activePropFirmAccountId
+    options.activeAccountId,
+    options.activePropFirmAccountId
   );
 
   return {

@@ -1,4 +1,4 @@
-import { getGeminiClient, getGeminiModel } from './geminiClient';
+import { getGeminiClient, getGeminiModel, generateContentWithResilience } from './geminiClient';
 import { classifyUserIntent } from './intentClassifier';
 import { buildStructuredAiContext, StructuredAiContext } from './dataEngine';
 import {
@@ -94,6 +94,50 @@ export interface AiCoachResponse {
   }>;
 }
 
+export type CoachRole = 'lead_coach' | 'trade_reviewer' | 'psychologist' | 'prop_firm_officer' | 'playbook_architect';
+
+export const COACH_ROLE_INSTRUCTIONS: Record<CoachRole, string> = {
+  lead_coach: `You are TradeForge AI — Lead Institutional Trading Coach & Quantitative Risk Officer.
+You oversee execution quality, risk management, statistical edge, and account growth across all asset classes and market sessions.
+Prime Directives:
+1. Ground every analysis in real performance numbers from the provided context (Net P&L, Win Rate, Profit Factor, Expectancy, R-multiple).
+2. Distinguish process adherence from mere outcome (good process loss vs bad habit win).
+3. Deliver high-impact, actionable prescriptions for risk sizing, daily stop loss rules, and session focus.
+4. Keep answers objective, data-cited, and formatted in clear Markdown.`,
+
+  trade_reviewer: `You are TradeForge AI — Senior Trade Post-Mortem & Execution Auditor.
+You specialize in granular, forensic critiques of individual trade executions and recent setups.
+Prime Directives:
+1. Dissect trade entry quality, technical invalidation point, stop placement, target projection, and R-multiple capture.
+2. Scrutinize execution errors (premature exit, chased entry, moving stop loss, oversized position, FOMO).
+3. Assign process-driven critiques: Praise high-discipline trade management even if stopped out; firmly critique rule deviations even if profitable.
+4. Provide concrete adjustment plans for the next execution of this specific setup.`,
+
+  psychologist: `You are TradeForge AI — Master Trading Psychologist & Mindset Coach.
+You specialize in cognitive biases, emotional capital, discipline stamina, and tilt prevention.
+Prime Directives:
+1. Examine emotional state logs (FOMO, Revenge, Hesitation, Greed, Anxiety, Overconfidence).
+2. Explain neurological drivers behind mistakes (amygdala hijack, loss aversion, dopamine seeking).
+3. Prescribe concrete psychological interventions (cooling-off protocols, circuit-breaker rules, pre-trade breathing checklists, mental resets).
+4. Emphasize that emotional regulation is a quantitative edge that directly prevents catastrophic drawdowns.`,
+
+  prop_firm_officer: `You are TradeForge AI — Chief Prop Firm Risk & Compliance Officer.
+You specialize in prop firm challenges, funded account preservation, and catastrophic risk containment (Apex, Topstep, FTMO, FundedNext, MyFundedFX, etc.).
+Prime Directives:
+1. Prioritize capital preservation above all: strictly audit Daily Loss Limit buffer, Maximum Trailing Drawdown, and consistency thresholds.
+2. Flag any trading behavior that jeopardizes account passing or payout eligibility (gambling sizing, revenge trading into limits, holding into restricted news).
+3. Calculate exact dollar and percentage buffers remaining before breach.
+4. Prescribe defensive position sizing (0.5% - 1% max risk per idea) to guarantee long-term funding survival.`,
+
+  playbook_architect: `You are TradeForge AI — Playbook & Quantitative Setup Architect.
+You specialize in trading edge verification, expectancy calculation, setup optimization, and strategy mechanics.
+Prime Directives:
+1. Evaluate setup win rates, average R-multiples, and profit factor per strategy.
+2. Separate positive-expectancy A+ setups from low-quality discretionary noise.
+3. Recommend eliminating or backtesting setups that show negative expectancy or high mistake correlation.
+4. Help the trader refine their playbook entry triggers, confirmation checklists, and invalidation criteria.`,
+};
+
 const SYSTEM_INSTRUCTION = `You are TradeForge AI — an Elite Institutional Trading Coach, Quantitative Risk Officer, and Performance Psychologist.
 You are embedded directly inside the trader's professional trade journaling and prop firm management terminal.
 
@@ -129,6 +173,9 @@ export async function executeAiCoachQuery(params: {
   riskGoals?: RiskGoalSettings;
   activeAccountId?: string;
   activePropFirmAccountId?: string;
+  coachRole?: CoachRole;
+  model?: string;
+  focusTrade?: Trade;
 }): Promise<AiCoachResponse> {
   const {
     query,
@@ -142,6 +189,9 @@ export async function executeAiCoachQuery(params: {
     riskGoals,
     activeAccountId,
     activePropFirmAccountId,
+    coachRole = 'lead_coach',
+    model: requestedModel,
+    focusTrade,
   } = params;
 
   // 1. Classify Intent & Extract Entities
@@ -269,20 +319,47 @@ export async function executeAiCoachQuery(params: {
 
   if (gemini) {
     try {
-      const model = getGeminiModel();
+      const model = getGeminiModel(requestedModel);
 
       // Format conversation history for multi-turn context
       const historySummary = conversationHistory
-        .slice(-6)
+        .slice(-10)
         .map((m) => `${m.sender.toUpperCase()}: ${m.text}`)
         .join('\n\n');
+
+      const focusTradePayload = focusTrade
+        ? `\n=== SPECIFIC FOCUS TRADE FOR DETAILED AUDIT ===\n${JSON.stringify(
+            {
+              id: focusTrade.id,
+              symbol: focusTrade.symbol,
+              direction: focusTrade.direction,
+              entryPrice: focusTrade.entryPrice,
+              exitPrice: focusTrade.exitPrice,
+              quantity: focusTrade.quantity,
+              netPnl: focusTrade.netPnl,
+              grossPnl: focusTrade.grossPnl,
+              rMultiple: focusTrade.rMultiple,
+              entryDate: focusTrade.entryDate,
+              exitDate: focusTrade.exitDate,
+              durationMinutes: focusTrade.durationMinutes,
+              session: focusTrade.session,
+              setupType: focusTrade.setupType,
+              rulesFollowed: focusTrade.rulesFollowed,
+              mistakes: focusTrade.mistakes,
+              emotionalState: focusTrade.emotionalState,
+              notes: focusTrade.notes,
+            },
+            null,
+            2
+          )}\n===============================================\n`
+        : '';
 
       const promptPayload = `
 === STRUCTURED TRADEFORGE DATABASE CONTEXT (AUTHORITATIVE) ===
 ${JSON.stringify(context, null, 2)}
 ==============================================================
-
-${historySummary ? `=== PREVIOUS CHAT CONVERSATION ===\n${historySummary}\n==================================\n` : ''}
+${focusTradePayload}
+${historySummary ? `=== PREVIOUS CHAT CONVERSATION HISTORY ===\n${historySummary}\n=========================================\n` : ''}
 
 CURRENT USER QUESTION:
 "${query}"
@@ -290,11 +367,12 @@ CURRENT USER QUESTION:
 Provide an institutional, data-grounded, professional response adhering strictly to your system directives. Cite exact metrics from the structured context. Do not invent any outside data.
 `;
 
-      const response = await gemini.models.generateContent({
-        model,
+      const roleInstruction = COACH_ROLE_INSTRUCTIONS[coachRole] || SYSTEM_INSTRUCTION;
+
+      const response = await generateContentWithResilience(gemini, model, {
         contents: promptPayload,
         config: {
-          systemInstruction: SYSTEM_INSTRUCTION,
+          systemInstruction: `${SYSTEM_INSTRUCTION}\n\nSPECIALIZED ACTIVE ROLE DIRECTIVES:\n${roleInstruction}`,
           temperature: 0.2, // Low temperature for high factual precision and numerical consistency
         },
       });

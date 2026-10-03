@@ -257,7 +257,7 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
     if (count === 0) {
       return isLight
         ? 'bg-slate-100/90 border-slate-200 hover:border-slate-300'
-        : 'bg-[#10131B] border-[rgba(255,255,255,0.05)] hover:border-[rgba(255,255,255,0.15)]';
+        : 'bg-[#0D1014] border-[rgba(255,255,255,0.055)] hover:border-[rgba(255,255,255,0.15)]';
     }
 
     if (pnl > 0) {
@@ -297,11 +297,11 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
       {/* Heatmap Area */}
       <div className="relative">
         {/* Month Headers */}
-        <div className="flex text-[10px] font-mono text-slate-400 pl-6 mb-1.5 h-4 relative">
+        <div className="flex text-[10px] font-mono text-[#A1A1AA] pl-6 mb-1.5 h-4 relative">
           {monthHeaders.map((m, idx) => (
             <span
               key={`${m.name}-${idx}`}
-              className="absolute text-slate-400 font-medium"
+              className="absolute text-[#A1A1AA] font-medium"
               style={{ left: `calc(1.5rem + ${m.weekIndex * 9.09}%)` }}
             >
               {m.name}
@@ -313,7 +313,7 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
         <div className="flex gap-1.5 items-start">
           {/* Day of Week Labels */}
           <div className={`flex flex-col gap-1 text-[9px] font-mono pr-1 pt-0.5 select-none w-5 ${
-            isLight ? 'text-slate-400' : 'text-slate-500'
+            isLight ? 'text-[#A1A1AA]' : 'text-[#71717A]'
           }`}>
             {daysOfWeek.map((d, i) => (
               <span key={`${d}-${i}`} className="h-3 sm:h-3.5 leading-none flex items-center justify-end">
@@ -362,7 +362,7 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
 
         {/* Heatmap Legend (Less -> More with Green/Red cues) */}
         <div className={`flex items-center justify-between mt-2.5 text-[9px] font-mono ${
-          isLight ? 'text-slate-500' : 'text-slate-400'
+          isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'
         }`}>
           <div className="flex items-center gap-2">
             <span className="flex items-center gap-1 text-[9px]">
@@ -376,7 +376,7 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
           </div>
           <div className="flex items-center gap-1">
             <span>Less</span>
-            <div className={`w-2 h-2 rounded-xs ${isLight ? 'bg-slate-100 border border-slate-200' : 'bg-[#10131B] border border-[rgba(255,255,255,0.05)]'}`} />
+            <div className={`w-2 h-2 rounded-xs ${isLight ? 'bg-slate-100 border border-slate-200' : 'bg-[#0D1014] border border-[rgba(255,255,255,0.055)]'}`} />
             <div className={`w-2 h-2 rounded-xs ${isLight ? 'bg-emerald-200' : 'bg-emerald-500/30'}`} />
             <div className={`w-2 h-2 rounded-xs ${isLight ? 'bg-emerald-400' : 'bg-emerald-500/60'}`} />
             <div className={`w-2 h-2 rounded-xs ${isLight ? 'bg-emerald-600' : 'bg-emerald-500'}`} />
@@ -389,11 +389,11 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
           <div className={`absolute -top-1 right-0 px-2.5 py-1.5 rounded-lg text-xs shadow-xl z-30 pointer-events-none animate-in fade-in border ${
             isLight
               ? 'bg-white border-slate-200 text-slate-900 shadow-slate-200/50'
-              : 'bg-[#0E121A] border-[rgba(255,255,255,0.12)] text-slate-100 shadow-black/60'
+              : 'bg-[#0B0E12] border-[rgba(255,255,255,0.08)] text-[#F4F5F7] shadow-black/60'
           }`}>
             <div className="font-semibold text-[11px]">{hoveredCell.dateStr}</div>
             <div className="flex items-center gap-1.5 mt-0.5 text-[10px] font-mono">
-              <span className="text-slate-400">{hoveredCell.tradeCount} trades</span>
+              <span className="text-[#8A919D]">{hoveredCell.tradeCount} trades</span>
               <span className="text-slate-600">•</span>
               <span className={`font-semibold ${hoveredCell.netPnl >= 0 ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')}`}>
                 {formatCurrency(hoveredCell.netPnl)}
@@ -401,7 +401,7 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
               {hoveredCell.tradeCount > 0 && (
                 <>
                   <span className="text-slate-600">•</span>
-                  <span className="text-blue-400">{hoveredCell.winRate.toFixed(0)}% Win</span>
+                  <span className="text-[#818CF8]">{hoveredCell.winRate.toFixed(0)}% Win</span>
                 </>
               )}
             </div>
@@ -414,7 +414,7 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
         isLight ? 'border-slate-200' : 'border-[rgba(255,255,255,0.06)]'
       }`}>
         <div className="flex-1">
-          <div className="flex items-center gap-1 text-[11px] text-slate-400 mb-1">
+          <div className="flex items-center gap-1 text-[11px] text-[#8A919D] mb-1">
             <span>Today's discipline</span>
             <DashboardInfoTooltip
               info={{
@@ -425,14 +425,14 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
             />
           </div>
           <div className="flex items-center gap-2">
-            <span className="font-mono font-bold text-xs text-slate-200">
+            <span className="font-mono font-bold text-xs text-[#F4F5F7]">
               {todayScore}/5
             </span>
             <div className={`h-1.5 flex-1 max-w-[120px] rounded-full overflow-hidden ${
-              isLight ? 'bg-slate-200' : 'bg-[#151922]'
+              isLight ? 'bg-slate-200' : 'bg-[#080A0D]'
             }`}>
               <div
-                className="h-full bg-blue-500 rounded-full transition-all duration-300"
+                className="h-full bg-[#6366F1] rounded-full transition-all duration-300"
                 style={{ width: `${(todayScore / 5) * 100}%` }}
               />
             </div>
@@ -442,13 +442,13 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
         {/* Daily Checklist Button */}
         <button
           onClick={() => setIsChecklistOpen(true)}
-          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg border text-xs font-medium transition cursor-pointer ${
+          className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl border text-xs font-medium transition cursor-pointer ${
             isLight
               ? 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-              : 'border-[rgba(255,255,255,0.08)] bg-[#12161F] hover:bg-[#181D28] text-slate-300 hover:text-white'
+              : 'border-[rgba(255,255,255,0.08)] bg-[#11151A] hover:bg-[#151A20] text-[#C2C7D0] hover:text-[#F4F5F7]'
           }`}
         >
-          <CalendarCheck2 className="w-3.5 h-3.5 text-blue-400" />
+          <CalendarCheck2 className="w-3.5 h-3.5 text-[#818CF8]" />
           <span>Checklist</span>
         </button>
       </div>
@@ -456,12 +456,7 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
       {/* Daily Checklist Modal */}
       {isChecklistOpen && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in"
-          style={{
-            backgroundColor: 'rgba(0, 0, 0, 0.75)',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-          }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-xs animate-in fade-in"
           onClick={(e) => {
             if (e.target === e.currentTarget) setIsChecklistOpen(false);
           }}
@@ -470,24 +465,24 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
             role="dialog"
             aria-modal="true"
             className={`w-full max-w-md rounded-2xl border p-5 shadow-2xl space-y-4 ${
-              isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#0E1118] border-[rgba(255,255,255,0.08)] text-slate-100'
+              isLight ? 'bg-white border-slate-200 text-slate-900' : 'bg-[#0B0E12] border-[rgba(255,255,255,0.08)] text-[#F4F5F7]'
             }`}
           >
             <div className={`flex items-center justify-between pb-3 border-b ${
               isLight ? 'border-slate-200' : 'border-[rgba(255,255,255,0.06)]'
             }`}>
               <div className="flex items-center gap-2.5">
-                <div className="p-1.5 rounded-lg bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                <div className="p-1.5 rounded-lg bg-[#6366F1]/10 text-[#818CF8] border border-[#6366F1]/20">
                   <Trophy className="w-4 h-4" />
                 </div>
                 <div>
-                  <h3 className="text-sm font-semibold text-slate-100">Daily Execution Checklist</h3>
-                  <p className="text-[10px] font-mono text-slate-400">Today: {todayKey}</p>
+                  <h3 className="text-sm font-semibold text-[#F4F5F7]">Daily Execution Checklist</h3>
+                  <p className="text-[10px] font-mono text-[#8A919D]">Today: {todayKey}</p>
                 </div>
               </div>
               <button
                 onClick={() => setIsChecklistOpen(false)}
-                className="p-1 rounded-lg text-slate-400 hover:text-white transition cursor-pointer"
+                className="p-1 rounded-lg text-[#8A919D] hover:text-[#F4F5F7] transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -505,24 +500,24 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
                       isChecked
                         ? isLight
                           ? 'bg-blue-50 border-blue-200 text-blue-900'
-                          : 'bg-blue-500/10 border-blue-500/25 text-slate-100'
+                          : 'bg-[#6366F1]/10 border-[#6366F1]/30 text-[#F4F5F7]'
                         : isLight
                         ? 'bg-slate-50 border-slate-200 text-slate-700 hover:border-slate-300'
-                        : 'bg-[#121620] border-[rgba(255,255,255,0.05)] text-slate-300 hover:border-[rgba(255,255,255,0.12)]'
+                        : 'bg-[#0D1014] border-[rgba(255,255,255,0.055)] text-[#C2C7D0] hover:border-[rgba(99,102,241,0.35)]'
                     }`}
                   >
                     <div className="mt-0.5">
                       {isChecked ? (
-                        <CheckSquare className="w-4 h-4 shrink-0 text-blue-400" />
+                        <CheckSquare className="w-4 h-4 shrink-0 text-[#818CF8]" />
                       ) : (
-                        <Square className="w-4 h-4 shrink-0 text-slate-500" />
+                        <Square className="w-4 h-4 shrink-0 text-[#5E6570]" />
                       )}
                     </div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-medium">{item.label}</span>
                         <span className={`text-[9px] font-mono font-semibold px-1.5 py-0.2 rounded ${
-                          isLight ? 'text-slate-600 bg-slate-200' : 'text-slate-400 bg-[#161B26]'
+                          isLight ? 'text-slate-600 bg-slate-200' : 'text-[#8A919D] bg-[#11151A]'
                         }`}>
                           {item.category}
                         </span>
@@ -537,7 +532,7 @@ export const ProgressTrackerCard: React.FC<ProgressTrackerCardProps> = ({
             <div className={`pt-3 border-t flex items-center justify-between ${
               isLight ? 'border-slate-200' : 'border-[rgba(255,255,255,0.06)]'
             }`}>
-              <div className="text-xs text-slate-400">
+              <div className="text-xs text-[#A1A1AA]">
                 Discipline: <strong className="font-mono text-blue-400">{todayScore} / 5</strong>
               </div>
               <button

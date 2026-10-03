@@ -336,12 +336,12 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
         className={`w-full max-w-3xl max-h-[92vh] rounded-2xl border flex flex-col shadow-2xl overflow-hidden transition-all ${
           isLight
             ? 'bg-white border-zinc-200 text-zinc-900 shadow-2xl'
-            : 'bg-[#12161D] border-[#1C232E] text-slate-100 shadow-2xl shadow-indigo-950/40'
+            : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)] text-slate-100 shadow-2xl shadow-indigo-950/40'
         }`}
       >
         {/* Header */}
         <div className={`flex items-center justify-between px-6 py-4 border-b shrink-0 ${
-          isLight ? 'border-zinc-200 bg-zinc-50/90' : 'border-[#1C232E] bg-[#12161D]'
+          isLight ? 'border-zinc-200 bg-zinc-50/90' : 'border-[rgba(255,255,255,0.07)] bg-[#0D0D0D]'
         }`}>
           <div className="flex items-center gap-2.5">
             <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-blue-600 to-purple-600 flex items-center justify-center text-white shadow-sm">
@@ -360,7 +360,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
           <button
             onClick={onClose}
             className={`p-1.5 rounded-lg transition ${
-              isLight ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100' : 'text-slate-400 hover:text-white hover:bg-[#1A1F27]'
+              isLight ? 'text-zinc-500 hover:text-zinc-900 hover:bg-zinc-100' : 'text-slate-400 hover:text-white hover:bg-[#141414]'
             }`}
           >
             <X className="w-5 h-5" />
@@ -381,7 +381,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                   className={`text-[11px] font-medium px-2.5 py-1 rounded-lg border transition cursor-pointer ${
                     isLight
                       ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-700'
-                      : 'bg-[#1A1F27] hover:bg-indigo-950/40 border-[#1C232E] hover:border-indigo-500/40 text-slate-300'
+                      : 'bg-[#141414] hover:bg-indigo-950/40 border-[rgba(255,255,255,0.07)] hover:border-indigo-500/40 text-slate-300'
                   }`}
                 >
                   + {tmpl.name}
@@ -403,7 +403,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                 className={`w-full rounded-xl px-3.5 py-2 text-xs focus:outline-none border font-medium ${
                   isLight
                     ? 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400 focus:border-indigo-500'
-                    : 'bg-[#0A0D14] border-[#1C232E] text-white placeholder-slate-500 focus:border-indigo-500'
+                    : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-white placeholder-slate-500 focus:border-indigo-500'
                 }`}
               />
             </div>
@@ -416,7 +416,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                 className={`w-full rounded-xl px-3 py-2 text-xs focus:outline-none border ${
                   isLight
                     ? 'bg-white border-zinc-300 text-zinc-900 focus:border-indigo-500'
-                    : 'bg-[#0A0D14] border-[#1C232E] text-slate-200 focus:border-indigo-500'
+                    : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-slate-200 focus:border-indigo-500'
                 }`}
                 disabled={isSaving}
               >
@@ -444,7 +444,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                 className={`w-full rounded-xl px-3 py-2 text-xs focus:outline-none border ${
                   isLight
                     ? 'bg-white border-zinc-300 text-zinc-900 focus:border-indigo-500'
-                    : 'bg-[#0A0D14] border-[#1C232E] text-slate-200 focus:border-indigo-500'
+                    : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-slate-200 focus:border-indigo-500'
                 }`}
               />
             </div>
@@ -462,7 +462,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                 className={`w-full rounded-xl px-3 py-2 text-xs focus:outline-none border font-mono ${
                   isLight
                     ? 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400 focus:border-indigo-500'
-                    : 'bg-[#0A0D14] border-[#1C232E] text-slate-200 focus:border-indigo-500'
+                    : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-slate-200 focus:border-indigo-500'
                 }`}
               />
             </div>
@@ -478,7 +478,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                 className={`w-full rounded-xl px-3 py-2 text-xs focus:outline-none border truncate ${
                   isLight
                     ? 'bg-white border-zinc-300 text-zinc-900 focus:border-indigo-500'
-                    : 'bg-[#0A0D14] border-[#1C232E] text-slate-200 focus:border-indigo-500'
+                    : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-slate-200 focus:border-indigo-500'
                 }`}
               >
                 <option value="">-- None (Standalone Note) --</option>
@@ -495,7 +495,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
           <div className={`p-4 rounded-xl border space-y-3 ${
             isLight
               ? 'bg-[#F8F9FB] border-zinc-200'
-              : 'bg-[#0A0D14] border-[#1C232E]'
+              : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'
           }`}>
             <div className="flex items-center justify-between">
               <span className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${
@@ -519,7 +519,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                   value={symbol}
                   onChange={e => setSymbol(e.target.value.toUpperCase())}
                   className={`w-full rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold border focus:outline-none transition ${
-                    isLight ? 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400 focus:border-indigo-500' : 'bg-[#12161D] border-[#1C232E] text-white focus:border-indigo-500'
+                    isLight ? 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400 focus:border-indigo-500' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)] text-white focus:border-indigo-500'
                   }`}
                 />
               </div>
@@ -539,7 +539,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                         ? 'text-rose-500 font-semibold'
                         : isLight ? 'text-zinc-800' : 'text-slate-200'
                   } ${
-                    isLight ? 'bg-white border-zinc-300 text-zinc-900 focus:border-indigo-500' : 'bg-[#12161D] border-[#1C232E] text-white focus:border-indigo-500'
+                    isLight ? 'bg-white border-zinc-300 text-zinc-900 focus:border-indigo-500' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)] text-white focus:border-indigo-500'
                   }`}
                 >
                   <option value="">-- Side --</option>
@@ -565,7 +565,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                         ? isLight ? 'bg-rose-50 text-rose-700 border-rose-300' : 'text-rose-400 border-rose-500/30'
                         : isLight
                           ? 'bg-white border-zinc-300 text-zinc-900 focus:border-indigo-500'
-                          : 'bg-[#12161D] border-[#1C232E] text-white focus:border-indigo-500'
+                          : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)] text-white focus:border-indigo-500'
                   }`}
                 />
               </div>
@@ -582,7 +582,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                   value={setup}
                   onChange={e => setSetup(e.target.value)}
                   className={`w-full rounded-lg px-2.5 py-1.5 text-xs border focus:outline-none transition ${
-                    isLight ? 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400 focus:border-indigo-500' : 'bg-[#12161D] border-[#1C232E] text-white focus:border-indigo-500'
+                    isLight ? 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400 focus:border-indigo-500' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)] text-white focus:border-indigo-500'
                   }`}
                 />
                 <datalist id="trade-setup-options-modal">
@@ -608,7 +608,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                   value={accountName}
                   onChange={e => setAccountName(e.target.value)}
                   className={`w-full rounded-lg px-2 py-1.5 text-xs border focus:outline-none transition truncate ${
-                    isLight ? 'bg-white border-zinc-300 text-zinc-900 focus:border-indigo-500' : 'bg-[#12161D] border-[#1C232E] text-white focus:border-indigo-500'
+                    isLight ? 'bg-white border-zinc-300 text-zinc-900 focus:border-indigo-500' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)] text-white focus:border-indigo-500'
                   }`}
                 >
                   <option value="">-- Select Account --</option>
@@ -657,7 +657,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                           : 'bg-purple-950/70 border-purple-600 text-purple-200 font-bold'
                         : isLight
                           ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-zinc-600'
-                          : 'bg-[#1A1F27] hover:bg-[#222936] border-[#1C232E] text-slate-400'
+                          : 'bg-[#141414] hover:bg-[#1A1A1A] border-[rgba(255,255,255,0.07)] text-slate-400'
                     }`}
                   >
                     {preset} {active ? '✓' : '+'}
@@ -681,7 +681,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                 className={`flex-1 rounded-lg px-3 py-1.5 text-xs focus:outline-none border ${
                   isLight
                     ? 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400 focus:border-indigo-500'
-                    : 'bg-[#0A0D14] border-[#1C232E] text-slate-200 focus:border-indigo-500'
+                    : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-slate-200 focus:border-indigo-500'
                 }`}
               />
               <button
@@ -690,7 +690,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                 className={`px-3 py-1.5 rounded-lg border text-xs font-semibold cursor-pointer ${
                   isLight
                     ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-300 text-zinc-800'
-                    : 'bg-[#1A1F27] hover:bg-[#222936] border-[#1C232E] text-white'
+                    : 'bg-[#141414] hover:bg-[#1A1A1A] border-[rgba(255,255,255,0.07)] text-white'
                 }`}
               >
                 Add
@@ -735,7 +735,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
               className={`w-full rounded-xl p-3.5 text-xs leading-relaxed font-mono focus:outline-none border custom-scrollbar ${
                 isLight
                   ? 'bg-white border-zinc-300 text-zinc-900 placeholder-zinc-400 focus:border-indigo-500'
-                  : 'bg-[#0A0D14] border-[#1C232E] text-slate-100 placeholder-slate-500 focus:border-indigo-500'
+                  : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-slate-100 placeholder-slate-500 focus:border-indigo-500'
               }`}
             />
           </div>
@@ -787,7 +787,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                   ? 'border-indigo-500 bg-indigo-950/30'
                   : isLight
                     ? 'border-zinc-300 hover:border-indigo-500 hover:bg-zinc-50 bg-zinc-50/50'
-                    : 'border-[#1C232E] hover:border-indigo-500/50 hover:bg-[#151B24] bg-[#0A0D14]'
+                    : 'border-[rgba(255,255,255,0.07)] hover:border-indigo-500/50 hover:bg-[#151B24] bg-[#070707]'
               }`}
             >
               <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400 shrink-0">
@@ -816,7 +816,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
                       className={`group relative rounded-xl border overflow-hidden flex flex-col justify-between p-2 transition ${
                         isLight
                           ? 'bg-zinc-50 border-zinc-200 hover:border-zinc-300'
-                          : 'bg-[#0E121A] border-[#1C232E] hover:border-slate-700'
+                          : 'bg-[#0D1014] border-[rgba(255,255,255,0.055)] hover:border-[rgba(99,102,241,0.35)]'
                       }`}
                     >
                       {att.type === 'image' ? (
@@ -863,7 +863,7 @@ export const JournalNoteModal: React.FC<JournalNoteModalProps> = ({
 
         {/* Footer Actions */}
         <div className={`flex items-center justify-end gap-2.5 px-6 py-3.5 border-t shrink-0 ${
-          isLight ? 'border-zinc-200 bg-zinc-50' : 'border-[#1C232E] bg-[#12161D]'
+          isLight ? 'border-zinc-200 bg-zinc-50' : 'border-[rgba(255,255,255,0.07)] bg-[#0D0D0D]'
         }`}>
           <button
             type="button"

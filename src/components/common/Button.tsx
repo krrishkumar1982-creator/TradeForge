@@ -45,13 +45,13 @@ export const Button: React.FC<ButtonProps> = ({
 
   const variantClasses: Record<ButtonVariant, string> = {
     primary:
-      'bg-blue-600 hover:bg-blue-500 text-white shadow-xs border border-blue-400/30 active:scale-[0.98]',
+      'bg-[linear-gradient(135deg,#2563EB,#7C3AED)] hover:opacity-95 text-white shadow-xs border border-blue-400/30 active:scale-[0.98]',
     secondary: isLight
       ? 'bg-white hover:bg-zinc-100 text-zinc-800 hover:text-zinc-900 border border-zinc-300 hover:border-zinc-400 shadow-xs active:scale-[0.98]'
-      : 'bg-[#12141A] hover:bg-[#181A21] text-slate-200 hover:text-white border border-[rgba(255,255,255,0.08)] hover:border-[rgba(255,255,255,0.14)] active:scale-[0.98]',
+      : 'bg-[#11151A] hover:bg-[#151A20] text-[#F4F5F7] hover:text-white border border-[rgba(255,255,255,0.07)] hover:border-[rgba(255,255,255,0.12)] active:scale-[0.98]',
     ghost: isLight
       ? 'bg-transparent hover:bg-zinc-100 text-zinc-600 hover:text-zinc-900 border border-transparent'
-      : 'bg-transparent hover:bg-[#12141A] text-slate-400 hover:text-slate-200 border border-transparent',
+      : 'bg-transparent hover:bg-[#151A20] text-[#8A919D] hover:text-[#F4F5F7] border border-transparent',
     danger: isLight
       ? 'bg-rose-50 hover:bg-rose-100 text-rose-700 hover:text-rose-800 border border-rose-200 active:scale-[0.98]'
       : 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 hover:text-rose-300 border border-rose-500/25 active:scale-[0.98]',
@@ -66,7 +66,7 @@ export const Button: React.FC<ButtonProps> = ({
   const activeClasses = isActive
     ? isLight
       ? 'bg-blue-50 text-blue-700 border-blue-300 shadow-xs'
-      : 'bg-blue-600/15 text-blue-400 border-blue-500/40'
+      : 'bg-[linear-gradient(90deg,rgba(59,130,246,0.16),rgba(124,58,237,0.18))] text-[#F4F5F7] border border-[rgba(99,102,241,0.35)]'
     : variantClasses[variant];
 
   return (

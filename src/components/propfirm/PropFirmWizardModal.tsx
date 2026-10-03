@@ -31,16 +31,16 @@ import { useTrading } from '../../context/TradingContext';
 interface PropFirmWizardModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAccountCreated: (account: PropFirmAccount) => void;
+  onAccountCreated: (account: PropFirmAccount) => Promise<void> | void;
 }
 
 const STEPS = [
-  { id: 1, label: 'Identity & Model', icon: Building2 },
+  { id: 1, label: 'Account Details', icon: Building2 },
   { id: 2, label: 'Phases & Targets', icon: Layers },
-  { id: 3, label: 'Drawdown Engine', icon: Sliders },
-  { id: 4, label: 'Trading Policies', icon: Shield },
-  { id: 5, label: 'Payout & Scale', icon: DollarSign },
-  { id: 6, label: 'Audit & Confirm', icon: FileCheck },
+  { id: 3, label: 'Drawdown Limits', icon: Sliders },
+  { id: 4, label: 'Trading Rules', icon: Shield },
+  { id: 5, label: 'Payouts', icon: DollarSign },
+  { id: 6, label: 'Review & Confirm', icon: FileCheck },
 ];
 
 const QUICK_SIZES = [10000, 25000, 50000, 100000, 200000, 300000];
@@ -136,6 +136,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
   const [currentStep, setCurrentStep] = useState(1);
   const [config, setConfig] = useState<PropFirmWizardConfig>(DEFAULT_CONFIG);
   const [selectedTemplateKey, setSelectedTemplateKey] = useState<string>('custom');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Prevent scrolling on document body when modal is active
   useEffect(() => {
@@ -189,11 +190,19 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
     });
   };
 
-  const handleFinalSubmit = (e: React.FormEvent) => {
+  const handleFinalSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const finalAccount = createCustomPropFirmAccount(config);
-    onAccountCreated(finalAccount);
-    onClose();
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const finalAccount = createCustomPropFirmAccount(config);
+      await onAccountCreated(finalAccount);
+      onClose();
+    } catch (err) {
+      console.error('Failed to create account:', err);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const canProceedStep1 = config.propFirmName.trim().length > 0 && config.accountSize > 0;
@@ -206,13 +215,13 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
       }}
     >
       <div
-        className="relative w-full max-w-5xl max-h-[calc(100vh-32px)] sm:max-h-[calc(100vh-48px)] bg-[#12161D]/95 border border-[#1C232E] rounded-2xl shadow-[0_25px_80px_rgba(0,0,0,0.7),0_0_50px_rgba(99,102,241,0.08)] flex flex-col overflow-hidden text-slate-200 z-[9991] backdrop-blur-xl"
+        className="relative w-full max-w-5xl max-h-[calc(100vh-32px)] sm:max-h-[calc(100vh-48px)] bg-[#0D0D0D] border border-[rgba(255,255,255,0.08)] rounded-2xl shadow-[0_25px_80px_rgba(0,0,0,0.85)] flex flex-col overflow-hidden text-slate-200 z-[9991] backdrop-blur-xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* =========================================================================
             1. FIXED MODAL HEADER (CLEAN & COMPACT)
             ========================================================================= */}
-        <div className="shrink-0 flex items-center justify-between px-6 sm:px-7 py-3.5 border-b border-[#1C232E] bg-[#12161D]">
+        <div className="shrink-0 flex items-center justify-between px-6 sm:px-7 py-3.5 border-b border-[rgba(255,255,255,0.06)] bg-[#0D0D0D]">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 shrink-0">
               <Shield className="w-4.5 h-4.5" />
@@ -220,21 +229,21 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
             <div>
               <div className="flex items-center gap-2.5 flex-wrap">
                 <h2 className="text-base sm:text-lg font-bold text-white tracking-tight">
-                  Configure Prop Firm Account
+                  Add Prop Firm Account
                 </h2>
                 <span className="px-2 py-0.5 rounded-md text-[11px] font-semibold bg-blue-500/10 text-blue-300 border border-blue-500/20">
                   Custom Rules
                 </span>
               </div>
               <p className="text-xs text-slate-400 mt-0.5 hidden sm:block">
-                Configure evaluation phases, drawdown engines, and risk rules.
+                Set up evaluation phases, drawdown limits, and account rules.
               </p>
             </div>
           </div>
 
           <button
             onClick={onClose}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-[#1A1F27] border border-transparent hover:border-[#1C232E] transition-all cursor-pointer"
+            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-[#141414] border border-transparent hover:border-[rgba(255,255,255,0.08)] transition-all cursor-pointer"
             title="Close Wizard"
           >
             <X className="w-5 h-5" />
@@ -244,7 +253,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
         {/* =========================================================================
             2. FIXED STEP PROGRESS NAVIGATION (SLEEK & BALANCED)
             ========================================================================= */}
-        <div className="shrink-0 px-6 sm:px-7 py-2.5 bg-[#0A0D14] border-b border-[#1C232E] flex items-center justify-between overflow-x-auto gap-2 no-scrollbar">
+        <div className="shrink-0 px-6 sm:px-7 py-2.5 bg-[#070707] border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between overflow-x-auto gap-2 no-scrollbar">
           {STEPS.map((s) => {
             const Icon = s.icon;
             const isCompleted = currentStep > s.id;
@@ -259,8 +268,8 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                   isCurrent
                     ? 'bg-blue-600/10 border border-blue-500/40 text-blue-200 shadow-sm'
                     : isCompleted
-                    ? 'bg-[#12161D] border border-[#1C232E] text-slate-300 hover:text-white hover:border-[#273141]'
-                    : 'text-slate-500 hover:text-slate-300 hover:bg-[#12161D]/50'
+                    ? 'bg-[#111111] border border-[rgba(255,255,255,0.07)] text-slate-300 hover:text-white hover:border-[rgba(255,255,255,0.12)]'
+                    : 'text-slate-500 hover:text-slate-300 hover:bg-[#111111]/50'
                 }`}
               >
                 <span
@@ -269,7 +278,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                       ? 'bg-blue-600 text-white'
                       : isCompleted
                       ? 'bg-blue-950/80 text-blue-400 border border-blue-500/30'
-                      : 'bg-[#1A1F27] text-slate-500 border border-[#1C232E]'
+                      : 'bg-[#141414] text-slate-500 border border-[rgba(255,255,255,0.08)]'
                   }`}
                 >
                   {isCompleted ? <Check className="w-3 h-3 stroke-[2.5]" /> : s.id}
@@ -289,7 +298,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
           {currentStep === 1 && (
             <div className="space-y-6">
               {/* Optional Preset Quick-Loader */}
-              <div className="p-4 sm:p-5 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-3.5">
+              <div className="p-4 sm:p-5 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-3.5">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <div className="flex items-center gap-2 text-xs font-semibold text-blue-400">
                     <Sparkles className="w-3.5 h-3.5" />
@@ -308,7 +317,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                         className={`p-3 text-left rounded-xl text-xs border transition-all cursor-pointer ${
                           isSelected
                             ? 'bg-blue-600/10 border-blue-500/60 text-white shadow-sm'
-                            : 'bg-[#0A0D14] border-[#1C232E] text-slate-300 hover:border-[#273141] hover:bg-[#161B23] hover:text-white'
+                            : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-slate-300 hover:border-[rgba(255,255,255,0.10)] hover:bg-[#161B23] hover:text-white'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1">
@@ -325,7 +334,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
               </div>
 
               {/* Primary Identity Form */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-4">
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-4">
                 <h3 className="text-sm font-bold text-white tracking-tight">
                   Account Identity
                 </h3>
@@ -340,7 +349,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                       placeholder="e.g. FundedNext, FTMO, Apex, Topstep"
                       value={config.propFirmName}
                       onChange={(e) => setConfig({ ...config, propFirmName: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:outline-none transition-colors"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:outline-none transition-colors"
                     />
                   </div>
 
@@ -353,14 +362,14 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                       placeholder="e.g. 100K Stellar Phase 1"
                       value={config.displayName}
                       onChange={(e) => setConfig({ ...config, displayName: e.target.value })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:outline-none transition-colors"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:outline-none transition-colors"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Account Size & Currency */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-4">
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-4">
                 <div className="flex items-center justify-between flex-wrap gap-2">
                   <h3 className="text-sm font-bold text-white tracking-tight">
                     Account Capital Size <span className="text-rose-400">*</span>
@@ -370,7 +379,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                     <select
                       value={config.currency}
                       onChange={(e) => setConfig({ ...config, currency: e.target.value })}
-                      className="px-2.5 py-1 bg-[#0A0D14] border border-[#1C232E] text-white rounded-lg text-xs font-mono focus:outline-none focus:border-blue-500 cursor-pointer"
+                      className="px-2.5 py-1 bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white rounded-lg text-xs font-mono focus:outline-none focus:border-blue-500 cursor-pointer"
                     >
                       {CURRENCIES.map((c) => (
                         <option key={c} value={c}>{c}</option>
@@ -391,7 +400,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                           className={`px-3.5 py-2 rounded-xl text-xs font-mono font-semibold transition-all cursor-pointer ${
                             isSelected
                               ? 'bg-blue-600 text-white shadow-sm border border-blue-500'
-                              : 'bg-[#0A0D14] border border-[#1C232E] text-slate-300 hover:border-[#273141] hover:text-white hover:bg-[#161B23]'
+                              : 'bg-[#070707] border border-[rgba(255,255,255,0.07)] text-slate-300 hover:border-[rgba(255,255,255,0.10)] hover:text-white hover:bg-[#161B23]'
                           }`}
                         >
                           ${(sz / 1000)}K
@@ -409,16 +418,16 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                       value={config.accountSize}
                       onChange={(e) => setConfig({ ...config, accountSize: Math.max(1000, parseFloat(e.target.value) || 0) })}
                       placeholder="Custom capital size..."
-                      className="w-full pl-8 pr-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-sm font-semibold focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:outline-none font-mono transition-colors"
+                      className="w-full pl-8 pr-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-sm font-semibold focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 focus:outline-none font-mono transition-colors"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Program Model Selection */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-4">
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-4">
                 <h3 className="text-sm font-bold text-white tracking-tight">
-                  Program Architecture <span className="text-rose-400">*</span>
+                  Program Type <span className="text-rose-400">*</span>
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {[
@@ -450,7 +459,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                         className={`p-4 rounded-xl text-left border transition-all cursor-pointer ${
                           isSelected
                             ? 'bg-blue-600/10 border-blue-500 text-white shadow-sm'
-                            : 'bg-[#0A0D14] border-[#1C232E] text-slate-400 hover:border-[#273141] hover:text-slate-200 hover:bg-[#161B23]'
+                            : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-slate-400 hover:border-[rgba(255,255,255,0.10)] hover:text-slate-200 hover:bg-[#161B23]'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-2">
@@ -458,7 +467,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                           <span className={`text-[10px] px-2 py-0.5 rounded-full font-semibold border ${
                             isSelected
                               ? 'bg-blue-500/20 text-blue-300 border-blue-500/30'
-                              : 'bg-[#1A1F27] text-slate-400 border-[#1C232E]'
+                              : 'bg-[#141414] text-slate-400 border-[rgba(255,255,255,0.07)]'
                           }`}>
                             {m.badge}
                           </span>
@@ -471,7 +480,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
               </div>
 
               {/* Trade Source Link */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                 <div>
                   <h3 className="text-sm font-bold text-white tracking-tight">Link to Trade Source</h3>
                   <p className="text-xs text-slate-400 mt-0.5">
@@ -481,7 +490,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                 <select
                   value={config.tradingAccountLink}
                   onChange={(e) => setConfig({ ...config, tradingAccountLink: e.target.value })}
-                  className="w-full sm:w-64 px-3.5 py-2.5 bg-[#0A0D14] border border-[#1C232E] text-white rounded-xl text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
+                  className="w-full sm:w-64 px-3.5 py-2.5 bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white rounded-xl text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
                 >
                   <option value="all">All Closed Trades (Global Feed)</option>
                   {accounts.map((acc) => (
@@ -498,7 +507,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
           {currentStep === 2 && (
             <div className="space-y-6">
               {/* Header Context */}
-              <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-[#1C232E]">
+              <div className="flex items-center justify-between flex-wrap gap-3 pb-2 border-b border-[rgba(255,255,255,0.07)]">
                 <div>
                   <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
                     Target & Loss Calibration
@@ -513,8 +522,8 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
               </div>
 
               {/* PHASE 1 (OR SINGLE EVALUATION) */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-5">
-                <div className="flex items-center justify-between pb-3 border-b border-[#1C232E]">
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-5">
+                <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.07)]">
                   <div className="flex items-center gap-2.5">
                     <span className="w-6 h-6 rounded-lg bg-blue-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
                       1
@@ -535,7 +544,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   {/* Profit Target */}
                   {config.programModel !== 'INSTANT_FUNDING' && (
-                    <div className="p-4 rounded-xl bg-[#0A0D14] border border-[#1C232E] space-y-2">
+                    <div className="p-4 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] space-y-2">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-bold text-emerald-400">Profit Target</label>
                         <input
@@ -547,7 +556,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                               phase1: { ...config.phase1, profitTargetEnabled: e.target.checked },
                             })
                           }
-                          className="w-4 h-4 rounded border-[#1C232E] bg-[#12161D] text-blue-600 focus:ring-0 cursor-pointer"
+                          className="w-4 h-4 rounded border-[rgba(255,255,255,0.07)] bg-[#0D0D0D] text-blue-600 focus:ring-0 cursor-pointer"
                         />
                       </div>
                       <div className="flex items-center gap-2">
@@ -563,7 +572,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                                 phase1: { ...config.phase1, profitTargetPercent: parseFloat(e.target.value) || 0 },
                               })
                             }
-                            className="w-full px-3 py-2 rounded-xl bg-[#12161D] border border-[#1C232E] text-white font-mono text-xs font-bold focus:border-blue-500 focus:outline-none"
+                            className="w-full px-3 py-2 rounded-xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] text-white font-mono text-xs font-bold focus:border-blue-500 focus:outline-none"
                           />
                         </div>
                         <span className="text-xs text-slate-400 font-mono">%</span>
@@ -575,7 +584,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                   )}
 
                   {/* Daily Loss Limit */}
-                  <div className="p-4 rounded-xl bg-[#0A0D14] border border-[#1C232E] space-y-2">
+                  <div className="p-4 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-amber-400">Daily Loss Limit</label>
                       <span className="text-[10px] text-slate-500">Per session</span>
@@ -593,7 +602,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                               phase1: { ...config.phase1, dailyLossPercent: parseFloat(e.target.value) || 0 },
                             })
                           }
-                          className="w-full px-3 py-2 rounded-xl bg-[#12161D] border border-[#1C232E] text-white font-mono text-xs font-bold focus:border-blue-500 focus:outline-none"
+                          className="w-full px-3 py-2 rounded-xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] text-white font-mono text-xs font-bold focus:border-blue-500 focus:outline-none"
                         />
                       </div>
                       <span className="text-xs text-slate-400 font-mono">%</span>
@@ -604,7 +613,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                   </div>
 
                   {/* Max Total Loss */}
-                  <div className="p-4 rounded-xl bg-[#0A0D14] border border-[#1C232E] space-y-2">
+                  <div className="p-4 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] space-y-2">
                     <div className="flex items-center justify-between">
                       <label className="text-xs font-bold text-rose-400">Maximum Drawdown</label>
                       <span className="text-[10px] text-slate-500">Account floor</span>
@@ -622,7 +631,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                               phase1: { ...config.phase1, totalLossPercent: parseFloat(e.target.value) || 0 },
                             })
                           }
-                          className="w-full px-3 py-2 rounded-xl bg-[#12161D] border border-[#1C232E] text-white font-mono text-xs font-bold focus:border-blue-500 focus:outline-none"
+                          className="w-full px-3 py-2 rounded-xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] text-white font-mono text-xs font-bold focus:border-blue-500 focus:outline-none"
                         />
                       </div>
                       <span className="text-xs text-slate-400 font-mono">%</span>
@@ -647,7 +656,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                           phase1: { ...config.phase1, minTradingDays: parseInt(e.target.value, 10) || 0 },
                         })
                       }
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
                     />
                   </div>
 
@@ -663,7 +672,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                           phase1: { ...config.phase1, maxTradingDays: parseInt(e.target.value, 10) || 0 },
                         })
                       }
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
                     />
                   </div>
 
@@ -680,7 +689,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                           phase1: { ...config.phase1, qualifyingDayProfitPercent: parseFloat(e.target.value) || 0 },
                         })
                       }
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
                     />
                   </div>
                 </div>
@@ -688,8 +697,8 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
 
               {/* PHASE 2 (IF TWO-STEP) */}
               {config.programModel === 'TWO_STEP' && (
-                <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-5">
-                  <div className="flex items-center justify-between pb-3 border-b border-[#1C232E]">
+                <div className="p-5 sm:p-6 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-5">
+                  <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.07)]">
                     <div className="flex items-center gap-2.5">
                       <span className="w-6 h-6 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs font-bold shadow-sm">
                         2
@@ -702,7 +711,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                    <div className="p-4 rounded-xl bg-[#0A0D14] border border-[#1C232E] space-y-2">
+                    <div className="p-4 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] space-y-2">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-bold text-emerald-400">Profit Target</label>
                         <input
@@ -714,7 +723,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                               phase2: { ...config.phase2, profitTargetEnabled: e.target.checked },
                             })
                           }
-                          className="w-4 h-4 rounded border-[#1C232E] bg-[#12161D] text-blue-600 focus:ring-0 cursor-pointer"
+                          className="w-4 h-4 rounded border-[rgba(255,255,255,0.07)] bg-[#0D0D0D] text-blue-600 focus:ring-0 cursor-pointer"
                         />
                       </div>
                       <div className="flex items-center gap-2">
@@ -729,7 +738,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                               phase2: { ...config.phase2, profitTargetPercent: parseFloat(e.target.value) || 0 },
                             })
                           }
-                          className="w-full px-3 py-2 rounded-xl bg-[#12161D] border border-[#1C232E] text-white font-mono text-xs font-bold focus:border-blue-500 focus:outline-none"
+                          className="w-full px-3 py-2 rounded-xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] text-white font-mono text-xs font-bold focus:border-blue-500 focus:outline-none"
                         />
                         <span className="text-xs text-slate-400 font-mono">%</span>
                         <div className="font-mono text-xs text-emerald-400 font-bold whitespace-nowrap">
@@ -738,7 +747,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="p-4 rounded-xl bg-[#0A0D14] border border-[#1C232E] space-y-2">
+                    <div className="p-4 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] space-y-2">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-bold text-amber-400">Daily Loss Limit</label>
                         <span className="text-[10px] text-slate-500">Per session</span>
@@ -755,7 +764,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                               phase2: { ...config.phase2, dailyLossPercent: parseFloat(e.target.value) || 0 },
                             })
                           }
-                          className="w-full px-3 py-2 rounded-xl bg-[#12161D] border border-[#1C232E] text-white font-mono text-xs font-bold focus:border-blue-500 focus:outline-none"
+                          className="w-full px-3 py-2 rounded-xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] text-white font-mono text-xs font-bold focus:border-blue-500 focus:outline-none"
                         />
                         <span className="text-xs text-slate-400 font-mono">%</span>
                         <div className="font-mono text-xs text-amber-400 font-bold whitespace-nowrap">
@@ -764,7 +773,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                       </div>
                     </div>
 
-                    <div className="p-4 rounded-xl bg-[#0A0D14] border border-[#1C232E] space-y-2">
+                    <div className="p-4 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] space-y-2">
                       <div className="flex items-center justify-between">
                         <label className="text-xs font-bold text-rose-400">Maximum Drawdown</label>
                         <span className="text-[10px] text-slate-500">Account floor</span>
@@ -781,7 +790,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                               phase2: { ...config.phase2, totalLossPercent: parseFloat(e.target.value) || 0 },
                             })
                           }
-                          className="w-full px-3 py-2 rounded-xl bg-[#12161D] border border-[#1C232E] text-white font-mono text-xs font-bold focus:border-blue-500 focus:outline-none"
+                          className="w-full px-3 py-2 rounded-xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] text-white font-mono text-xs font-bold focus:border-blue-500 focus:outline-none"
                         />
                         <span className="text-xs text-slate-400 font-mono">%</span>
                         <div className="font-mono text-xs text-rose-400 font-bold whitespace-nowrap">
@@ -804,7 +813,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                             phase2: { ...config.phase2, minTradingDays: parseInt(e.target.value, 10) || 0 },
                           })
                         }
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
                       />
                     </div>
                     <div className="space-y-1.5">
@@ -820,7 +829,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                             phase2: { ...config.phase2, qualifyingDayProfitPercent: parseFloat(e.target.value) || 0 },
                           })
                         }
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -832,7 +841,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
           {/* STEP 3: DRAWDOWN ENGINE */}
           {currentStep === 3 && (
             <div className="space-y-6">
-              <div className="pb-2 border-b border-[#1C232E]">
+              <div className="pb-2 border-b border-[rgba(255,255,255,0.07)]">
                 <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
                   Drawdown Calculation Engine
                 </h3>
@@ -842,7 +851,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
               </div>
 
               {/* Daily Loss Reset Methodology */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-4">
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-4">
                 <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
                   Daily Loss Reset Methodology
                 </h4>
@@ -884,7 +893,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                         className={`p-4 rounded-xl text-left border transition-all cursor-pointer ${
                           isSelected
                             ? 'bg-blue-600/10 border-blue-500 text-white shadow-sm'
-                            : 'bg-[#0A0D14] border-[#1C232E] text-slate-400 hover:border-[#273141] hover:text-slate-200'
+                            : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-slate-400 hover:border-[rgba(255,255,255,0.10)] hover:text-slate-200'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1.5">
@@ -899,7 +908,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
               </div>
 
               {/* Maximum Drawdown Model */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-4">
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-4">
                 <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
                   Maximum Drawdown Model (Floor Calculation)
                 </h4>
@@ -941,7 +950,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                         className={`p-4 rounded-xl text-left border transition-all cursor-pointer ${
                           isSelected
                             ? 'bg-rose-500/10 border-rose-500 text-white shadow-sm'
-                            : 'bg-[#0A0D14] border-[#1C232E] text-slate-400 hover:border-[#273141] hover:text-slate-200'
+                            : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-slate-400 hover:border-[rgba(255,255,255,0.10)] hover:text-slate-200'
                         }`}
                       >
                         <div className="flex items-center justify-between mb-1.5">
@@ -960,7 +969,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
           {/* STEP 4: TRADING POLICIES */}
           {currentStep === 4 && (
             <div className="space-y-6">
-              <div className="pb-2 border-b border-[#1C232E]">
+              <div className="pb-2 border-b border-[rgba(255,255,255,0.07)]">
                 <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
                   Institutional Trading Rules & Restrictions
                 </h3>
@@ -970,7 +979,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
               </div>
 
               {/* Consistency Rule */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-4">
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-xs font-bold text-white">Consistency Rule Enforcement</h4>
@@ -982,12 +991,12 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                     type="checkbox"
                     checked={config.consistencyRule}
                     onChange={(e) => setConfig({ ...config, consistencyRule: e.target.checked })}
-                    className="w-4 h-4 rounded border-[#1C232E] bg-[#0A0D14] text-blue-600 focus:ring-0 cursor-pointer"
+                    className="w-4 h-4 rounded border-[rgba(255,255,255,0.07)] bg-[#070707] text-blue-600 focus:ring-0 cursor-pointer"
                   />
                 </div>
 
                 {config.consistencyRule && (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[#1C232E]">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-3 border-t border-[rgba(255,255,255,0.07)]">
                     <div className="space-y-1.5">
                       <label className="block text-xs font-semibold text-slate-200">Max Single-Day Profit Share (%)</label>
                       <input
@@ -996,7 +1005,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                         max={90}
                         value={config.consistencyMaxDayPercent}
                         onChange={(e) => setConfig({ ...config, consistencyMaxDayPercent: parseFloat(e.target.value) || 40 })}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white font-mono text-xs focus:border-blue-500 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white font-mono text-xs focus:border-blue-500 focus:outline-none"
                       />
                     </div>
 
@@ -1008,7 +1017,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                         max={90}
                         value={config.maxProfitConcentrationPercent}
                         onChange={(e) => setConfig({ ...config, maxProfitConcentrationPercent: parseFloat(e.target.value) || 40 })}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white font-mono text-xs focus:border-blue-500 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white font-mono text-xs focus:border-blue-500 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1018,9 +1027,9 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
               {/* Holding & News Segmented Policies */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {/* News Trading */}
-                <div className="p-5 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-3">
+                <div className="p-5 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-3">
                   <div className="text-xs font-bold text-slate-200">High-Impact News Trading</div>
-                  <div className="flex rounded-xl overflow-hidden border border-[#1C232E] p-1 bg-[#0A0D14] gap-1">
+                  <div className="flex rounded-xl overflow-hidden border border-[rgba(255,255,255,0.07)] p-1 bg-[#070707] gap-1">
                     {(['ALLOWED', 'RESTRICTED', 'PROHIBITED'] as const).map((mode) => (
                       <button
                         key={mode}
@@ -1043,9 +1052,9 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                 </div>
 
                 {/* Weekend Holding */}
-                <div className="p-5 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-3">
+                <div className="p-5 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-3">
                   <div className="text-xs font-bold text-slate-200">Weekend Position Holding</div>
-                  <div className="flex rounded-xl overflow-hidden border border-[#1C232E] p-1 bg-[#0A0D14] gap-1">
+                  <div className="flex rounded-xl overflow-hidden border border-[rgba(255,255,255,0.07)] p-1 bg-[#070707] gap-1">
                     <button
                       type="button"
                       onClick={() => setConfig({ ...config, weekendHolding: true })}
@@ -1072,9 +1081,9 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                 </div>
 
                 {/* Overnight Holding */}
-                <div className="p-5 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-3">
+                <div className="p-5 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-3">
                   <div className="text-xs font-bold text-slate-200">Overnight Position Holding</div>
-                  <div className="flex rounded-xl overflow-hidden border border-[#1C232E] p-1 bg-[#0A0D14] gap-1">
+                  <div className="flex rounded-xl overflow-hidden border border-[rgba(255,255,255,0.07)] p-1 bg-[#070707] gap-1">
                     <button
                       type="button"
                       onClick={() => setConfig({ ...config, overnightHolding: true })}
@@ -1101,9 +1110,9 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                 </div>
 
                 {/* EA / Bots */}
-                <div className="p-5 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-3">
+                <div className="p-5 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-3">
                   <div className="text-xs font-bold text-slate-200">EA / Algorithmic Bots</div>
-                  <div className="flex rounded-xl overflow-hidden border border-[#1C232E] p-1 bg-[#0A0D14] gap-1">
+                  <div className="flex rounded-xl overflow-hidden border border-[rgba(255,255,255,0.07)] p-1 bg-[#070707] gap-1">
                     {(['ALLOWED', 'RESTRICTED', 'PROHIBITED'] as const).map((mode) => (
                       <button
                         key={mode}
@@ -1127,7 +1136,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
               </div>
 
               {/* Position & Risk Caps */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-4">
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-4">
                 <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
                   Position Caps & Leverage Boundaries
                 </h4>
@@ -1140,7 +1149,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                       value={config.maxLotSize || ''}
                       placeholder="e.g. 20 (0 = no cap)"
                       onChange={(e) => setConfig({ ...config, maxLotSize: parseFloat(e.target.value) || undefined })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
                     />
                   </div>
 
@@ -1152,7 +1161,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                       value={config.maxPositions || ''}
                       placeholder="e.g. 10 (0 = no cap)"
                       onChange={(e) => setConfig({ ...config, maxPositions: parseInt(e.target.value, 10) || undefined })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
                     />
                   </div>
 
@@ -1163,14 +1172,14 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                       min={1}
                       value={config.maxLeverage || 100}
                       onChange={(e) => setConfig({ ...config, maxLeverage: parseInt(e.target.value, 10) || 100 })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Prohibited Strategies Checkbox Matrix */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-3">
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-3">
                 <div className="text-xs font-bold text-slate-200 uppercase tracking-wider">
                   Prohibited Strategy Tags
                 </div>
@@ -1185,7 +1194,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                         className={`px-3 py-2.5 rounded-xl text-xs font-medium text-left border transition-all flex items-center justify-between cursor-pointer ${
                           isSelected
                             ? 'bg-rose-500/10 border-rose-500/50 text-rose-300 shadow-sm'
-                            : 'bg-[#0A0D14] border-[#1C232E] text-slate-400 hover:border-[#273141] hover:text-white'
+                            : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-slate-400 hover:border-[rgba(255,255,255,0.10)] hover:text-white'
                         }`}
                       >
                         <span className="truncate">{strat}</span>
@@ -1201,7 +1210,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
           {/* STEP 5: PAYOUT & SCALING */}
           {currentStep === 5 && (
             <div className="space-y-6">
-              <div className="pb-2 border-b border-[#1C232E]">
+              <div className="pb-2 border-b border-[rgba(255,255,255,0.07)]">
                 <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
                   Profit Split, Payout Schedule & Account Scaling
                 </h3>
@@ -1211,8 +1220,8 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
               </div>
 
               {/* Payout Terms */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-5">
-                <div className="flex items-center justify-between pb-3 border-b border-[#1C232E]">
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-5">
+                <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.07)]">
                   <h4 className="text-xs font-bold text-slate-200 uppercase tracking-wider">
                     Trader Profit Split & Schedule
                   </h4>
@@ -1250,7 +1259,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                     <select
                       value={config.payoutFrequency}
                       onChange={(e) => setConfig({ ...config, payoutFrequency: e.target.value as any })}
-                      className="w-full px-3.5 py-2.5 bg-[#0A0D14] border border-[#1C232E] text-white rounded-xl text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
+                      className="w-full px-3.5 py-2.5 bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white rounded-xl text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
                     >
                       <option value="BIWEEKLY">Bi-Weekly (Every 14 days)</option>
                       <option value="WEEKLY">Weekly (Every 7 days)</option>
@@ -1266,7 +1275,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                       min={0}
                       value={config.firstPayoutDays}
                       onChange={(e) => setConfig({ ...config, firstPayoutDays: parseInt(e.target.value, 10) || 0 })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
                     />
                   </div>
 
@@ -1277,14 +1286,14 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                       min={10}
                       value={config.minPayoutAmount}
                       onChange={(e) => setConfig({ ...config, minPayoutAmount: parseInt(e.target.value, 10) || 0 })}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Scaling Plan */}
-              <div className="p-5 sm:p-6 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-4">
+              <div className="p-5 sm:p-6 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="text-xs font-bold text-white">Account Scaling Tier Plan</h4>
@@ -1296,12 +1305,12 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                     type="checkbox"
                     checked={config.scalingEnabled}
                     onChange={(e) => setConfig({ ...config, scalingEnabled: e.target.checked })}
-                    className="w-4 h-4 rounded border-[#1C232E] bg-[#0A0D14] text-blue-600 focus:ring-0 cursor-pointer"
+                    className="w-4 h-4 rounded border-[rgba(255,255,255,0.07)] bg-[#070707] text-blue-600 focus:ring-0 cursor-pointer"
                   />
                 </div>
 
                 {config.scalingEnabled && (
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-[#1C232E]">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 pt-3 border-t border-[rgba(255,255,255,0.07)]">
                     <div className="space-y-1.5">
                       <label className="block text-xs font-semibold text-slate-200">Profit Target for Scale (%)</label>
                       <input
@@ -1309,7 +1318,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                         min={5}
                         value={config.scalingProfitPercent}
                         onChange={(e) => setConfig({ ...config, scalingProfitPercent: parseFloat(e.target.value) || 10 })}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
                       />
                     </div>
 
@@ -1321,7 +1330,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                         step={5000}
                         value={config.scalingIncrementAmount}
                         onChange={(e) => setConfig({ ...config, scalingIncrementAmount: parseFloat(e.target.value) || 25000 })}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
                       />
                     </div>
 
@@ -1333,7 +1342,7 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                         step={50000}
                         value={config.maxScalingAccountSize}
                         onChange={(e) => setConfig({ ...config, maxScalingAccountSize: parseFloat(e.target.value) || 2000000 })}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
+                        className="w-full px-3.5 py-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-white text-xs font-mono focus:border-blue-500 focus:outline-none"
                       />
                     </div>
                   </div>
@@ -1355,14 +1364,14 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
               {/* Master Summary Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Identity & Structure Card */}
-                <div className="p-5 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-3">
+                <div className="p-5 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-3">
                   <div className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center justify-between">
                     <span>Account Identity</span>
-                    <span className="px-2 py-0.5 rounded-md bg-[#1A1F27] text-[11px] text-white font-mono border border-[#1C232E]">
+                    <span className="px-2 py-0.5 rounded-md bg-[#141414] text-[11px] text-white font-mono border border-[rgba(255,255,255,0.07)]">
                       {config.programModel.replace('_', ' ')}
                     </span>
                   </div>
-                  <div className="space-y-2 text-xs divide-y divide-[#1C232E]/60">
+                  <div className="space-y-2 text-xs divide-y divide-[rgba(255,255,255,0.07)]/60">
                     <div className="flex justify-between pt-1">
                       <span className="text-slate-400">Prop Firm:</span>
                       <span className="font-semibold text-white">{config.propFirmName}</span>
@@ -1383,12 +1392,12 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                 </div>
 
                 {/* Risk Parameters Card */}
-                <div className="p-5 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-3">
+                <div className="p-5 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-3">
                   <div className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center justify-between">
                     <span>Calibration Targets</span>
                     <span className="text-blue-400 font-mono text-xs">Phase 1 Active</span>
                   </div>
-                  <div className="space-y-2 text-xs divide-y divide-[#1C232E]/60">
+                  <div className="space-y-2 text-xs divide-y divide-[rgba(255,255,255,0.07)]/60">
                     <div className="flex justify-between pt-1">
                       <span className="text-slate-400">Profit Target:</span>
                       <span className="font-mono text-emerald-400 font-bold">
@@ -1415,28 +1424,28 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                 </div>
 
                 {/* Policies & Restrictions */}
-                <div className="p-5 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-3">
+                <div className="p-5 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-3">
                   <div className="text-xs font-bold text-slate-200 uppercase tracking-wider">
                     Enforced Trading Policies
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] flex justify-between">
+                    <div className="p-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] flex justify-between">
                       <span className="text-slate-400">News Trading:</span>
                       <span className="font-semibold text-white">{config.newsTrading}</span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] flex justify-between">
+                    <div className="p-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] flex justify-between">
                       <span className="text-slate-400">Weekend Hold:</span>
                       <span className={config.weekendHolding ? 'text-emerald-400 font-semibold' : 'text-rose-400 font-semibold'}>
                         {config.weekendHolding ? 'Allowed' : 'Prohibited'}
                       </span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] flex justify-between">
+                    <div className="p-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] flex justify-between">
                       <span className="text-slate-400">Consistency:</span>
                       <span className={config.consistencyRule ? 'text-blue-300 font-semibold' : 'text-slate-400'}>
                         {config.consistencyRule ? `${config.consistencyMaxDayPercent}% Cap` : 'Disabled'}
                       </span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] flex justify-between">
+                    <div className="p-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] flex justify-between">
                       <span className="text-slate-400">EA / Bots:</span>
                       <span className="text-white font-semibold">{config.eaTrading}</span>
                     </div>
@@ -1444,26 +1453,26 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
                 </div>
 
                 {/* Payout & Scaling */}
-                <div className="p-5 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-3">
+                <div className="p-5 rounded-2xl bg-[#0D0D0D] border border-[rgba(255,255,255,0.07)] space-y-3">
                   <div className="text-xs font-bold text-slate-200 uppercase tracking-wider">
                     Payout & Scaling
                   </div>
                   <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] flex justify-between">
+                    <div className="p-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] flex justify-between">
                       <span className="text-slate-400">Profit Split:</span>
                       <span className="font-semibold text-emerald-400">{config.profitSplitTraderPercent}% Trader</span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] flex justify-between">
+                    <div className="p-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] flex justify-between">
                       <span className="text-slate-400">Frequency:</span>
                       <span className="font-semibold text-white">{config.payoutFrequency}</span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] flex justify-between">
+                    <div className="p-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] flex justify-between">
                       <span className="text-slate-400">Scaling:</span>
                       <span className={config.scalingEnabled ? 'text-blue-300 font-semibold' : 'text-slate-400'}>
                         {config.scalingEnabled ? `+${config.scalingProfitPercent}% Target` : 'Disabled'}
                       </span>
                     </div>
-                    <div className="p-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] flex justify-between">
+                    <div className="p-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] flex justify-between">
                       <span className="text-slate-400">Max Cap:</span>
                       <span className="text-white font-mono">${(config.maxScalingAccountSize/1000).toFixed(0)}K</span>
                     </div>
@@ -1477,12 +1486,12 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
         {/* =========================================================================
             4. FIXED MODAL FOOTER
             ========================================================================= */}
-        <div className="shrink-0 px-6 sm:px-7 py-4 border-t border-[#1C232E] bg-[#12161D] flex items-center justify-between">
+        <div className="shrink-0 px-6 sm:px-7 py-4 border-t border-[rgba(255,255,255,0.07)] bg-[#0D0D0D] flex items-center justify-between">
           <button
             type="button"
             onClick={() => setCurrentStep((prev) => Math.max(1, prev - 1))}
             disabled={currentStep === 1}
-            className="flex items-center gap-1.5 h-10 px-4 rounded-xl text-xs font-semibold text-slate-300 hover:text-white bg-[#1A1F27] hover:bg-[#222936] border border-[#1C232E] disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer"
+            className="flex items-center gap-1.5 h-10 px-4 rounded-xl text-xs font-semibold text-slate-300 hover:text-white bg-[#141414] hover:bg-[#1A1A1A] border border-[rgba(255,255,255,0.07)] disabled:opacity-40 disabled:pointer-events-none transition-all cursor-pointer"
           >
             <ChevronLeft className="w-4 h-4" />
             <span>Previous</span>
@@ -1503,10 +1512,20 @@ export const PropFirmWizardModal: React.FC<PropFirmWizardModalProps> = ({
               <button
                 type="button"
                 onClick={handleFinalSubmit}
-                className="flex items-center gap-2 h-10 px-5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-sm transition-all cursor-pointer border border-blue-500/50"
+                disabled={isSubmitting}
+                className="flex items-center gap-2 h-10 px-5 rounded-xl text-xs font-bold text-white bg-blue-600 hover:bg-blue-500 shadow-sm disabled:opacity-50 transition-all cursor-pointer border border-blue-500/50"
               >
-                <Award className="w-4 h-4" />
-                <span>Initialize Account</span>
+                {isSubmitting ? (
+                  <>
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <>
+                    <Award className="w-4 h-4" />
+                    <span>Initialize Account</span>
+                  </>
+                )}
               </button>
             )}
           </div>

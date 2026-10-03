@@ -446,7 +446,7 @@ ${note.content}
     >
       {/* Mobile Segmented Navigation Bar */}
       <div className={`md:hidden flex items-center justify-between p-2 border-b shrink-0 ${
-        isLight ? 'border-zinc-200 bg-white' : 'border-[#1C232E] bg-[#12161D]'
+        isLight ? 'border-zinc-200 bg-white' : 'border-[rgba(255,255,255,0.07)] bg-[#0D0D0D]'
       }`}>
         <div className="flex items-center gap-1 w-full">
           <button
@@ -511,7 +511,7 @@ ${note.content}
           className={`w-full md:w-56 lg:w-64 shrink-0 border-r flex flex-col justify-between overflow-y-auto custom-scrollbar p-3 space-y-4 ${
             isLight
               ? 'bg-white border-zinc-200'
-              : 'bg-[#0A0E18] border-[#1C232E]'
+              : 'bg-[#0A0E18] border-[rgba(255,255,255,0.07)]'
           } ${mobileActiveView === 'sidebar' ? 'flex' : 'hidden md:flex'}`}
         >
           <div className="space-y-4">
@@ -522,7 +522,7 @@ ${note.content}
               className={`w-full py-2 px-3 rounded-xl border text-xs font-semibold flex items-center justify-center gap-2 transition shadow-2xs active:scale-[0.98] cursor-pointer ${
                 isLight
                   ? 'bg-zinc-50 hover:bg-zinc-100 border-zinc-200 text-zinc-800'
-                  : 'bg-[#1A1F27] hover:bg-[#1A233A] border-indigo-500/30 text-slate-200'
+                  : 'bg-[#141414] hover:bg-[#1A233A] border-indigo-500/30 text-slate-200'
               }`}
             >
               <Plus className="w-3.5 h-3.5 text-indigo-500" />
@@ -558,7 +558,7 @@ ${note.content}
                       : 'bg-indigo-600/20 text-white font-semibold border border-indigo-500/30'
                     : isLight
                       ? 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-                      : 'text-slate-400 hover:bg-[#1A1F27] hover:text-slate-200'
+                      : 'text-slate-400 hover:bg-[#141414] hover:text-slate-200'
                 }`}
               >
                 <div className="flex items-center gap-2 truncate">
@@ -573,7 +573,7 @@ ${note.content}
                         : 'bg-indigo-900/50 text-indigo-200 border-indigo-700/50'
                       : isLight
                         ? 'bg-zinc-100 text-zinc-600 border-zinc-200'
-                        : 'bg-[#12161D] text-slate-400 border-[#1C232E]'
+                        : 'bg-[#0D0D0D] text-slate-400 border-[rgba(255,255,255,0.07)]'
                   }`}
                 >
                   {totalNotesCount}
@@ -604,7 +604,7 @@ ${note.content}
                             : 'bg-indigo-600/20 text-white font-semibold border border-indigo-500/30'
                           : isLight
                             ? 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-                            : 'text-slate-400 hover:bg-[#1A1F27] hover:text-slate-200'
+                            : 'text-slate-400 hover:bg-[#141414] hover:text-slate-200'
                       }`}
                     >
                       <div className="flex items-center gap-2 truncate">
@@ -638,7 +638,7 @@ ${note.content}
                           }}
                           className={`p-1 rounded transition opacity-0 group-hover:opacity-100 ${
                             isMenuOpen
-                              ? isLight ? 'opacity-100 bg-zinc-200' : 'opacity-100 bg-[#1A1F27]'
+                              ? isLight ? 'opacity-100 bg-zinc-200' : 'opacity-100 bg-[#141414]'
                               : ''
                           } ${
                             isLight
@@ -654,7 +654,7 @@ ${note.content}
                             className={`absolute right-0 mt-1 w-36 rounded-xl border shadow-xl p-1 z-30 space-y-0.5 ${
                               isLight
                                 ? 'bg-white border-zinc-200 text-zinc-800'
-                                : 'bg-[#12161D] border-[#1C232E] text-slate-300'
+                                : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)] text-slate-300'
                             }`}
                             onClick={(e) => e.stopPropagation()}
                           >
@@ -664,7 +664,7 @@ ${note.content}
                               className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition text-left cursor-pointer ${
                                 isLight
                                   ? 'text-zinc-700 hover:text-zinc-900 hover:bg-zinc-100'
-                                  : 'text-slate-300 hover:text-white hover:bg-[#1A1F27]'
+                                  : 'text-slate-300 hover:text-white hover:bg-[#141414]'
                               }`}
                             >
                               <Edit3 className="w-3.5 h-3.5 text-indigo-500" />
@@ -703,7 +703,7 @@ ${note.content}
                         : 'bg-indigo-600/20 text-white font-semibold border border-indigo-500/30'
                       : isLight
                         ? 'text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-                        : 'text-slate-400 hover:bg-[#1A1F27] hover:text-slate-200'
+                        : 'text-slate-400 hover:bg-[#141414] hover:text-slate-200'
                   }`}
                 >
                   <div className="flex items-center gap-2 truncate">
@@ -769,7 +769,7 @@ ${note.content}
                         ? 'font-semibold'
                         : isLight
                           ? 'border-transparent text-zinc-600 hover:bg-zinc-100 hover:text-zinc-900'
-                          : 'border-transparent text-slate-400 hover:bg-[#1A1F27] hover:text-slate-200'
+                          : 'border-transparent text-slate-400 hover:bg-[#141414] hover:text-slate-200'
                     }`}
                   >
                     <div className="flex items-center gap-2 truncate">
@@ -787,7 +787,7 @@ ${note.content}
                           ? 'font-bold'
                           : isLight
                             ? 'bg-zinc-100 text-zinc-600 border-zinc-200'
-                            : 'bg-[#12161D] text-slate-400 border-[#1C232E]'
+                            : 'bg-[#0D0D0D] text-slate-400 border-[rgba(255,255,255,0.07)]'
                       }`}
                     >
                       {count}
@@ -806,7 +806,7 @@ ${note.content}
               className={`p-3 rounded-xl border space-y-2.5 ${
                 isLight
                   ? 'bg-zinc-50 border-zinc-200'
-                  : 'bg-[#12161D] border-[#1C232E]'
+                  : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)]'
               }`}
             >
               <div className={`flex items-center gap-1.5 text-xs font-bold ${
@@ -820,7 +820,7 @@ ${note.content}
                 <div className={`p-2 rounded-lg border ${
                   isLight
                     ? 'bg-white border-zinc-200 shadow-2xs'
-                    : 'bg-[#0A0D14] border-[#1C232E]'
+                    : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'
                 }`}>
                   <span className={`text-[10px] block mb-0.5 ${isLight ? 'text-zinc-500' : 'text-slate-400'}`}>Total Notes</span>
                   <span className={`text-sm font-bold font-mono ${isLight ? 'text-zinc-900' : 'text-white'}`}>{totalNotesCount}</span>
@@ -828,7 +828,7 @@ ${note.content}
                 <div className={`p-2 rounded-lg border ${
                   isLight
                     ? 'bg-white border-zinc-200 shadow-2xs'
-                    : 'bg-[#0A0D14] border-[#1C232E]'
+                    : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'
                 }`}>
                   <span className={`text-[10px] block mb-0.5 ${isLight ? 'text-zinc-500' : 'text-slate-400'}`}>Total Tags</span>
                   <span className={`text-sm font-bold font-mono ${isLight ? 'text-zinc-900' : 'text-white'}`}>{totalTagsCount}</span>
@@ -843,7 +843,7 @@ ${note.content}
               className={`w-full flex items-center justify-between px-2.5 py-2 rounded-xl text-xs transition border cursor-pointer ${
                 isLight
                   ? 'bg-zinc-50 hover:bg-zinc-100 border-zinc-200 text-zinc-700'
-                  : 'bg-[#12161D] hover:bg-[#1A1F27] border-[#1C232E] text-slate-400 hover:text-slate-200'
+                  : 'bg-[#0D0D0D] hover:bg-[#141414] border-[rgba(255,255,255,0.07)] text-slate-400 hover:text-slate-200'
               }`}
             >
               <div className="flex items-center gap-2 truncate">
@@ -853,7 +853,7 @@ ${note.content}
               <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded-md border ${
                 isLight
                   ? 'bg-white text-zinc-600 border-zinc-200'
-                  : 'bg-[#0A0D14] text-slate-400 border-[#1C232E]'
+                  : 'bg-[#070707] text-slate-400 border-[rgba(255,255,255,0.07)]'
               }`}>
                 {deletedCount}
               </span>
@@ -869,12 +869,12 @@ ${note.content}
           className={`w-full md:w-80 lg:w-96 shrink-0 border-r flex flex-col overflow-hidden ${
             isLight
               ? 'bg-[#F8F9FB] border-zinc-200'
-              : 'bg-[#0A0D14] border-[#1C232E]'
+              : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'
           } ${mobileActiveView === 'list' ? 'flex' : 'hidden md:flex'}`}
         >
           {/* Top Actions: + New Note & Search Bar */}
           <div className={`p-3.5 space-y-2.5 border-b shrink-0 ${
-            isLight ? 'border-zinc-200 bg-white' : 'border-[#1C232E] bg-[#0A0D14]'
+            isLight ? 'border-zinc-200 bg-white' : 'border-[rgba(255,255,255,0.07)] bg-[#070707]'
           }`}>
             {/* + New Note Button (Electric Blue / Purple Gradient) */}
             <button
@@ -898,7 +898,7 @@ ${note.content}
                   className={`w-full rounded-xl pl-9 pr-3 py-1.5 text-xs focus:outline-none border transition ${
                     isLight
                       ? 'bg-white border-zinc-200 text-zinc-900 placeholder-zinc-400 focus:border-indigo-500 shadow-2xs'
-                      : 'bg-[#0A0D14] border-[#1C232E] text-white placeholder-slate-500 focus:border-indigo-500'
+                      : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-white placeholder-slate-500 focus:border-indigo-500'
                   }`}
                 />
                 {searchQuery && (
@@ -920,7 +920,7 @@ ${note.content}
                       ? 'bg-indigo-600/20 border-indigo-500 text-indigo-500 font-semibold'
                       : isLight
                         ? 'bg-white border-zinc-200 text-zinc-600 hover:text-zinc-900 shadow-2xs'
-                        : 'bg-[#0A0D14] border-[#1C232E] text-slate-400 hover:text-white'
+                        : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-slate-400 hover:text-white'
                   }`}
                   title="Filter options"
                 >
@@ -932,7 +932,7 @@ ${note.content}
                     className={`absolute right-0 mt-1 w-44 rounded-xl border shadow-xl py-1.5 z-30 text-xs ${
                       isLight
                         ? 'bg-white border-zinc-200 text-zinc-800'
-                        : 'bg-[#12161D] border-[#1C232E] text-slate-200'
+                        : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)] text-slate-200'
                     }`}
                     onMouseLeave={() => setShowFilterMenu(false)}
                   >
@@ -955,7 +955,7 @@ ${note.content}
                           setShowFilterMenu(false);
                         }}
                         className={`w-full text-left px-3 py-1.5 flex items-center justify-between transition cursor-pointer ${
-                          isLight ? 'hover:bg-zinc-100' : 'hover:bg-[#1A1F27]'
+                          isLight ? 'hover:bg-zinc-100' : 'hover:bg-[#141414]'
                         } ${
                           quickFilter === f.key
                             ? 'text-indigo-600 font-semibold'
@@ -1003,10 +1003,10 @@ ${note.content}
                             isSelected
                               ? isLight
                                 ? 'bg-indigo-50/90 border-indigo-400/90 shadow-sm ring-1 ring-indigo-300'
-                                : 'bg-[#1A1F27] border-indigo-500/80 shadow-md shadow-indigo-950/40 ring-1 ring-indigo-500/40'
+                                : 'bg-[#141414] border-indigo-500/80 shadow-md shadow-indigo-950/40 ring-1 ring-indigo-500/40'
                               : isLight
                                 ? 'bg-white hover:bg-zinc-50 border-zinc-200 hover:border-zinc-300 shadow-2xs'
-                                : 'bg-[#12161D] hover:bg-[#1A1F27] border-[#1C232E] hover:border-[#2A3444]'
+                                : 'bg-[#0D0D0D] hover:bg-[#141414] border-[rgba(255,255,255,0.07)] hover:border-[rgba(255,255,255,0.12)]'
                           }`}
                         >
                           {/* Top Row: Title + Time */}
@@ -1097,14 +1097,14 @@ ${note.content}
         <main
           id="journal-right-detail-panel"
           className={`flex-1 flex flex-col overflow-y-auto custom-scrollbar p-4 sm:p-6 space-y-6 ${
-            isLight ? 'bg-white' : 'bg-[#0A0D14]'
+            isLight ? 'bg-white' : 'bg-[#070707]'
           } ${mobileActiveView === 'detail' ? 'flex' : 'hidden md:flex'}`}
         >
           {currentNote ? (
             <>
               {/* Mobile Back to Notes List Button */}
               <div className={`md:hidden flex items-center justify-between pb-2 border-b ${
-                isLight ? 'border-zinc-200' : 'border-[#1C232E]'
+                isLight ? 'border-zinc-200' : 'border-[rgba(255,255,255,0.07)]'
               }`}>
                 <button
                   type="button"
@@ -1112,7 +1112,7 @@ ${note.content}
                   className={`inline-flex items-center gap-1.5 text-xs font-semibold py-1.5 px-3 rounded-xl border cursor-pointer ${
                     isLight
                       ? 'bg-zinc-100 hover:bg-zinc-200 border-zinc-200 text-indigo-600'
-                      : 'bg-[#1A1F27] border-[#1C232E] text-indigo-400 hover:text-indigo-300'
+                      : 'bg-[#141414] border-[rgba(255,255,255,0.07)] text-indigo-400 hover:text-indigo-300'
                   }`}
                 >
                   <ChevronLeft className="w-4 h-4" />
@@ -1121,7 +1121,7 @@ ${note.content}
               </div>
 
               {/* Header: Title, Star, Edit, Delete, More Actions */}
-              <div className={`space-y-3 pb-2 border-b ${isLight ? 'border-zinc-200' : 'border-[#1C232E]'}`}>
+              <div className={`space-y-3 pb-2 border-b ${isLight ? 'border-zinc-200' : 'border-[rgba(255,255,255,0.07)]'}`}>
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <h1 className={`text-lg sm:text-xl font-bold tracking-tight truncate ${
@@ -1132,7 +1132,7 @@ ${note.content}
                     <button
                       onClick={() => handleToggleFavorite(currentNote)}
                       className={`p-1 rounded-lg transition cursor-pointer ${
-                        isLight ? 'hover:bg-zinc-100' : 'hover:bg-[#1A1F27]'
+                        isLight ? 'hover:bg-zinc-100' : 'hover:bg-[#141414]'
                       }`}
                       title={currentNote.isFavorite ? 'Remove from favorites' : 'Add to favorites'}
                     >
@@ -1154,7 +1154,7 @@ ${note.content}
                       className={`p-2 rounded-xl border transition shadow-2xs cursor-pointer ${
                         isLight
                           ? 'bg-zinc-50 hover:bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-zinc-900'
-                          : 'bg-[#12161D] hover:bg-[#1A1F27] border-[#1C232E] text-slate-300 hover:text-white'
+                          : 'bg-[#0D0D0D] hover:bg-[#141414] border-[rgba(255,255,255,0.07)] text-slate-300 hover:text-white'
                       }`}
                       title="Edit Note"
                     >
@@ -1180,7 +1180,7 @@ ${note.content}
                         className={`p-2 rounded-xl border transition shadow-2xs cursor-pointer ${
                           isLight
                             ? 'bg-zinc-50 hover:bg-zinc-100 border-zinc-200 text-zinc-700 hover:text-zinc-900'
-                            : 'bg-[#12161D] hover:bg-[#1A1F27] border-[#1C232E] text-slate-300 hover:text-white'
+                            : 'bg-[#0D0D0D] hover:bg-[#141414] border-[rgba(255,255,255,0.07)] text-slate-300 hover:text-white'
                         }`}
                         title="More actions"
                       >
@@ -1192,7 +1192,7 @@ ${note.content}
                           className={`absolute right-0 mt-1.5 w-48 rounded-xl border shadow-xl py-1.5 z-30 text-xs ${
                             isLight
                               ? 'bg-white border-zinc-200 text-zinc-800'
-                              : 'bg-[#12161D] border-[#1C232E] text-slate-200'
+                              : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)] text-slate-200'
                           }`}
                           onMouseLeave={() => setShowMoreMenu(false)}
                         >
@@ -1432,7 +1432,7 @@ ${note.content}
                       ? isLight ? 'border-indigo-500 bg-indigo-50' : 'border-indigo-500 bg-indigo-950/20'
                       : isLight
                         ? 'border-zinc-300 hover:border-indigo-500 bg-[#F8F9FB]'
-                        : 'border-[#1C232E] hover:border-indigo-500/50 bg-[#0A0D14]'
+                        : 'border-[rgba(255,255,255,0.07)] hover:border-indigo-500/50 bg-[#070707]'
                   }`}
                 >
                   <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-500 shrink-0">
@@ -1457,7 +1457,7 @@ ${note.content}
                         className={`p-3 rounded-xl border flex flex-col justify-between gap-2.5 transition ${
                           isLight
                             ? 'bg-[#F8F9FB] border-zinc-200'
-                            : 'bg-[#12161D] border-slate-800/80 hover:border-slate-700'
+                            : 'bg-[#0D0D0D] border-slate-800/80 hover:border-slate-700'
                         }`}
                       >
                         {att.type === 'image' ? (
@@ -1524,7 +1524,7 @@ ${note.content}
               <div className={`w-14 h-14 rounded-2xl border flex items-center justify-center shadow-inner ${
                 isLight
                   ? 'bg-zinc-100 border-zinc-200 text-zinc-400'
-                  : 'bg-[#12161D] border-slate-800 text-slate-500'
+                  : 'bg-[#0D0D0D] border-slate-800 text-slate-500'
               }`}>
                 <BookOpen className="w-7 h-7 text-indigo-500" />
               </div>

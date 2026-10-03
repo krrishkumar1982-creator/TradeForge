@@ -240,7 +240,7 @@ export const RadarScoreCard: React.FC<RadarScoreCardProps> = ({ trades }) => {
         improvementTip:
           profitFactor < 1.5
             ? 'Target trades offering minimum 2:1 Reward-to-Risk ratio and trim losing trades sooner.'
-            : 'Institutional-grade ratio. Gross gains significantly outpace losing trade drag.',
+            : 'Solid ratio. Gross gains outpace losing trades.',
         statusLabel: getStatusLabel(profitFactorScore),
         icon: TrendingUp,
       },
@@ -276,7 +276,7 @@ export const RadarScoreCard: React.FC<RadarScoreCardProps> = ({ trades }) => {
       },
       {
         key: 'recoveryFactor',
-        name: 'Recovery factor',
+        name: 'Recovery',
         rawValue: recoveryFactor.toFixed(2),
         normalizedScore: Math.round(recoveryScore),
         weight: 0.15,
@@ -433,7 +433,7 @@ export const RadarScoreCard: React.FC<RadarScoreCardProps> = ({ trades }) => {
     { label: 'Profit factor', x: cx + maxRadius + 34, y: cy + maxRadius / 2 + 10, anchor: 'start' },
     { label: 'Avg win/loss', x: cx, y: cy + maxRadius + 18, anchor: 'middle' },
     { label: 'Max drawdown', x: cx - maxRadius - 34, y: cy + maxRadius / 2 + 10, anchor: 'end' },
-    { label: 'Recovery factor', x: cx - maxRadius - 34, y: cy - maxRadius / 2 + 3, anchor: 'end' },
+    { label: 'Recovery', x: cx - maxRadius - 34, y: cy - maxRadius / 2 + 3, anchor: 'end' },
   ];
 
   const activeMetric = hoveredIndex !== null ? metrics[hoveredIndex] : null;
@@ -444,10 +444,10 @@ export const RadarScoreCard: React.FC<RadarScoreCardProps> = ({ trades }) => {
       <div className="flex items-center justify-between px-1 mb-1">
         <div className={`flex items-center gap-1.5 text-xs ${isLight ? 'text-[#4B5563]' : 'text-[#8C97AB]'}`}>
           <Sparkles className={`w-3.5 h-3.5 ${isLight ? 'text-[#1D4ED8]' : 'text-[#4C7DFF]'}`} />
-          <span className={`font-semibold ${isLight ? 'text-[#111827]' : 'text-[#F3F6FB]'}`}>Performance Hexagon</span>
+          <span className={`font-semibold ${isLight ? 'text-[#111827]' : 'text-[#F3F6FB]'}`}>Performance Profile</span>
         </div>
         <span className={`text-[10px] font-mono ${isLight ? 'text-[#6B7280]' : 'text-[#8C97AB]'}`}>
-          {closedCount} Closed Trades
+          {closedCount} Trades
         </span>
       </div>
 
@@ -590,7 +590,7 @@ export const RadarScoreCard: React.FC<RadarScoreCardProps> = ({ trades }) => {
             className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[240px] rounded-xl border p-3 shadow-xl z-30 pointer-events-none animate-in fade-in zoom-in-95 space-y-1.5 ${
               isLight
                 ? 'bg-white border-slate-200 text-slate-900 shadow-slate-200/50'
-                : 'border-[rgba(255,255,255,0.10)] bg-[#181A21] text-slate-100 shadow-black/80'
+                : 'border-[rgba(255,255,255,0.10)] bg-[#181A21] text-[#F5F5F5] shadow-black/80'
             }`}
           >
             <div className={`flex items-center justify-between pb-1 border-b ${
@@ -598,7 +598,7 @@ export const RadarScoreCard: React.FC<RadarScoreCardProps> = ({ trades }) => {
             }`}>
               <div className="flex items-center gap-1.5">
                 <activeMetric.icon className={`w-3.5 h-3.5 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />
-                <span className={`font-semibold text-xs ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>{activeMetric.name}</span>
+                <span className={`font-semibold text-xs ${isLight ? 'text-slate-900' : 'text-[#F5F5F5]'}`}>{activeMetric.name}</span>
               </div>
               <span className={`text-[10px] font-semibold font-mono px-1.5 py-0.2 rounded border ${
                 isLight ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
@@ -608,17 +608,17 @@ export const RadarScoreCard: React.FC<RadarScoreCardProps> = ({ trades }) => {
             </div>
 
             <div className="flex items-center justify-between text-xs font-mono">
-              <span className={`text-[11px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Real Value:</span>
+              <span className={`text-[11px] ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Real Value:</span>
               <span className={`font-bold ${isLight ? 'text-emerald-600' : 'text-emerald-400'}`}>{activeMetric.rawValue}</span>
             </div>
 
             <div className={`text-[10px] font-mono rounded px-2 py-1 border ${
-              isLight ? 'bg-slate-50 text-slate-800 border-slate-200' : 'text-slate-300 bg-[#101116] border-[rgba(255,255,255,0.06)]'
+              isLight ? 'bg-slate-50 text-slate-800 border-slate-200' : 'text-[#D4D4D8] bg-[#101116] border-[rgba(255,255,255,0.06)]'
             }`}>
               {activeMetric.calculation}
             </div>
 
-            <div className={`text-[10px] leading-snug pt-0.5 ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>
+            <div className={`text-[10px] leading-snug pt-0.5 ${isLight ? 'text-slate-600' : 'text-[#A1A1AA]'}`}>
               <strong className={isLight ? 'text-blue-600' : 'text-blue-400'}>Tactical Tip: </strong>
               {activeMetric.improvementTip}
             </div>
@@ -632,7 +632,7 @@ export const RadarScoreCard: React.FC<RadarScoreCardProps> = ({ trades }) => {
       }`}>
         <div className="flex items-end justify-between">
           <div>
-            <div className={`text-[11px] font-medium ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Performance Index</div>
+            <div className={`text-[11px] font-medium ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Performance Index</div>
             <div className={`text-2xl font-bold font-mono tracking-tight flex items-center gap-2 ${
               isLight ? 'text-slate-900' : 'text-white'
             }`}>
@@ -664,7 +664,7 @@ export const RadarScoreCard: React.FC<RadarScoreCardProps> = ({ trades }) => {
           </div>
 
           <div className="text-right">
-            <span className={`text-[10px] font-mono ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
+            <span className={`text-[10px] font-mono ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
               Record: <strong className={isLight ? 'text-emerald-600' : 'text-emerald-400'}>{winCount}W</strong> / <strong className={isLight ? 'text-rose-600' : 'text-rose-400'}>{lossCount}L</strong>
             </span>
           </div>
@@ -685,7 +685,7 @@ export const RadarScoreCard: React.FC<RadarScoreCardProps> = ({ trades }) => {
 
           {/* Scale Axis Markers (0, 20, 40, 60, 80, 100) */}
           <div className={`flex justify-between text-[9px] font-mono px-0.5 ${
-            isLight ? 'text-slate-400' : 'text-slate-500'
+            isLight ? 'text-[#A1A1AA]' : 'text-[#71717A]'
           }`}>
             <span>0</span>
             <span>20</span>

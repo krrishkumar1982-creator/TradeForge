@@ -263,32 +263,32 @@ export const TradingToolsView: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="pb-4 border-b border-[#1C232E]">
-        <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white flex items-center gap-2">
-          <Calculator className="w-6 h-6 text-indigo-400" />
-          Institutional Trading Mathematics & Sizing Tools
+      <div className="pb-4 border-b border-[rgba(255,255,255,0.06)]">
+        <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#F4F5F7] flex items-center gap-2">
+          <Calculator className="w-6 h-6 text-[#818CF8]" />
+          Position Sizing & Analytics
         </h1>
-        <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-          Unlock quantitative precision. Access mathematically validated calculators for contract sizing, drawdown recoveries, Monte Carlo equity curves, options profiles, and risk/reward parameters.
+        <p className="text-xs text-[#8A919D] mt-1 leading-relaxed">
+          Institutional calculators for position sizing, risk mitigation, and mathematical modeling.
         </p>
       </div>
 
       {/* Search & Navigation Bar */}
-      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-[#12161D] p-4 rounded-2xl border border-[#1C232E]">
+      <div className="flex flex-col sm:flex-row gap-4 items-center justify-between bg-[#0D1014] p-4 rounded-2xl border border-[rgba(255,255,255,0.055)]">
         {/* Search */}
         <div className="relative w-full sm:w-80">
-          <Search className="absolute left-3.5 top-3 w-4 h-4 text-slate-500" />
+          <Search className="absolute left-3.5 top-3 w-4 h-4 text-[#5E6570]" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Search calculators... (e.g. position, kelly)"
-            className="w-full rounded-xl bg-[#0A0D14] border border-[#1C232E] p-2.5 pl-10 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            className="w-full rounded-xl bg-[#080A0D] border border-[rgba(255,255,255,0.08)] p-2.5 pl-10 text-xs text-[#F4F5F7] placeholder-[#5E6570] focus:outline-none focus:border-[#6366F1]"
           />
         </div>
 
         {/* Dynamic tool count */}
-        <div className="text-xs font-bold text-slate-400 font-mono">
+        <div className="text-xs font-medium text-[#8A919D] font-mono">
           {filteredTools.length} {filteredTools.length === 1 ? 'tool' : 'tools'} available
         </div>
       </div>
@@ -299,10 +299,10 @@ export const TradingToolsView: React.FC = () => {
           <button
             key={cat.id}
             onClick={() => setActiveCategory(cat.id)}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer border ${
               activeCategory === cat.id
-                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/25'
-                : 'bg-[#12161D] border-[#1C232E] text-slate-400 hover:text-white hover:border-[#273141] hover:bg-[#1A1F27]'
+                ? 'bg-[#11151A] text-[#F4F5F7] border-[rgba(99,102,241,0.35)] shadow-xs'
+                : 'bg-[#080A0D] border-[rgba(255,255,255,0.06)] text-[#8A919D] hover:text-[#F4F5F7] hover:border-[rgba(255,255,255,0.12)] hover:bg-[#151A20]'
             }`}
           >
             {cat.label}
@@ -316,19 +316,19 @@ export const TradingToolsView: React.FC = () => {
           <div
             key={tool.id}
             onClick={() => setActiveToolId(tool.id)}
-            className="group rounded-2xl border border-[#1C232E] bg-[#0E121A] p-5 shadow-sm hover:border-indigo-500/40 hover:bg-[#12161D] transition-all duration-300 cursor-pointer flex flex-col justify-between space-y-4"
+            className="group rounded-2xl border border-[rgba(255,255,255,0.055)] bg-[#0D1014] p-5 shadow-xs hover:border-[rgba(99,102,241,0.35)] hover:bg-[#11151A] transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-4"
           >
             <div className="space-y-3">
               {/* Top info and badge */}
               <div className="flex items-center justify-between">
-                <span className="text-[9px] font-bold uppercase tracking-wider text-slate-500">
+                <span className="text-[9px] font-semibold uppercase tracking-wider text-[#5E6570]">
                   {tool.categoryLabel}
                 </span>
                 {tool.badge && (
-                  <span className={`text-[9px] font-black uppercase px-2 py-0.5 rounded ${
+                  <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded ${
                     tool.badge === 'Popular' 
-                      ? 'bg-indigo-600/10 text-indigo-400 border border-indigo-500/20' 
-                      : 'bg-emerald-600/10 text-emerald-400 border border-emerald-500/20'
+                      ? 'bg-[#6366F1]/10 text-[#818CF8] border border-[#6366F1]/20' 
+                      : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                   }`}>
                     ★ {tool.badge}
                   </span>
@@ -337,24 +337,24 @@ export const TradingToolsView: React.FC = () => {
 
               {/* Title & icon */}
               <div className="flex items-start gap-3">
-                <div className="p-2 bg-[#0A0D14] rounded-xl border border-[#1C232E] group-hover:border-indigo-500/20 transition-colors">
+                <div className="p-2 bg-[#080A0D] rounded-xl border border-[rgba(255,255,255,0.06)] group-hover:border-[#6366F1]/30 transition-colors">
                   {tool.icon}
                 </div>
                 <div>
-                  <h3 className="text-sm font-bold text-slate-100 group-hover:text-indigo-400 transition-colors leading-snug">
+                  <h3 className="text-sm font-semibold text-[#F4F5F7] group-hover:text-[#818CF8] transition-colors leading-snug">
                     {tool.name}
                   </h3>
                 </div>
               </div>
 
               {/* Description */}
-              <p className="text-xs text-slate-400 leading-relaxed">
+              <p className="text-xs text-[#8A919D] leading-relaxed">
                 {tool.description}
               </p>
             </div>
 
             {/* Action footer */}
-            <div className="pt-2 flex items-center justify-between text-xs text-indigo-400 group-hover:text-indigo-300 font-bold">
+            <div className="pt-2 flex items-center justify-between text-xs text-[#818CF8] group-hover:text-[#A5B4FC] font-medium">
               <span>Open Tool</span>
               <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1.5 transition-transform" />
             </div>
@@ -368,26 +368,26 @@ export const TradingToolsView: React.FC = () => {
           {/* Backdrop */}
           <div 
             onClick={() => setActiveToolId(null)}
-            className="absolute inset-0 bg-[#0A0D14] backdrop-blur-md"
+            className="absolute inset-0 bg-black/80 backdrop-blur-xs"
           />
 
           {/* Modal Container */}
-          <div className="relative bg-[#12161D] border border-[#1C232E] rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
+          <div className="relative bg-[#0B0E12] border border-[rgba(255,255,255,0.08)] rounded-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl flex flex-col">
             {/* Header */}
-            <div className="p-5 border-b border-[#1C232E] flex items-center justify-between bg-[#0A0D14]/40">
+            <div className="p-5 border-b border-[rgba(255,255,255,0.06)] flex items-center justify-between bg-[#06080B]">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-[#0A0D14] rounded-xl border border-[#1C232E] text-indigo-400">
+                <div className="p-2.5 bg-[#080A0D] rounded-xl border border-[rgba(255,255,255,0.06)] text-[#818CF8]">
                   {activeToolMetadata.icon}
                 </div>
                 <div>
-                  <h2 className="text-sm font-black text-slate-100">{activeToolMetadata.name}</h2>
-                  <p className="text-[10px] text-slate-400 mt-0.5">{activeToolMetadata.description}</p>
+                  <h2 className="text-sm font-semibold text-[#F4F5F7]">{activeToolMetadata.name}</h2>
+                  <p className="text-[10px] text-[#8A919D] mt-0.5">{activeToolMetadata.description}</p>
                 </div>
               </div>
 
               <button
                 onClick={() => setActiveToolId(null)}
-                className="p-1.5 rounded-lg bg-slate-850 hover:bg-[#1A1F27] text-slate-400 hover:text-slate-200 transition"
+                className="p-1.5 rounded-lg text-[#8A919D] hover:text-[#F4F5F7] hover:bg-[#151A20] transition cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>

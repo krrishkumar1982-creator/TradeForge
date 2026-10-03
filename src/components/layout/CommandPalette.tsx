@@ -197,8 +197,8 @@ export const CommandPalette: React.FC = () => {
         }`}>
           {/* Quick Actions */}
           <div>
-            <div className={`px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider ${
-              isLight ? 'text-slate-400' : 'text-slate-500'
+            <div className={`px-2.5 pb-1 text-xs font-medium ${
+              isLight ? 'text-slate-500' : 'text-[#71717A]'
             }`}>
               Quick Actions
             </div>
@@ -223,11 +223,11 @@ export const CommandPalette: React.FC = () => {
                       <Icon className="w-3.5 h-3.5" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <div className={`text-xs font-medium ${
+                      <div className={`text-[13.5px] font-medium ${
                         isLight ? 'text-slate-900 group-hover:text-slate-900' : 'text-slate-100 group-hover:text-white'
                       }`}>{action.label}</div>
-                      <div className={`text-[11px] truncate ${
-                        isLight ? 'text-slate-500' : 'text-slate-400'
+                      <div className={`text-xs truncate ${
+                        isLight ? 'text-slate-500' : 'text-[#9CA3AF]'
                       }`}>{action.desc}</div>
                     </div>
                     <CornerDownLeft className={`w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition ${
@@ -242,8 +242,8 @@ export const CommandPalette: React.FC = () => {
           {/* Matched Trades */}
           {query.trim().length > 0 && matchedTrades.length > 0 && (
             <div>
-              <div className={`px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider border-t pt-2 ${
-                isLight ? 'text-slate-400 border-slate-100' : 'text-slate-500 border-[rgba(255,255,255,0.06)]'
+              <div className={`px-2.5 pb-1 text-xs font-medium border-t pt-2 ${
+                isLight ? 'text-slate-500 border-slate-100' : 'text-[#71717A] border-[rgba(255,255,255,0.06)]'
               }`}>
                 Matching Trades
               </div>
@@ -261,7 +261,7 @@ export const CommandPalette: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <span className={`px-1.5 py-0.2 rounded text-[9px] font-mono font-bold ${
+                      <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
                         trade.direction === 'BUY'
                           ? isLight
                             ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
@@ -272,8 +272,8 @@ export const CommandPalette: React.FC = () => {
                       }`}>
                         {trade.direction}
                       </span>
-                      <span className={`font-semibold text-xs ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>{trade.symbol}</span>
-                      <span className={`text-[11px] truncate max-w-[180px] ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>{trade.setupType}</span>
+                      <span className={`font-semibold text-[13.5px] ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>{trade.symbol}</span>
+                      <span className={`text-xs truncate max-w-[180px] ${isLight ? 'text-slate-500' : 'text-[#9CA3AF]'}`}>{trade.setupType}</span>
                     </div>
                     <div className="text-right font-mono tabular-nums">
                       <span className={`text-xs font-semibold ${
@@ -283,7 +283,7 @@ export const CommandPalette: React.FC = () => {
                       }`}>
                         {trade.netPnl >= 0 ? '+' : ''}${trade.netPnl.toFixed(2)}
                       </span>
-                      <span className={`text-[10px] ml-1.5 ${isLight ? 'text-slate-400' : 'text-slate-500'}`}>
+                      <span className={`text-xs ml-1.5 ${isLight ? 'text-slate-500' : 'text-[#71717A]'}`}>
                         ({trade.rMultiple >= 0 ? '+' : ''}{trade.rMultiple}R)
                       </span>
                     </div>
@@ -296,8 +296,8 @@ export const CommandPalette: React.FC = () => {
           {/* Matched Playbooks */}
           {query.trim().length > 0 && matchedPlaybooks.length > 0 && (
             <div>
-              <div className={`px-2.5 pb-1 text-[10px] font-semibold uppercase tracking-wider border-t pt-2 ${
-                isLight ? 'text-slate-400 border-slate-100' : 'text-slate-500 border-[rgba(255,255,255,0.06)]'
+              <div className={`px-2.5 pb-1 text-xs font-medium border-t pt-2 ${
+                isLight ? 'text-slate-500 border-slate-100' : 'text-[#71717A] border-[rgba(255,255,255,0.06)]'
               }`}>
                 Matching Playbooks
               </div>
@@ -314,10 +314,10 @@ export const CommandPalette: React.FC = () => {
                     }`}
                   >
                     <div className="flex items-center gap-2">
-                      <span className="text-sm">{pb.icon}</span>
-                      <span className={`text-xs font-semibold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>{pb.name}</span>
+                      <span className="text-base">{pb.icon}</span>
+                      <span className={`text-[13.5px] font-semibold ${isLight ? 'text-slate-900' : 'text-slate-100'}`}>{pb.name}</span>
                     </div>
-                    <span className={`text-xs font-mono font-medium ${isLight ? 'text-blue-600' : 'text-blue-400'}`}>{pb.winRate}% WR</span>
+                    <span className={`text-xs font-mono font-medium ${isLight ? 'text-blue-600' : 'text-[#818CF8]'}`}>{pb.winRate}% WR</span>
                   </button>
                 ))}
               </div>

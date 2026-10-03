@@ -69,8 +69,8 @@ export const Modal: React.FC<ModalProps> = ({
   return (
     <div
       id={id}
-      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-sm animate-in fade-in duration-140 ${
-        isLight ? 'bg-slate-900/40' : 'bg-[rgba(7,8,11,0.82)]'
+      className={`fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 backdrop-blur-xs animate-in fade-in duration-140 ${
+        isLight ? 'bg-black/40' : 'bg-black/80'
       }`}
       onClick={e => {
         if (closeOnBackdrop && e.target === e.currentTarget) {
@@ -85,14 +85,14 @@ export const Modal: React.FC<ModalProps> = ({
         className={`w-full rounded-2xl border flex flex-col max-h-[92vh] overflow-hidden animate-in zoom-in-95 duration-140 ${
           isLight
             ? 'bg-white border-zinc-200 shadow-2xl text-zinc-800'
-            : 'bg-[#181A21] border-[rgba(255,255,255,0.10)] shadow-[0_20px_50px_rgba(0,0,0,0.8)] text-slate-200'
+            : 'bg-[#0B0E12] border-[rgba(255,255,255,0.07)] shadow-[0_20px_50px_rgba(0,0,0,0.72)] text-[#F4F5F7]'
         } ${sizeClasses[size]} ${className}`}
       >
         {/* Header */}
         {(title || subtitle) && (
           <div
             className={`flex items-center justify-between px-5 py-4 border-b shrink-0 ${
-              isLight ? 'border-zinc-200 bg-white' : 'border-[rgba(255,255,255,0.07)] bg-[#181A21]'
+              isLight ? 'border-zinc-200 bg-white' : 'border-[rgba(255,255,255,0.07)] bg-[#0B0E12]'
             }`}
           >
             <div className="flex items-center gap-3 min-w-0">
@@ -111,7 +111,7 @@ export const Modal: React.FC<ModalProps> = ({
                 {typeof title === 'string' ? (
                   <h3
                     className={`text-sm sm:text-base font-semibold tracking-tight truncate ${
-                      isLight ? 'text-zinc-900' : 'text-white'
+                      isLight ? 'text-zinc-900' : 'text-[#F4F5F7]'
                     }`}
                   >
                     {title}
@@ -122,7 +122,7 @@ export const Modal: React.FC<ModalProps> = ({
                 {subtitle && (
                   <p
                     className={`text-xs truncate mt-0.5 ${
-                      isLight ? 'text-zinc-500' : 'text-slate-400'
+                      isLight ? 'text-zinc-500' : 'text-[#8A919D]'
                     }`}
                   >
                     {subtitle}
@@ -137,7 +137,7 @@ export const Modal: React.FC<ModalProps> = ({
               className={`p-1.5 rounded-lg transition cursor-pointer shrink-0 ml-2 ${
                 isLight
                   ? 'text-zinc-400 hover:text-zinc-900 hover:bg-zinc-100'
-                  : 'text-slate-400 hover:text-white hover:bg-[#232733]'
+                  : 'text-[#8A919D] hover:text-[#F4F5F7] hover:bg-[#151A20]'
               }`}
               aria-label="Close"
             >
@@ -149,7 +149,7 @@ export const Modal: React.FC<ModalProps> = ({
         {/* Body */}
         <div
           className={`flex-1 overflow-y-auto p-5 custom-scrollbar text-xs sm:text-sm ${
-            isLight ? 'text-zinc-700 bg-white' : 'text-slate-200 bg-[#181A21]'
+            isLight ? 'text-zinc-700 bg-white' : 'text-[#C2C7D0] bg-[#0B0E12]'
           }`}
         >
           {children}
@@ -159,7 +159,7 @@ export const Modal: React.FC<ModalProps> = ({
         {footer && (
           <div
             className={`flex items-center justify-end gap-2.5 px-5 py-3.5 border-t shrink-0 ${
-              isLight ? 'border-zinc-200 bg-zinc-50/70' : 'border-[rgba(255,255,255,0.07)] bg-[#14161C]'
+              isLight ? 'border-zinc-200 bg-zinc-50/70' : 'border-[rgba(255,255,255,0.07)] bg-[#080A0D]'
             }`}
           >
             {footer}

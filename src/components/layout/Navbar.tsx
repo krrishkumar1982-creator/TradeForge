@@ -145,7 +145,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       className={`h-14 border-b px-3 sm:px-4 flex items-center justify-between sticky top-0 z-30 select-none transition-colors duration-150 ${
         isLight
           ? 'bg-white/95 backdrop-blur-md border-[#E2E8F0] text-slate-800'
-          : 'bg-[#090A0E]/90 backdrop-blur-md border-[rgba(255,255,255,0.07)] text-slate-100'
+          : 'bg-[#06080B]/95 backdrop-blur-md border-[rgba(255,255,255,0.055)] text-[#F4F5F7]'
       }`}
     >
       {/* =========================================================================
@@ -159,7 +159,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           className={`lg:hidden p-1.5 rounded-lg border transition cursor-pointer ${
             isLight
               ? 'border-slate-300 bg-slate-100 hover:bg-slate-200 text-slate-700'
-              : 'border-[rgba(255,255,255,0.08)] bg-[#101116] hover:bg-[#15171D] text-slate-300'
+              : 'border-[rgba(255,255,255,0.07)] bg-[#0D1014] hover:bg-[#151A20] text-[#C2C7D0]'
           }`}
           aria-label="Open Navigation Menu"
         >
@@ -185,7 +185,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           className={`flex items-center gap-2 px-2.5 py-1 rounded-lg border text-xs shrink-0 ${
             isLight
               ? 'bg-slate-100/80 border-slate-300/80 text-slate-700 font-medium'
-              : 'bg-[#101116] border-[rgba(255,255,255,0.06)] text-slate-300'
+              : 'bg-[#0D1014] border-[rgba(255,255,255,0.055)] text-[#C2C7D0]'
           }`}
         >
           <div className="flex items-center gap-1.5">
@@ -197,9 +197,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               LIVE
             </span>
           </div>
-          <span className={`${isLight ? 'text-slate-300' : 'text-slate-600'} hidden sm:inline`}>|</span>
-          <div className={`flex items-center gap-1.5 font-mono text-[11px] tabular-nums font-semibold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
-            <Clock className={`w-3.5 h-3.5 ${isLight ? 'text-slate-600' : 'text-slate-400'} hidden md:inline`} />
+          <span className={`${isLight ? 'text-slate-300' : 'text-[#5E6570]'} hidden sm:inline`}>|</span>
+          <div className={`flex items-center gap-1.5 font-mono text-[11px] tabular-nums font-semibold ${isLight ? 'text-slate-800' : 'text-[#F4F5F7]'}`}>
+            <Clock className={`w-3.5 h-3.5 ${isLight ? 'text-slate-600' : 'text-[#8A919D]'} hidden md:inline`} />
             <span>{currentTime || '00:00:00'}</span>
           </div>
         </div>
@@ -215,14 +215,14 @@ export const Navbar: React.FC<NavbarProps> = ({
           className={`flex items-center gap-2 rounded-lg border px-2.5 py-1 text-xs transition cursor-pointer ${
             isLight
               ? 'border-slate-200 bg-slate-50 hover:bg-slate-100 text-slate-700'
-              : 'border-[rgba(255,255,255,0.07)] bg-[#101116] hover:bg-[#15171D] hover:border-[rgba(255,255,255,0.12)] text-slate-400 hover:text-slate-200'
+              : 'border-[rgba(255,255,255,0.07)] bg-[#0D1014] hover:bg-[#151A20] hover:border-[rgba(255,255,255,0.10)] text-[#8A919D] hover:text-[#F4F5F7]'
           }`}
           title="Open Command Center (⌘K)"
         >
-          <Search className={`h-3.5 w-3.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`} />
-          <span className={`hidden md:inline font-normal text-xs ${isLight ? 'text-slate-600' : 'text-slate-400'}`}>Command Search...</span>
+          <Search className={`h-3.5 w-3.5 ${isLight ? 'text-slate-500' : 'text-[#8A919D]'}`} />
+          <span className={`hidden md:inline font-normal text-xs ${isLight ? 'text-slate-600' : 'text-[#8A919D]'}`}>Command Search...</span>
           <kbd className={`hidden md:inline-block rounded px-1.5 py-0.2 text-[10px] font-mono font-medium ${
-            isLight ? 'bg-slate-200/70 border border-slate-300 text-slate-700' : 'bg-[#181A21] border border-[rgba(255,255,255,0.08)] text-slate-400'
+            isLight ? 'bg-slate-200/70 border border-slate-300 text-slate-700' : 'bg-[#11151A] border border-[rgba(255,255,255,0.07)] text-[#8A919D]'
           }`}>
             ⌘K
           </kbd>
@@ -239,7 +239,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`flex items-center gap-1 rounded-lg border px-2 py-1 text-xs font-medium transition cursor-pointer ${
               isLight
                 ? 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-                : 'border-[rgba(255,255,255,0.07)] bg-[#101116] hover:bg-[#15171D] hover:border-[rgba(255,255,255,0.12)] text-slate-300 hover:text-white'
+                : 'border-[rgba(255,255,255,0.07)] bg-[#0D1014] hover:bg-[#151A20] hover:border-[rgba(255,255,255,0.10)] text-[#C2C7D0] hover:text-[#F4F5F7]'
             }`}
             title="Display Units Mode"
           >
@@ -248,17 +248,17 @@ export const Navbar: React.FC<NavbarProps> = ({
             {currencyMode === 'PRIVACY' && <EyeOff className="w-3.5 h-3.5 text-amber-400" />}
             {currencyMode === 'R_MULTIPLE' && <span className="font-bold text-xs text-indigo-400">R</span>}
             {currencyMode === 'TICKS' && <Hash className="w-3.5 h-3.5 text-emerald-400" />}
-            <ChevronDown className="w-3 h-3 text-slate-500" />
+            <ChevronDown className="w-3 h-3 text-[#8A919D]" />
           </button>
 
           {isCurrencyDropdownOpen && (
-            <div className={`absolute left-0 sm:right-0 sm:left-auto mt-1.5 w-48 rounded-xl border p-1 shadow-[0_12px_36px_rgba(0,0,0,0.5)] z-50 animate-in fade-in duration-100 ${
-              isLight ? 'border-slate-200 bg-white' : 'border-[rgba(255,255,255,0.10)] bg-[#181A21]'
+            <div className={`absolute left-0 sm:right-0 sm:left-auto mt-1.5 w-48 rounded-xl border p-1 shadow-[0_12px_36px_rgba(0,0,0,0.65)] z-50 animate-in fade-in duration-100 ${
+              isLight ? 'border-slate-200 bg-white' : 'border-[rgba(255,255,255,0.08)] bg-[#0B0E12]'
             }`}>
-              <div className={`px-2 py-1 text-[10px] font-semibold uppercase tracking-wider border-b ${
-                isLight ? 'text-slate-500 border-slate-100' : 'text-slate-500 border-[rgba(255,255,255,0.06)]'
+              <div className={`px-2.5 py-1.5 text-xs font-medium border-b ${
+                isLight ? 'text-slate-600 border-slate-100' : 'text-[#9CA3AF] border-[rgba(255,255,255,0.055)]'
               }`}>
-                Display Metrics In
+                Show Values As
               </div>
               {[
                 { id: 'USD', label: 'Dollar ($)', desc: 'Realized currency', icon: DollarSign },
@@ -275,12 +275,12 @@ export const Navbar: React.FC<NavbarProps> = ({
                   }}
                   className={`flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer ${
                     currencyMode === opt.id
-                      ? isLight ? 'bg-blue-50 text-blue-700 font-medium' : 'bg-blue-600/15 text-blue-400 font-medium'
-                      : isLight ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-[#1E222D] text-slate-300 hover:text-white'
+                      ? isLight ? 'bg-blue-50 text-blue-700 font-medium' : 'bg-[rgba(59,130,246,0.12)] text-[#F4F5F7] font-medium'
+                      : isLight ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-[#151A20] text-[#C2C7D0] hover:text-[#F4F5F7]'
                   }`}
                 >
                   <div className="flex items-center gap-2">
-                    <opt.icon className={`w-3.5 h-3.5 ${currencyMode === opt.id ? (isLight ? 'text-blue-600' : 'text-blue-400') : 'text-slate-400'}`} />
+                    <opt.icon className={`w-3.5 h-3.5 ${currencyMode === opt.id ? (isLight ? 'text-blue-600' : 'text-blue-400') : 'text-[#8A919D]'}`} />
                     <span>{opt.label}</span>
                   </div>
                   {currencyMode === opt.id && <Check className={`w-3.5 h-3.5 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />}
@@ -301,16 +301,16 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`flex items-center gap-1.5 rounded-lg border px-2 py-1 text-xs font-medium transition cursor-pointer ${
               isLight
                 ? 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-                : 'border-[rgba(255,255,255,0.07)] bg-[#101116] hover:bg-[#15171D] hover:border-[rgba(255,255,255,0.12)] text-slate-300 hover:text-white'
+                : 'border-[rgba(255,255,255,0.07)] bg-[#0D1014] hover:bg-[#151A20] hover:border-[rgba(255,255,255,0.10)] text-[#C2C7D0] hover:text-[#F4F5F7]'
             }`}
           >
             <Calendar className="w-3.5 h-3.5 text-blue-400" />
-            <span className={`hidden sm:inline max-w-[120px] truncate ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+            <span className={`hidden sm:inline max-w-[120px] truncate ${isLight ? 'text-slate-700' : 'text-[#C2C7D0]'}`}>
               {dateRange.startDate && dateRange.endDate
                 ? `${safeFormatDate(dateRange.startDate, '—', { month: 'short', day: 'numeric' })} - ${safeFormatDate(dateRange.endDate, '—', { month: 'short', day: 'numeric' })}`
                 : dateRange.presetLabel || 'Dates'}
             </span>
-            <ChevronDown className="w-3 h-3 text-slate-500" />
+            <ChevronDown className="w-3 h-3 text-[#8A919D]" />
           </button>
 
           <DateRangeDropdown
@@ -339,7 +339,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`flex items-center gap-1.5 rounded-lg border px-2.5 py-1 text-xs font-medium transition cursor-pointer ${
               isLight
                 ? 'border-slate-200 bg-white hover:bg-slate-50 text-slate-900'
-                : 'border-[rgba(255,255,255,0.07)] bg-[#101116] hover:bg-[#15171D] hover:border-[rgba(255,255,255,0.12)] text-slate-200'
+                : 'border-[rgba(255,255,255,0.07)] bg-[#0D1014] hover:bg-[#151A20] hover:border-[rgba(255,255,255,0.10)] text-[#C2C7D0] hover:text-[#F4F5F7]'
             }`}
           >
             <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${currentPropFirm ? 'bg-blue-400' : 'bg-emerald-400'}`} />
@@ -352,39 +352,39 @@ export const Navbar: React.FC<NavbarProps> = ({
                 currentAccount?.name || 'Account'
               )}
             </span>
-            <ChevronDown className="w-3 h-3 text-slate-500 shrink-0" />
+            <ChevronDown className="w-3 h-3 text-[#8A919D] shrink-0" />
           </button>
 
           {isAccountDropdownOpen && (
-            <div className={`absolute right-0 mt-1.5 w-64 max-h-[75vh] overflow-y-auto custom-scrollbar rounded-xl border p-1 shadow-[0_12px_36px_rgba(0,0,0,0.5)] z-50 animate-in fade-in duration-100 ${
-              isLight ? 'border-slate-200 bg-white' : 'border-[rgba(255,255,255,0.10)] bg-[#181A21]'
+            <div className={`absolute right-0 mt-1.5 w-64 max-h-[75vh] overflow-y-auto custom-scrollbar rounded-xl border p-1 shadow-[0_12px_36px_rgba(0,0,0,0.65)] z-50 animate-in fade-in duration-100 ${
+              isLight ? 'border-slate-200 bg-white' : 'border-[rgba(255,255,255,0.08)] bg-[#0B0E12]'
             }`}>
-              <div className={`px-2 py-1 text-[10px] font-semibold uppercase tracking-wider border-b ${
-                isLight ? 'text-slate-500 border-slate-100' : 'text-slate-500 border-[rgba(255,255,255,0.06)]'
+              <div className={`px-2.5 py-1.5 text-xs font-medium border-b ${
+                isLight ? 'text-slate-600 border-slate-100' : 'text-[#9CA3AF] border-[rgba(255,255,255,0.055)]'
               }`}>
-                Active Trading Portfolio
+                Accounts
               </div>
               <button
                 onClick={() => {
                   setSelectedAccountId('all');
                   setIsAccountDropdownOpen(false);
                 }}
-                className={`flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer ${
+                className={`flex w-full items-center justify-between px-2.5 py-2 rounded-lg text-xs sm:text-sm transition cursor-pointer ${
                   selectedAccountId === 'all'
-                    ? isLight ? 'bg-blue-50 text-blue-700 font-medium' : 'bg-blue-600/15 text-blue-400 font-medium'
-                    : isLight ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-[#1E222D] text-slate-300 hover:text-white'
+                    ? isLight ? 'bg-blue-50 text-blue-700 font-medium' : 'bg-[rgba(59,130,246,0.12)] text-[#F4F5F7] font-medium'
+                    : isLight ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-[#151A20] text-[#C2C7D0] hover:text-[#F4F5F7]'
                 }`}
               >
-                <span className="font-medium">All Accounts Combined</span>
+                <span className="font-medium">All Accounts</span>
                 {selectedAccountId === 'all' && <Check className={`w-3.5 h-3.5 ${isLight ? 'text-blue-600' : 'text-blue-400'}`} />}
               </button>
 
               {/* Broker Accounts */}
-              <div className={`px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wider flex items-center justify-between ${
-                isLight ? 'text-slate-500' : 'text-slate-500'
+              <div className={`px-2.5 pt-2.5 pb-1 text-xs font-medium flex items-center justify-between ${
+                isLight ? 'text-slate-500' : 'text-[#71717A]'
               }`}>
                 <span>Broker Accounts</span>
-                <span className="font-mono text-[9px]">{accounts.length}</span>
+                <span className="font-mono text-xs">{accounts.length}</span>
               </div>
               {accounts.map(acc => (
                 <button
@@ -393,15 +393,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                     setSelectedAccountId(acc.id);
                     setIsAccountDropdownOpen(false);
                   }}
-                  className={`flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer ${
+                  className={`flex w-full items-center justify-between px-2.5 py-2 rounded-lg text-xs sm:text-sm transition cursor-pointer ${
                     selectedAccountId === acc.id
-                      ? isLight ? 'bg-blue-50 text-blue-700 font-medium' : 'bg-blue-600/15 text-blue-400 font-medium'
-                      : isLight ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-[#1E222D] text-slate-300 hover:text-white'
+                      ? isLight ? 'bg-blue-50 text-blue-700 font-medium' : 'bg-[rgba(59,130,246,0.12)] text-[#F4F5F7] font-medium'
+                      : isLight ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-[#151A20] text-[#C2C7D0] hover:text-[#F4F5F7]'
                   }`}
                 >
                   <div className="text-left">
-                    <div className={`font-medium ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>{acc.name}</div>
-                    <div className={`text-[10px] flex items-center gap-1.5 ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
+                    <div className={`font-medium ${isLight ? 'text-slate-900' : 'text-[#F4F5F7]'}`}>{acc.name}</div>
+                    <div className={`text-xs flex items-center gap-1.5 ${isLight ? 'text-slate-500' : 'text-[#9CA3AF]'}`}>
                       <span>{acc.broker}</span>
                       <span className="font-mono tabular-nums">${(acc?.currentBalance ?? 0).toLocaleString()}</span>
                     </div>
@@ -413,11 +413,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               {/* Prop Firm Accounts */}
               {propFirmAccounts.length > 0 && (
                 <>
-                  <div className={`px-2 pt-2 pb-0.5 text-[10px] font-semibold uppercase tracking-wider flex items-center justify-between border-t mt-1 ${
-                    isLight ? 'border-slate-100 text-blue-600' : 'border-[rgba(255,255,255,0.06)] text-blue-400'
+                  <div className={`px-2.5 pt-2.5 pb-1 text-xs font-medium flex items-center justify-between border-t mt-1.5 ${
+                    isLight ? 'border-slate-100 text-blue-600' : 'border-[rgba(255,255,255,0.055)] text-[#818CF8]'
                   }`}>
                     <span>Prop Firm Accounts</span>
-                    <span className="font-mono text-[9px]">{propFirmAccounts.length}</span>
+                    <span className="font-mono text-xs">{propFirmAccounts.length}</span>
                   </div>
                   {propFirmAccounts.map(pf => (
                     <button
@@ -427,15 +427,15 @@ export const Navbar: React.FC<NavbarProps> = ({
                         setSelectedPropFirmAccountId(pf.id);
                         setIsAccountDropdownOpen(false);
                       }}
-                      className={`flex w-full items-center justify-between px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer ${
+                      className={`flex w-full items-center justify-between px-2.5 py-2 rounded-lg text-xs sm:text-sm transition cursor-pointer ${
                         selectedAccountId === pf.id
-                          ? isLight ? 'bg-blue-50 text-blue-700 font-medium' : 'bg-blue-600/15 text-blue-400 font-medium'
-                          : isLight ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-[#1E222D] text-slate-300 hover:text-white'
+                          ? isLight ? 'bg-blue-50 text-blue-700 font-medium' : 'bg-[rgba(59,130,246,0.12)] text-[#F4F5F7] font-medium'
+                          : isLight ? 'hover:bg-slate-100 text-slate-700' : 'hover:bg-[#151A20] text-[#C2C7D0] hover:text-[#F4F5F7]'
                       }`}
                     >
                       <div className="text-left">
-                        <div className={`font-medium ${isLight ? 'text-slate-900' : 'text-slate-200'}`}>{pf.name}</div>
-                        <div className={`text-[10px] flex items-center gap-1.5 ${isLight ? 'text-slate-500' : 'text-slate-500'}`}>
+                        <div className={`font-medium ${isLight ? 'text-slate-900' : 'text-[#F4F5F7]'}`}>{pf.name}</div>
+                        <div className={`text-xs flex items-center gap-1.5 ${isLight ? 'text-slate-500' : 'text-[#9CA3AF]'}`}>
                           <span>{pf.firmName}</span>
                           <span className="font-mono tabular-nums">${pf.startingBalance.toLocaleString()}</span>
                         </div>
@@ -455,7 +455,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           className={`rounded-lg border p-1.5 transition cursor-pointer ${
             isLight
               ? 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-              : 'border-[rgba(255,255,255,0.07)] bg-[#101116] hover:bg-[#15171D] hover:border-[rgba(255,255,255,0.12)] text-slate-400 hover:text-slate-200'
+              : 'border-[rgba(255,255,255,0.07)] bg-[#0D1014] hover:bg-[#151A20] hover:border-[rgba(255,255,255,0.10)] text-[#8A919D] hover:text-[#F4F5F7]'
           }`}
           title={`Switch to ${theme === 'dark' ? 'Light' : 'Dark'} Mode`}
         >
@@ -472,9 +472,9 @@ export const Navbar: React.FC<NavbarProps> = ({
           className={`relative rounded-lg border p-1.5 transition cursor-pointer ${
             isLight
               ? 'border-slate-200 bg-white hover:bg-slate-50 text-slate-700'
-              : 'border-[rgba(255,255,255,0.07)] bg-[#101116] hover:bg-[#15171D] hover:border-[rgba(255,255,255,0.12)] text-slate-400 hover:text-slate-200'
+              : 'border-[rgba(255,255,255,0.07)] bg-[#0D1014] hover:bg-[#151A20] hover:border-[rgba(255,255,255,0.10)] text-[#8A919D] hover:text-[#F4F5F7]'
           }`}
-          title="Notifications & Risk Alerts"
+          title="Notifications"
         >
           <Bell className="w-3.5 h-3.5" />
           {unreadCount > 0 && (
@@ -491,7 +491,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`flex items-center gap-1.5 rounded-lg p-1 border transition cursor-pointer ${
               isLight
                 ? 'hover:bg-slate-100 border-transparent hover:border-slate-200'
-                : 'hover:bg-[#15171D] border-transparent hover:border-[rgba(255,255,255,0.07)]'
+                : 'hover:bg-[#151A20] border-transparent hover:border-[rgba(255,255,255,0.07)]'
             }`}
             title={accountName}
           >
@@ -505,24 +505,24 @@ export const Navbar: React.FC<NavbarProps> = ({
               />
             ) : (
               <div className={`w-6 h-6 rounded-md font-semibold text-[11px] flex items-center justify-center ${
-                isLight ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-[#181A21] text-blue-400 border border-[rgba(255,255,255,0.08)]'
+                isLight ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-[#11151A] text-blue-400 border border-[rgba(255,255,255,0.07)]'
               }`}>
                 {userInitials}
               </div>
             )}
-            <ChevronDown className="w-3 h-3 text-slate-500" />
+            <ChevronDown className="w-3 h-3 text-[#8A919D]" />
           </button>
 
           {isProfileMenuOpen && (
-            <div className={`absolute right-0 mt-1.5 w-56 rounded-xl border p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.5)] z-50 animate-in fade-in duration-100 ${
-              isLight ? 'border-slate-200 bg-white' : 'border-[rgba(255,255,255,0.10)] bg-[#181A21]'
+            <div className={`absolute right-0 mt-1.5 w-56 rounded-xl border p-1.5 shadow-[0_12px_36px_rgba(0,0,0,0.65)] z-50 animate-in fade-in duration-100 ${
+              isLight ? 'border-slate-200 bg-white' : 'border-[rgba(255,255,255,0.08)] bg-[#0B0E12]'
             }`}>
               <div className={`p-2 rounded-lg mb-1 border ${
-                isLight ? 'bg-slate-50 border-slate-200/60' : 'bg-[#12141A] border-[rgba(255,255,255,0.06)]'
+                isLight ? 'bg-slate-50 border-slate-200/60' : 'bg-[#0D1014] border-[rgba(255,255,255,0.055)]'
               }`}>
-                <div className={`text-xs font-semibold truncate ${isLight ? 'text-slate-900' : 'text-white'}`}>{accountName}</div>
-                <div className={`text-[10px] truncate font-mono mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                  {authUser?.email || 'Institutional Desk'}
+                <div className={`text-xs font-semibold truncate ${isLight ? 'text-slate-900' : 'text-[#F4F5F7]'}`}>{accountName}</div>
+                <div className={`text-[10px] truncate font-mono mt-0.5 ${isLight ? 'text-slate-500' : 'text-[#8A919D]'}`}>
+                  {authUser?.email || 'Trader'}
                 </div>
               </div>
 
@@ -532,11 +532,11 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setIsProfileMenuOpen(false);
                 }}
                 className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs rounded-lg transition cursor-pointer text-left ${
-                  isLight ? 'text-slate-700 hover:bg-slate-100' : 'text-slate-300 hover:text-white hover:bg-[#1E222D]'
+                  isLight ? 'text-slate-700 hover:bg-slate-100' : 'text-[#C2C7D0] hover:text-[#F4F5F7] hover:bg-[#151A20]'
                 }`}
               >
-                <Settings className="w-3.5 h-3.5 text-slate-400" />
-                <span>Account Settings</span>
+                <Settings className="w-3.5 h-3.5 text-[#8A919D]" />
+                <span>Settings</span>
               </button>
 
               <button
@@ -545,14 +545,14 @@ export const Navbar: React.FC<NavbarProps> = ({
                   setIsProfileMenuOpen(false);
                 }}
                 className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-xs rounded-lg transition cursor-pointer text-left ${
-                  isLight ? 'text-slate-700 hover:bg-slate-100' : 'text-slate-300 hover:text-white hover:bg-[#1E222D]'
+                  isLight ? 'text-slate-700 hover:bg-slate-100' : 'text-[#C2C7D0] hover:text-[#F4F5F7] hover:bg-[#151A20]'
                 }`}
               >
-                <Shield className="w-3.5 h-3.5 text-slate-400" />
-                <span>Mentor Hub</span>
+                <Shield className="w-3.5 h-3.5 text-[#8A919D]" />
+                <span>Mentor</span>
               </button>
 
-              <div className={`my-1 border-t ${isLight ? 'border-slate-100' : 'border-[rgba(255,255,255,0.06)]'}`} />
+              <div className={`my-1 border-t ${isLight ? 'border-slate-100' : 'border-[rgba(255,255,255,0.055)]'}`} />
 
               <button
                 onClick={() => {
@@ -571,7 +571,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Primary CTA: Add Trade / New Execution */}
         <button
           onClick={() => setIsAddTradeOpen(true)}
-          className="flex items-center gap-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white px-3 py-1 text-xs font-semibold shadow-xs border border-blue-400/30 transition active:scale-[0.98] cursor-pointer shrink-0"
+          className="flex items-center gap-1.5 rounded-lg bg-[linear-gradient(135deg,#2563EB,#7C3AED)] hover:opacity-95 text-white px-3 py-1 text-xs font-semibold shadow-xs border border-blue-400/30 transition active:scale-[0.98] cursor-pointer shrink-0"
         >
           <Plus className="w-3.5 h-3.5" />
           <span className="hidden sm:inline">Add Trade</span>

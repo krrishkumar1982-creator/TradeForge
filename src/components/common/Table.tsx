@@ -48,7 +48,7 @@ export function TradeForgeTable<T>({
             className={`border-b ${
               isLight
                 ? 'border-zinc-200 bg-zinc-50/90 text-zinc-600'
-                : 'border-[rgba(255,255,255,0.08)] bg-[#0C0D12] text-slate-400'
+                : 'border-[rgba(255,255,255,0.055)] bg-[#090C10] text-[#8A919D]'
             }`}
           >
             {columns.map(col => {
@@ -66,13 +66,13 @@ export function TradeForgeTable<T>({
                   key={col.key}
                   style={col.width ? { width: col.width } : undefined}
                   onClick={() => col.sortable && onSort?.(col.key)}
-                  className={`py-2.5 px-3 font-semibold select-none tracking-tight ${
-                    isLight ? 'text-zinc-600' : 'text-slate-400'
+                  className={`py-2.5 px-3 font-semibold select-none tracking-tight text-[11px] uppercase ${
+                    isLight ? 'text-zinc-600' : 'text-[#8A919D]'
                   } ${alignClass} ${
                     col.sortable
                       ? isLight
                         ? 'cursor-pointer hover:text-zinc-900'
-                        : 'cursor-pointer hover:text-slate-200'
+                        : 'cursor-pointer hover:text-[#F4F5F7]'
                       : ''
                   }`}
                 >
@@ -97,14 +97,14 @@ export function TradeForgeTable<T>({
           className={`divide-y ${
             isLight
               ? 'divide-zinc-200/80 bg-white'
-              : 'divide-[rgba(255,255,255,0.05)] bg-[#101116]'
+              : 'divide-[rgba(255,255,255,0.055)] bg-[#0D1014]'
           }`}
         >
           {isLoading ? (
             <tr>
               <td
                 colSpan={columns.length}
-                className={`py-12 text-center ${isLight ? 'text-zinc-400' : 'text-slate-500'}`}
+                className={`py-12 text-center ${isLight ? 'text-zinc-400' : 'text-[#8A919D]'}`}
               >
                 <div className="flex items-center justify-center gap-2">
                   <span className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
@@ -117,7 +117,7 @@ export function TradeForgeTable<T>({
               <td
                 colSpan={columns.length}
                 className={`py-12 text-center font-medium ${
-                  isLight ? 'text-zinc-400' : 'text-slate-500'
+                  isLight ? 'text-zinc-400' : 'text-[#8A919D]'
                 }`}
               >
                 {emptyMessage}
@@ -134,10 +134,10 @@ export function TradeForgeTable<T>({
                     isClickable
                       ? isLight
                         ? 'cursor-pointer hover:bg-zinc-50 active:bg-zinc-100'
-                        : 'cursor-pointer hover:bg-[#161821] active:bg-[#1A1D27]'
+                        : 'cursor-pointer hover:bg-[#151A20] active:bg-[#11151A]'
                       : isLight
                       ? 'hover:bg-zinc-50/50'
-                      : 'hover:bg-[#13151C]'
+                      : 'hover:bg-[#151A20]'
                   }`}
                 >
                   {columns.map(col => {
@@ -155,8 +155,8 @@ export function TradeForgeTable<T>({
                     return (
                       <td
                         key={col.key}
-                        className={`py-2 px-3 tabular-nums ${
-                          isLight ? 'text-zinc-800' : 'text-slate-200'
+                        className={`py-2.5 px-3 tabular-nums ${
+                          isLight ? 'text-zinc-800' : 'text-[#C2C7D0]'
                         } ${alignClass}`}
                       >
                         {content}

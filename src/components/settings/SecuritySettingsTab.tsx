@@ -141,27 +141,27 @@ export const SecuritySettingsTab: React.FC = () => {
   return (
     <div className="space-y-6 max-w-3xl">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#1C232E]">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[rgba(255,255,255,0.06)]">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <Shield className="w-4 h-4 text-indigo-400" />
+          <h2 className="text-base font-semibold text-[#F4F5F7] flex items-center gap-2">
+            <Shield className="w-4 h-4 text-[#818CF8]" />
             Security & Authentication Center
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#8A919D] mt-0.5">
             Manage multi-factor verification, API bridge tokens, session locks, and terminal credentials.
           </p>
         </div>
       </div>
 
       {/* Two-Factor Authentication Card */}
-      <div className="p-5 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-4">
+      <div className="p-5 rounded-2xl bg-[#0D1014] border border-[rgba(255,255,255,0.055)] space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-[#6366F1]/10 border border-[#6366F1]/20 text-[#818CF8] flex items-center justify-center">
               <Smartphone className="w-5 h-5" />
             </div>
             <div>
-              <div className="text-xs font-bold text-slate-100 flex items-center gap-2">
+              <div className="text-xs font-semibold text-[#F4F5F7] flex items-center gap-2">
                 <span>Two-Factor Authentication (2FA)</span>
                 <span className={`px-2 py-0.5 rounded text-[10px] font-bold ${
                   twoFactorEnabled
@@ -171,7 +171,7 @@ export const SecuritySettingsTab: React.FC = () => {
                   {twoFactorEnabled ? 'ENFORCED' : 'DISABLED'}
                 </span>
               </div>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-[#8A919D] mt-0.5">
                 Protects your trading journal and live prop account configurations via Google Authenticator or hardware YubiKey.
               </p>
             </div>
@@ -187,7 +187,7 @@ export const SecuritySettingsTab: React.FC = () => {
                 next ? 'success' : 'warning'
               );
             }}
-            className={`px-3.5 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer border ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition cursor-pointer border ${
               twoFactorEnabled
                 ? 'bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border-rose-500/30'
                 : 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30'
@@ -199,58 +199,58 @@ export const SecuritySettingsTab: React.FC = () => {
       </div>
 
       {/* Change Password Card */}
-      <form onSubmit={handleUpdatePassword} className="p-5 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-4">
-        <div className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-          <Lock className="w-4 h-4 text-indigo-400" />
+      <form onSubmit={handleUpdatePassword} className="p-5 rounded-2xl bg-[#0D1014] border border-[rgba(255,255,255,0.055)] space-y-4">
+        <div className="text-xs font-semibold text-[#F4F5F7] uppercase tracking-wider flex items-center gap-2">
+          <Lock className="w-4 h-4 text-[#818CF8]" />
           Update Master Password
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
           <div>
-            <label className="block text-slate-400 font-semibold mb-1.5">Current Password</label>
+            <label className="block text-[#A7ADB7] font-medium mb-1.5">Current Password</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={currentPassword}
                 onChange={e => setCurrentPassword(e.target.value)}
                 placeholder="••••••••••••"
-                className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 text-[#F4F5F7] placeholder-[#5E6570] focus:outline-none focus:border-[#6366F1]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-slate-400 font-semibold mb-1.5">New Password</label>
+            <label className="block text-[#A7ADB7] font-medium mb-1.5">New Password</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={newPassword}
                 onChange={e => setNewPassword(e.target.value)}
                 placeholder="Min 8 chars, 1 number"
-                className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 text-[#F4F5F7] placeholder-[#5E6570] focus:outline-none focus:border-[#6366F1]"
               />
             </div>
           </div>
 
           <div>
-            <label className="block text-slate-400 font-semibold mb-1.5">Confirm New Password</label>
+            <label className="block text-[#A7ADB7] font-medium mb-1.5">Confirm New Password</label>
             <div className="relative">
               <input
                 type={showPassword ? 'text' : 'password'}
                 value={confirmPassword}
                 onChange={e => setConfirmPassword(e.target.value)}
                 placeholder="Repeat password"
-                className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 text-[#F4F5F7] placeholder-[#5E6570] focus:outline-none focus:border-[#6366F1]"
               />
             </div>
           </div>
         </div>
 
-        <div className="flex items-center justify-between pt-2 border-t border-[#1C232E]/60">
+        <div className="flex items-center justify-between pt-2 border-t border-[rgba(255,255,255,0.06)]">
           <button
             type="button"
             onClick={() => setShowPassword(prev => !prev)}
-            className="flex items-center gap-1.5 text-xs text-slate-400 hover:text-slate-200 cursor-pointer"
+            className="flex items-center gap-1.5 text-xs text-[#8A919D] hover:text-[#F4F5F7] cursor-pointer"
           >
             {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
             <span>{showPassword ? 'Hide Passwords' : 'Show Passwords'}</span>
@@ -259,7 +259,7 @@ export const SecuritySettingsTab: React.FC = () => {
           <button
             type="submit"
             disabled={isUpdatingPassword || !newPassword}
-            className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#1A1F27] hover:bg-[#232B36] text-slate-200 border border-[#1C232E] transition disabled:opacity-50 cursor-pointer"
+            className="px-4 py-2 rounded-xl text-xs font-medium bg-[#11151A] hover:bg-[#151A20] text-[#C2C7D0] hover:text-[#F4F5F7] border border-[rgba(255,255,255,0.08)] transition disabled:opacity-50 cursor-pointer"
           >
             {isUpdatingPassword ? 'Updating...' : 'Update Password'}
           </button>
@@ -267,16 +267,16 @@ export const SecuritySettingsTab: React.FC = () => {
       </form>
 
       {/* Institutional API Keys & Bridges */}
-      <div className="p-5 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-4">
+      <div className="p-5 rounded-2xl bg-[#0D1014] border border-[rgba(255,255,255,0.055)] space-y-4">
         <div className="flex items-center justify-between">
-          <div className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-            <Key className="w-4 h-4 text-indigo-400" />
+          <div className="text-xs font-semibold text-[#F4F5F7] uppercase tracking-wider flex items-center gap-2">
+            <Key className="w-4 h-4 text-[#818CF8]" />
             Terminal API Bridge & Webhook Credentials
           </div>
           <button
             type="button"
             onClick={handleRegenerateApiKey}
-            className="flex items-center gap-1 text-xs text-indigo-400 hover:text-indigo-300 font-medium cursor-pointer"
+            className="flex items-center gap-1 text-xs text-[#818CF8] hover:text-[#A5B4FC] font-medium cursor-pointer"
           >
             <RefreshCw className="w-3 h-3" />
             Regenerate Keys
@@ -285,18 +285,18 @@ export const SecuritySettingsTab: React.FC = () => {
 
         <div className="space-y-3 text-xs">
           <div>
-            <label className="block text-slate-400 font-semibold mb-1">Read-Only Trade Journal API Token</label>
+            <label className="block text-[#A7ADB7] font-medium mb-1">Read-Only Trade Journal API Token</label>
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 readOnly
                 value={apiKey}
-                className="flex-1 bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-200 font-mono text-xs select-all"
+                className="flex-1 bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 text-[#F4F5F7] font-mono text-xs select-all"
               />
               <button
                 type="button"
                 onClick={() => handleCopy(apiKey, 'API Token')}
-                className="p-2 rounded-xl bg-[#1A1F27] hover:bg-[#232B36] text-slate-300 border border-[#1C232E] cursor-pointer"
+                className="p-2 rounded-xl bg-[#11151A] hover:bg-[#151A20] text-[#C2C7D0] hover:text-[#F4F5F7] border border-[rgba(255,255,255,0.08)] cursor-pointer"
                 title="Copy API Key"
               >
                 {copiedKey === 'API Token' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -305,18 +305,18 @@ export const SecuritySettingsTab: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-slate-400 font-semibold mb-1">TradingView / Webhook Execution Secret</label>
+            <label className="block text-[#A7ADB7] font-medium mb-1">TradingView / Webhook Execution Secret</label>
             <div className="flex items-center gap-2">
               <input
                 type="text"
                 readOnly
                 value={webhookSecret}
-                className="flex-1 bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-200 font-mono text-xs select-all"
+                className="flex-1 bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 text-[#F4F5F7] font-mono text-xs select-all"
               />
               <button
                 type="button"
                 onClick={() => handleCopy(webhookSecret, 'Webhook Secret')}
-                className="p-2 rounded-xl bg-[#1A1F27] hover:bg-[#232B36] text-slate-300 border border-[#1C232E] cursor-pointer"
+                className="p-2 rounded-xl bg-[#11151A] hover:bg-[#151A20] text-[#C2C7D0] hover:text-[#F4F5F7] border border-[rgba(255,255,255,0.08)] cursor-pointer"
                 title="Copy Webhook Secret"
               >
                 {copiedKey === 'Webhook Secret' ? <Check className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
@@ -327,10 +327,10 @@ export const SecuritySettingsTab: React.FC = () => {
       </div>
 
       {/* Active Login Sessions */}
-      <div className="p-5 rounded-2xl bg-[#12161D] border border-[#1C232E] space-y-4">
+      <div className="p-5 rounded-2xl bg-[#0D1014] border border-[rgba(255,255,255,0.055)] space-y-4">
         <div className="flex items-center justify-between">
-          <div className="text-xs font-bold text-slate-200 uppercase tracking-wider flex items-center gap-2">
-            <Clock className="w-4 h-4 text-indigo-400" />
+          <div className="text-xs font-semibold text-[#F4F5F7] uppercase tracking-wider flex items-center gap-2">
+            <Clock className="w-4 h-4 text-[#818CF8]" />
             Active Terminal Sessions ({sessions.length})
           </div>
           {sessions.length > 1 && (
@@ -350,36 +350,36 @@ export const SecuritySettingsTab: React.FC = () => {
               key={sess.id}
               className={`p-3 rounded-xl border flex items-center justify-between text-xs transition ${
                 sess.isCurrent
-                  ? 'bg-indigo-500/10 border-indigo-500/30'
-                  : 'bg-[#0A0D14] border-[#1C232E]'
+                  ? 'bg-[#6366F1]/10 border-[#6366F1]/30'
+                  : 'bg-[#080A0D] border-[rgba(255,255,255,0.06)]'
               }`}
             >
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-[#1A1F27] text-slate-300 border border-[#1C232E]">
+                <div className="p-2 rounded-lg bg-[#11151A] text-[#C2C7D0] border border-[rgba(255,255,255,0.08)]">
                   {sess.device.includes('iPhone') ? <PhoneIcon className="w-4 h-4" /> : <Laptop className="w-4 h-4" />}
                 </div>
                 <div>
-                  <div className="font-bold text-slate-100 flex items-center gap-2">
+                  <div className="font-medium text-[#F4F5F7] flex items-center gap-2">
                     <span>{sess.device}</span>
                     {sess.isCurrent && (
-                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-indigo-500 text-white font-mono font-bold">
+                      <span className="text-[9px] px-1.5 py-0.2 rounded bg-[#6366F1] text-white font-mono font-bold">
                         THIS DEVICE
                       </span>
                     )}
                   </div>
-                  <div className="text-[11px] text-slate-400 font-mono mt-0.5">
+                  <div className="text-[11px] text-[#8A919D] font-mono mt-0.5">
                     {sess.browser} • {sess.ip}
                   </div>
                 </div>
               </div>
 
               <div className="flex items-center gap-3">
-                <span className="text-[11px] text-slate-400">{sess.lastActive}</span>
+                <span className="text-[11px] text-[#8A919D]">{sess.lastActive}</span>
                 {!sess.isCurrent && (
                   <button
                     type="button"
                     onClick={() => handleRevokeSession(sess.id)}
-                    className="p-1.5 rounded-lg bg-[#1A1F27] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-[#1C232E] transition cursor-pointer"
+                    className="p-1.5 rounded-lg bg-[#11151A] hover:bg-rose-500/20 text-[#8A919D] hover:text-rose-400 border border-[rgba(255,255,255,0.06)] transition cursor-pointer"
                     title="Terminate this session"
                   >
                     <LogOut className="w-3.5 h-3.5" />

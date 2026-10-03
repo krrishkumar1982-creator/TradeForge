@@ -36,11 +36,11 @@ export const MetricCard: React.FC<MetricCardProps> = ({
 
   const variantStyles = {
     default: {
-      border: isLight ? 'border-zinc-200' : 'border-[rgba(255,255,255,0.08)]',
+      border: isLight ? 'border-zinc-200' : 'border-[rgba(255,255,255,0.055)]',
       iconBg: isLight
         ? 'bg-zinc-100 text-zinc-700 border border-zinc-200'
-        : 'bg-[#181A21] text-slate-300 border border-[rgba(255,255,255,0.06)]',
-      valueColor: isLight ? 'text-zinc-900' : 'text-slate-100',
+        : 'bg-[#11151A] text-[#C2C7D0] border border-[rgba(255,255,255,0.07)]',
+      valueColor: isLight ? 'text-zinc-900' : 'text-[#F4F5F7]',
     },
     success: {
       border: isLight ? 'border-emerald-200' : 'border-emerald-500/25',
@@ -93,25 +93,25 @@ export const MetricCard: React.FC<MetricCardProps> = ({
       className={`relative rounded-xl border transition-all duration-140 ${
         isLight
           ? 'bg-white shadow-xs hover:border-zinc-300'
-          : 'bg-[#12141A] hover:border-[rgba(255,255,255,0.14)]'
+          : 'bg-[#0D1014] hover:border-[rgba(255,255,255,0.09)] shadow-[0_4px_20px_rgba(0,0,0,0.25)]'
       } ${style.border} ${sizeClasses[size]} ${className}`}
     >
       <div className="flex items-start justify-between gap-2.5">
-        <div className="space-y-1 min-w-0 flex-1">
+        <div className="space-y-1.5 min-w-0 flex-1">
           <div className="flex items-center gap-1.5 flex-wrap">
             <span
-              className={`text-[11px] font-medium tracking-tight select-none truncate ${
-                isLight ? 'text-zinc-500' : 'text-slate-400'
+              className={`text-xs sm:text-[13px] font-medium tracking-normal select-none truncate ${
+                isLight ? 'text-zinc-600' : 'text-[#9CA3AF]'
               }`}
             >
               {label}
             </span>
             {statusBadge && (
               <span
-                className={`text-[9px] font-semibold px-1.5 py-0.2 rounded-full border ${
+                className={`text-[11px] font-medium px-2 py-0.5 rounded-full border ${
                   isLight
                     ? 'bg-zinc-100 text-zinc-700 border-zinc-200'
-                    : 'bg-[#181A21] text-slate-300 border-[rgba(255,255,255,0.08)]'
+                    : 'bg-[#11151A] text-[#C2C7D0] border-[rgba(255,255,255,0.07)]'
                 }`}
               >
                 {statusBadge}
@@ -120,13 +120,13 @@ export const MetricCard: React.FC<MetricCardProps> = ({
           </div>
 
           <div
-            className={`font-mono tabular-nums font-bold tracking-tight truncate ${style.valueColor} ${valueSizes[size]}`}
+            className={`font-semibold tracking-tight tabular-nums truncate ${style.valueColor} ${valueSizes[size]}`}
           >
             {value}
           </div>
 
           {(subValue || change !== undefined) && (
-            <div className="flex items-center gap-1.5 text-[11px] pt-0.5">
+            <div className="flex items-center gap-1.5 text-xs pt-0.5">
               {trend && (
                 <span className="flex items-center gap-0.5 font-medium">
                   {trend === 'up' && (
@@ -136,7 +136,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                     <TrendingDown className={`w-3 h-3 ${isLight ? 'text-rose-600' : 'text-rose-400'}`} />
                   )}
                   {trend === 'neutral' && (
-                    <Minus className={`w-3 h-3 ${isLight ? 'text-zinc-400' : 'text-slate-400'}`} />
+                    <Minus className={`w-3 h-3 ${isLight ? 'text-zinc-400' : 'text-[#8A919D]'}`} />
                   )}
                 </span>
               )}
@@ -153,7 +153,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
                         : 'text-rose-400'
                       : isLight
                       ? 'text-zinc-500'
-                      : 'text-slate-400'
+                      : 'text-[#8A919D]'
                   }`}
                 >
                   {typeof change === 'number' && change > 0 ? `+${change}` : change}
@@ -162,7 +162,7 @@ export const MetricCard: React.FC<MetricCardProps> = ({
               {subValue && (
                 <span
                   className={`font-normal truncate ${
-                    isLight ? 'text-zinc-500' : 'text-slate-500'
+                    isLight ? 'text-zinc-500' : 'text-[#8A919D]'
                   }`}
                 >
                   {subValue}

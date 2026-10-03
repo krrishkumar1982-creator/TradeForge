@@ -77,18 +77,14 @@ export const TradersLoungeView: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[#1C232E]">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-3 border-b border-[rgba(255,255,255,0.07)]">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-white flex items-center gap-2">
             <MessageSquare className="w-6 h-6 text-blue-400" />
-            Traders Lounge & Community Feed
-            <span className="inline-flex items-center gap-1.5 ml-2 text-[11px] font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 px-2 py-0.5 rounded-full">
-              <Radio className="w-3 h-3 animate-pulse text-emerald-400" />
-              Live Multi-User
-            </span>
+            Trader Lounge
           </h1>
           <p className="text-xs text-slate-400 mt-0.5">
-            Share verified executions, discuss market structure setups, and learn from top performers
+            Share ideas. Compare processes. Learn from other traders.
           </p>
         </div>
       </div>
@@ -97,13 +93,13 @@ export const TradersLoungeView: React.FC = () => {
         {/* Left 8 Cols: Composer + Feed */}
         <div className="lg:col-span-8 space-y-4">
           {/* Post Composer */}
-          <form onSubmit={handlePost} className="rounded-2xl border border-[#1C232E] bg-[#12161D] p-4 shadow-xl backdrop-blur-sm space-y-3">
+          <form onSubmit={handlePost} className="rounded-2xl border border-[rgba(255,255,255,0.07)] bg-[#0D0D0D] p-4 shadow-xl backdrop-blur-sm space-y-3">
             <textarea
               rows={3}
               placeholder="Share a trade thesis, liquidity sweep observation, or psychological takeaway..."
               value={postContent}
               onChange={e => setPostContent(e.target.value)}
-              className="w-full rounded-xl bg-[#0A0D14] border border-[#1C232E] p-3 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+              className="w-full rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] p-3 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-blue-500"
             />
             <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
               <div className="flex items-center gap-2">
@@ -112,14 +108,14 @@ export const TradersLoungeView: React.FC = () => {
                   placeholder="Symbol (e.g. MES)"
                   value={symbol}
                   onChange={e => setSymbol(e.target.value)}
-                  className="w-24 bg-[#0A0D14] border border-[#1C232E] rounded-lg px-2.5 py-1 text-xs text-slate-200 uppercase"
+                  className="w-24 bg-[#070707] border border-[rgba(255,255,255,0.07)] rounded-lg px-2.5 py-1 text-xs text-slate-200 uppercase"
                 />
                 <input
                   type="text"
                   placeholder="P&L (e.g. +$650)"
                   value={pnl}
                   onChange={e => setPnl(e.target.value)}
-                  className="w-28 bg-[#0A0D14] border border-[#1C232E] rounded-lg px-2.5 py-1 text-xs text-emerald-400 font-mono"
+                  className="w-28 bg-[#070707] border border-[rgba(255,255,255,0.07)] rounded-lg px-2.5 py-1 text-xs text-emerald-400 font-mono"
                 />
               </div>
 
@@ -133,7 +129,7 @@ export const TradersLoungeView: React.FC = () => {
                 ) : (
                   <Send className="w-3.5 h-3.5" />
                 )}
-                <span>Post Idea</span>
+                <span>New Post</span>
               </button>
             </div>
           </form>
@@ -141,8 +137,8 @@ export const TradersLoungeView: React.FC = () => {
           {/* Posts Feed */}
           <div className="space-y-4">
             {communityPosts.length === 0 ? (
-              <div className="rounded-2xl border border-[#1C232E] bg-[#12161D] p-8 text-center text-xs text-slate-400">
-                No community posts yet. Be the first trader to share a trade idea!
+              <div className="rounded-2xl border border-[rgba(255,255,255,0.07)] bg-[#0D0D0D] p-8 text-center text-xs text-slate-400">
+                No posts yet.
               </div>
             ) : (
               communityPosts.map(post => {
@@ -153,7 +149,7 @@ export const TradersLoungeView: React.FC = () => {
                 return (
                   <div
                     key={post.id}
-                    className="rounded-2xl border border-[#1C232E] bg-[#12161D] p-5 shadow-xl backdrop-blur-sm space-y-3"
+                    className="rounded-2xl border border-[rgba(255,255,255,0.07)] bg-[#0D0D0D] p-5 shadow-xl backdrop-blur-sm space-y-3"
                   >
                     {/* Author Info */}
                     <div className="flex items-center justify-between">
@@ -161,7 +157,7 @@ export const TradersLoungeView: React.FC = () => {
                         <img
                           src={post.authorAvatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80'}
                           alt={post.authorName}
-                          className="w-10 h-10 rounded-full object-cover border border-[#273141]"
+                          className="w-10 h-10 rounded-full object-cover border border-[rgba(255,255,255,0.10)]"
                         />
                         <div>
                           <div className="flex items-center gap-2">
@@ -206,13 +202,13 @@ export const TradersLoungeView: React.FC = () => {
 
                     {/* Image if any */}
                     {post.imageUrl && (
-                      <div className="rounded-xl overflow-hidden border border-[#1C232E] max-h-60">
+                      <div className="rounded-xl overflow-hidden border border-[rgba(255,255,255,0.07)] max-h-60">
                         <img src={post.imageUrl} alt="Trade Chart" className="w-full h-full object-cover" />
                       </div>
                     )}
 
                     {/* Actions */}
-                    <div className="flex items-center gap-4 pt-2 border-t border-[#1C232E] text-xs text-slate-400">
+                    <div className="flex items-center gap-4 pt-2 border-t border-[rgba(255,255,255,0.07)] text-xs text-slate-400">
                       <button
                         onClick={() => toggleLikePost(post.id)}
                         className={`flex items-center gap-1.5 transition ${
@@ -234,7 +230,7 @@ export const TradersLoungeView: React.FC = () => {
 
                     {/* Expanded Comments Section */}
                     {isCommentsOpen && (
-                      <div className="pt-3 border-t border-[#1C232E] space-y-3">
+                      <div className="pt-3 border-t border-[rgba(255,255,255,0.07)] space-y-3">
                         {/* List Comments */}
                         {comments.length > 0 && (
                           <div className="space-y-2 max-h-60 overflow-y-auto pr-1">
@@ -244,13 +240,13 @@ export const TradersLoungeView: React.FC = () => {
                               return (
                                 <div
                                   key={comment.id}
-                                  className="flex items-start justify-between gap-2 p-2.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-xs"
+                                  className="flex items-start justify-between gap-2 p-2.5 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-xs"
                                 >
                                   <div className="flex items-start gap-2">
                                     <img
                                       src={comment.avatar || 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?w=120&auto=format&fit=crop&q=80'}
                                       alt={comment.author}
-                                      className="w-6 h-6 rounded-full object-cover border border-[#273141] mt-0.5"
+                                      className="w-6 h-6 rounded-full object-cover border border-[rgba(255,255,255,0.10)] mt-0.5"
                                     />
                                     <div>
                                       <div className="flex items-center gap-2">
@@ -293,7 +289,7 @@ export const TradersLoungeView: React.FC = () => {
                             onKeyDown={(e) => {
                               if (e.key === 'Enter') handleAddComment(post.id);
                             }}
-                            className="flex-1 bg-[#0A0D14] border border-[#1C232E] rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
+                            className="flex-1 bg-[#070707] border border-[rgba(255,255,255,0.07)] rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-blue-500"
                           />
                           <button
                             onClick={() => handleAddComment(post.id)}
@@ -317,7 +313,7 @@ export const TradersLoungeView: React.FC = () => {
         </div>
 
         {/* Right 4 Cols: Verified Leaderboard */}
-        <div className="lg:col-span-4 rounded-2xl border border-[#1C232E] bg-[#12161D] p-5 shadow-xl backdrop-blur-sm space-y-4">
+        <div className="lg:col-span-4 rounded-2xl border border-[rgba(255,255,255,0.07)] bg-[#0D0D0D] p-5 shadow-xl backdrop-blur-sm space-y-4">
           <h3 className="text-xs font-bold text-slate-100 uppercase tracking-wider flex items-center gap-2">
             <Trophy className="w-4 h-4 text-amber-400" />
             Verified Trader Leaderboard
@@ -347,8 +343,8 @@ export const TradersLoungeView: React.FC = () => {
                           }
                         }
                       }}
-                      className={`flex items-center justify-between p-3 rounded-xl bg-[#0A0D14] border text-xs transition ${
-                        isAdmin ? 'cursor-pointer hover:border-[#273141]' : 'border-[#1C232E]'
+                      className={`flex items-center justify-between p-3 rounded-xl bg-[#070707] border text-xs transition ${
+                        isAdmin ? 'cursor-pointer hover:border-[rgba(255,255,255,0.10)]' : 'border-[rgba(255,255,255,0.07)]'
                       }`}
                     >
                       <div className="flex items-center gap-2.5">
@@ -403,7 +399,7 @@ export const TradersLoungeView: React.FC = () => {
                               type="number"
                               value={adminPoints}
                               onChange={(e) => setAdminPoints(Number(e.target.value))}
-                              className="w-full bg-[#0A0D14] border border-slate-850 rounded px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
+                              className="w-full bg-[#070707] border border-slate-850 rounded px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-mono"
                             />
                           </div>
                           <div>
@@ -411,7 +407,7 @@ export const TradersLoungeView: React.FC = () => {
                             <select
                               value={adminRole}
                               onChange={(e) => setAdminRole(e.target.value)}
-                              className="w-full bg-[#0A0D14] border border-slate-850 rounded px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
+                              className="w-full bg-[#070707] border border-slate-850 rounded px-2.5 py-1 text-xs text-slate-200 focus:outline-none focus:border-blue-500 font-semibold"
                             >
                               <option value="USER">USER</option>
                               <option value="ADMIN">ADMIN</option>

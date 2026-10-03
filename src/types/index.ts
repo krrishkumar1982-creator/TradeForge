@@ -128,7 +128,7 @@ export interface TradingAccount {
 export interface PlaybookRule {
   id: string;
   text: string;
-  category: 'ENTRY' | 'EXIT' | 'RISK' | 'MARKET' | 'INVALIDATION';
+  category: 'ENTRY' | 'EXIT' | 'RISK' | 'MARKET' | 'MANAGEMENT' | 'INVALIDATION';
   required: boolean;
   active?: boolean;
   order?: number;
@@ -154,6 +154,7 @@ export interface Playbook {
   icon: string; // emoji or icon name
   color: string;
   description: string;
+  whenToTrade?: string;
   market?: MarketType;
   instrument?: string;
   direction?: 'Long' | 'Short' | 'Both';

@@ -104,20 +104,20 @@ export const TradeSettingsTab: React.FC = () => {
   return (
     <form onSubmit={handleSave} className="space-y-6 max-w-3xl">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#1C232E]">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[rgba(255,255,255,0.06)]">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <Sliders className="w-4 h-4 text-blue-400" />
+          <h2 className="text-base font-semibold text-[#F4F5F7] flex items-center gap-2">
+            <Sliders className="w-4 h-4 text-[#818CF8]" />
             Trading Preferences & Execution Defaults
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#8A919D] mt-0.5">
             Configure automated position sizing rules, default risk targets, and mandatory discipline guardrails.
           </p>
         </div>
         <button
           type="submit"
           disabled={isSaving}
-          className="flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-semibold bg-blue-600 hover:bg-blue-500 text-white shadow-sm border border-blue-500/50 transition disabled:opacity-50 cursor-pointer"
+          className="flex items-center gap-2 h-9 px-4 rounded-xl text-xs font-semibold bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-xs transition disabled:opacity-50 cursor-pointer"
         >
           {isSaving ? (
             <>
@@ -137,14 +137,14 @@ export const TradeSettingsTab: React.FC = () => {
       <FormSection
         title="Execution Sizing & Risk Rules"
         description="Pre-populated position sizing and risk boundaries applied to newly logged trades."
-        icon={<Percent className="w-4 h-4 text-blue-400" />}
+        icon={<Percent className="w-4 h-4 text-[#818CF8]" />}
       >
         <FormGrid columns={3}>
           <FormField label="Default Asset Class">
             <select
               value={form.defaultMarket}
               onChange={e => handleChange('defaultMarket', e.target.value as any)}
-              className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
+              className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3.5 py-2.5 text-[#F4F5F7] text-xs focus:outline-none focus:border-[#6366F1] cursor-pointer"
             >
               <option value="Futures">Futures (CME / NYMEX / CBOT)</option>
               <option value="Forex">Forex (Currencies / FX Pairs)</option>
@@ -163,8 +163,8 @@ export const TradeSettingsTab: React.FC = () => {
                 onClick={() => handleChange('defaultDirection', 'BUY')}
                 className={`py-2 rounded-xl text-xs font-semibold border transition cursor-pointer ${
                   form.defaultDirection === 'BUY'
-                    ? 'border-emerald-500/50 bg-emerald-500/10 text-emerald-400'
-                    : 'border-[#1C232E] bg-[#0A0D14] text-slate-400 hover:text-slate-200'
+                    ? 'border-emerald-500/40 bg-emerald-500/10 text-emerald-400'
+                    : 'border-[rgba(255,255,255,0.08)] bg-[#080A0D] text-[#8A919D] hover:text-[#F4F5F7] hover:bg-[#11151A]'
                 }`}
               >
                 BUY / Long
@@ -174,8 +174,8 @@ export const TradeSettingsTab: React.FC = () => {
                 onClick={() => handleChange('defaultDirection', 'SELL')}
                 className={`py-2 rounded-xl text-xs font-semibold border transition cursor-pointer ${
                   form.defaultDirection === 'SELL'
-                    ? 'border-rose-500/50 bg-rose-500/10 text-rose-400'
-                    : 'border-[#1C232E] bg-[#0A0D14] text-slate-400 hover:text-slate-200'
+                    ? 'border-rose-500/40 bg-rose-500/10 text-rose-400'
+                    : 'border-[rgba(255,255,255,0.08)] bg-[#080A0D] text-[#8A919D] hover:text-[#F4F5F7] hover:bg-[#11151A]'
                 }`}
               >
                 SELL / Short
@@ -187,7 +187,7 @@ export const TradeSettingsTab: React.FC = () => {
             <select
               value={form.defaultOrderType}
               onChange={e => handleChange('defaultOrderType', e.target.value as any)}
-              className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
+              className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3.5 py-2.5 text-[#F4F5F7] text-xs focus:outline-none focus:border-[#6366F1] cursor-pointer"
             >
               <option value="MARKET">Market Execution</option>
               <option value="LIMIT">Limit Order</option>
@@ -202,7 +202,7 @@ export const TradeSettingsTab: React.FC = () => {
               min="0.01"
               value={form.defaultQuantity}
               onChange={e => handleChange('defaultQuantity', parseFloat(e.target.value) || 1)}
-              className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-blue-500 font-mono"
+              className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3.5 py-2.5 text-[#F4F5F7] text-xs focus:outline-none focus:border-[#6366F1] font-mono"
             />
           </FormField>
 
@@ -213,12 +213,12 @@ export const TradeSettingsTab: React.FC = () => {
                 step="0.1"
                 value={form.defaultRiskValue}
                 onChange={e => handleChange('defaultRiskValue', parseFloat(e.target.value) || 0)}
-                className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-blue-500 font-mono"
+                className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3.5 py-2.5 text-[#F4F5F7] text-xs focus:outline-none focus:border-[#6366F1] font-mono"
               />
               <select
                 value={form.defaultRiskUnit}
                 onChange={e => handleChange('defaultRiskUnit', e.target.value as any)}
-                className="bg-[#0A0D14] border border-[#1C232E] rounded-xl px-2.5 py-2.5 text-white text-xs focus:outline-none focus:border-blue-500 cursor-pointer font-bold"
+                className="bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-2.5 py-2.5 text-[#F4F5F7] text-xs focus:outline-none focus:border-[#6366F1] cursor-pointer font-bold"
               >
                 <option value="PERCENT">%</option>
                 <option value="CURRENCY">$</option>
@@ -234,9 +234,9 @@ export const TradeSettingsTab: React.FC = () => {
                 step="0.1"
                 value={form.defaultRTarget}
                 onChange={e => handleChange('defaultRTarget', parseFloat(e.target.value) || 2)}
-                className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl pl-3.5 pr-8 py-2.5 text-white text-xs focus:outline-none focus:border-blue-500 font-mono"
+                className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl pl-3.5 pr-8 py-2.5 text-[#F4F5F7] text-xs focus:outline-none focus:border-[#6366F1] font-mono"
               />
-              <span className="absolute right-3 top-2.5 text-slate-400 font-bold font-mono text-xs">R</span>
+              <span className="absolute right-3 top-2.5 text-[#8A919D] font-bold font-mono text-xs">R</span>
             </div>
           </FormField>
         </FormGrid>
@@ -246,14 +246,14 @@ export const TradeSettingsTab: React.FC = () => {
       <FormSection
         title="Session & Portfolio Mapping"
         description="Default trading hours and account context assigned when quickly logging executions."
-        icon={<Clock className="w-4 h-4 text-blue-400" />}
+        icon={<Clock className="w-4 h-4 text-[#818CF8]" />}
       >
         <FormGrid columns={2}>
           <FormField label="Default Trading Session">
             <select
               value={form.defaultSession}
               onChange={e => handleChange('defaultSession', e.target.value as any)}
-              className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
+              className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3.5 py-2.5 text-[#F4F5F7] text-xs focus:outline-none focus:border-[#6366F1] cursor-pointer"
             >
               <option value="New York">New York Session (09:30 - 16:00 EST)</option>
               <option value="London">London Session (03:00 - 11:30 EST)</option>
@@ -269,7 +269,7 @@ export const TradeSettingsTab: React.FC = () => {
             <select
               value={form.defaultAccountId}
               onChange={e => handleChange('defaultAccountId', e.target.value)}
-              className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3.5 py-2.5 text-white text-xs focus:outline-none focus:border-blue-500 cursor-pointer"
+              className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3.5 py-2.5 text-[#F4F5F7] text-xs focus:outline-none focus:border-[#6366F1] cursor-pointer"
             >
               <option value="">Auto-Detect / Most Recently Active</option>
               {accounts.map(acc => (
@@ -286,9 +286,9 @@ export const TradeSettingsTab: React.FC = () => {
       <FormSection
         title="Journaling Discipline Guardrails"
         description="Enforce institutional rigor: prevent unchecked impulsive trades and hold yourself accountable."
-        icon={<ShieldCheck className="w-4 h-4 text-blue-400" />}
+        icon={<ShieldCheck className="w-4 h-4 text-[#818CF8]" />}
       >
-        <div className="space-y-3 divide-y divide-[#1C232E]/60">
+        <div className="space-y-3 divide-y divide-[rgba(255,255,255,0.06)]">
           <div className="pt-1">
             <ToggleSwitch
               checked={Boolean(form.requireSetup)}
@@ -322,15 +322,6 @@ export const TradeSettingsTab: React.FC = () => {
               onChange={() => handleChange('requireMistakeOnLoss', !form.requireMistakeOnLoss)}
               label="Mandatory Mistake Attribution on Losses"
               description="Requires tagging the psychological or mechanical error when closing a trade in the red."
-            />
-          </div>
-
-          <div className="pt-3">
-            <ToggleSwitch
-              checked={Boolean(form.trackCommissions)}
-              onChange={() => handleChange('trackCommissions', !form.trackCommissions)}
-              label="Automatically Deduct Commissions & Exchange Fees"
-              description="Applies your defined commission rules to convert gross returns into true net PnL."
             />
           </div>
 

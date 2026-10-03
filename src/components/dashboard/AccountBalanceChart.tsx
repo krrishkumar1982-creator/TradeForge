@@ -165,7 +165,7 @@ export const AccountBalanceChart: React.FC<AccountBalanceChartProps> = ({
             className={`px-2 py-0.5 rounded-md font-semibold transition cursor-pointer ${
               viewMode === 'balance'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+                : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-[#A1A1AA] hover:text-white'
             }`}
           >
             Equity Balance
@@ -175,7 +175,7 @@ export const AccountBalanceChart: React.FC<AccountBalanceChartProps> = ({
             className={`px-2 py-0.5 rounded-md font-semibold transition cursor-pointer ${
               viewMode === 'drawdown'
                 ? 'bg-rose-600 text-white shadow-xs'
-                : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-slate-400 hover:text-white'
+                : isLight ? 'text-slate-600 hover:text-slate-900' : 'text-[#A1A1AA] hover:text-white'
             }`}
           >
             Drawdown
@@ -301,7 +301,7 @@ export const AccountBalanceChart: React.FC<AccountBalanceChartProps> = ({
           className={`absolute z-30 px-3 py-1.5 rounded-lg text-xs pointer-events-none transition-all duration-150 border ${
             isLight
               ? 'bg-white border-slate-200 text-slate-900 shadow-xl'
-              : 'bg-[#181A21] border-[rgba(255,255,255,0.10)] text-slate-100 shadow-2xl'
+              : 'bg-[#181A21] border-[rgba(255,255,255,0.10)] text-[#F5F5F5] shadow-2xl'
           }`}
           style={{
             top: '32px',
@@ -310,13 +310,13 @@ export const AccountBalanceChart: React.FC<AccountBalanceChartProps> = ({
           }}
         >
           <div className={`text-[10px] font-semibold border-b pb-0.5 ${
-            isLight ? 'text-slate-500 border-slate-100' : 'text-slate-400 border-[rgba(255,255,255,0.06)]'
+            isLight ? 'text-[#71717A] border-slate-100' : 'text-[#A1A1AA] border-[rgba(255,255,255,0.06)]'
           }`}>
             {activePoint.dateStr}
           </div>
           <div className="mt-0.5 space-y-0.5 text-[11px] font-mono">
             <div className="flex items-center justify-between gap-3">
-              <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Balance:</span>
+              <span className={isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}>Balance:</span>
               <span className={`font-bold ${isLight ? 'text-slate-900' : 'text-white'}`}>{formatCurrency(activePoint.balance)}</span>
             </div>
             {viewMode === 'drawdown' ? (
@@ -326,7 +326,7 @@ export const AccountBalanceChart: React.FC<AccountBalanceChartProps> = ({
               </div>
             ) : (
               <div className="flex items-center justify-between gap-3">
-                <span className={isLight ? 'text-slate-500' : 'text-slate-400'}>Cum P&L:</span>
+                <span className={isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}>Cum P&L:</span>
                 <span className={activePoint.cumulativePnl >= 0 ? (isLight ? 'text-emerald-600 font-bold' : 'text-emerald-400 font-bold') : (isLight ? 'text-rose-600 font-bold' : 'text-rose-400 font-bold')}>
                   {formatCurrency(activePoint.cumulativePnl)}
                 </span>
@@ -338,7 +338,7 @@ export const AccountBalanceChart: React.FC<AccountBalanceChartProps> = ({
 
       {/* X Axis Date labels */}
       <div className={`flex justify-between px-10 text-[9px] font-mono uppercase tracking-wider ${
-        isLight ? 'text-slate-500' : 'text-slate-400'
+        isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'
       }`}>
         <span>{dataPoints[0]?.dateStr || 'Start'}</span>
         <span>{dataPoints[dataPoints.length - 1]?.dateStr || 'Today'}</span>

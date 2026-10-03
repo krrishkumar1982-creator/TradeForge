@@ -355,17 +355,14 @@ export const MentorModeView: React.FC = () => {
   return (
     <div className={`p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto min-h-screen ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}>
       {/* Top Header */}
-      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b ${isLight ? 'border-zinc-200' : 'border-[#1C232E]'}`}>
+      <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b ${isLight ? 'border-zinc-200' : 'border-[rgba(255,255,255,0.07)]'}`}>
         <div>
           <h1 className="text-xl sm:text-2xl font-black tracking-tight flex items-center gap-2.5">
             <Users2 className="w-6 h-6 text-blue-500" />
-            Mentor Hub & Account Sharing
-            <span className="text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-              REAL-TIME SYNC
-            </span>
+            Mentor Hub
           </h1>
           <p className={`text-xs mt-1 ${isLight ? 'text-zinc-600' : 'text-slate-400'}`}>
-            Securely share live performance data with coaches or review student accounts with privacy controls.
+            Learn, review and improve your process.
           </p>
         </div>
       </div>
@@ -379,11 +376,11 @@ export const MentorModeView: React.FC = () => {
               ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
               : isLight
                 ? 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                : 'bg-[#12161D] text-slate-400 hover:bg-[#1A1F27] hover:text-white'
+                : 'bg-[#0D0D0D] text-slate-400 hover:bg-[#141414] hover:text-white'
           }`}
         >
           <Award className="w-4 h-4" />
-          <span>Mentor Workspace (Students: {studentsList.length})</span>
+          <span>Mentors ({studentsList.length})</span>
         </button>
 
         <button
@@ -393,11 +390,11 @@ export const MentorModeView: React.FC = () => {
               ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
               : isLight
                 ? 'bg-zinc-100 text-zinc-600 hover:bg-zinc-200'
-                : 'bg-[#12161D] text-slate-400 hover:bg-[#1A1F27] hover:text-white'
+                : 'bg-[#0D0D0D] text-slate-400 hover:bg-[#141414] hover:text-white'
           }`}
         >
           <ShieldCheck className="w-4 h-4" />
-          <span>Student Mode (My Mentors & Code)</span>
+          <span>My Mentors & Code</span>
           {mentorsList.length > 0 && (
             <span className="px-1.5 py-0.2 rounded-full bg-blue-500/20 text-blue-400 text-[10px]">
               {mentorsList.length}
@@ -414,7 +411,7 @@ export const MentorModeView: React.FC = () => {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             {/* Left 4 Columns: Student Roster */}
             <div className={`lg:col-span-4 rounded-2xl border p-4 space-y-3 ${
-              isLight ? 'bg-white border-zinc-200 shadow-xs' : 'bg-[#12161D] border-[#1C232E]'
+              isLight ? 'bg-white border-zinc-200 shadow-xs' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)]'
             }`}>
               <div className="flex items-center justify-between px-1 pb-1">
                 <span className={`text-xs font-bold uppercase tracking-wider ${isLight ? 'text-zinc-500' : 'text-slate-400'}`}>
@@ -455,7 +452,7 @@ export const MentorModeView: React.FC = () => {
                   className={`w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border focus:outline-none focus:border-blue-500 ${
                     isLight
                       ? 'bg-zinc-50 border-zinc-200 text-zinc-900'
-                      : 'bg-[#0A0D14] border-[#1C232E] text-slate-200'
+                      : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-slate-200'
                   }`}
                 />
               </div>
@@ -495,14 +492,14 @@ export const MentorModeView: React.FC = () => {
                               : 'bg-blue-600/15 border-blue-500/40 shadow-sm'
                             : isLight
                               ? 'bg-zinc-50 border-zinc-200 hover:border-zinc-300'
-                              : 'bg-[#0A0D14] border-[#1C232E] hover:border-[#273141]'
+                              : 'bg-[#070707] border-[rgba(255,255,255,0.07)] hover:border-[rgba(255,255,255,0.10)]'
                         }`}
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <img
                             src={student.avatar}
                             alt={student.name}
-                            className="w-10 h-10 rounded-full object-cover shrink-0 border border-[#273141]"
+                            className="w-10 h-10 rounded-full object-cover shrink-0 border border-[rgba(255,255,255,0.10)]"
                           />
                           <div className="min-w-0">
                             <div className={`text-xs font-bold truncate ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}>
@@ -532,7 +529,7 @@ export const MentorModeView: React.FC = () => {
             {/* Right 8 Columns: Detailed Student Dashboard */}
             <div className="lg:col-span-8 space-y-4">
               {isLoadingDetails ? (
-                <div className={`p-12 text-center rounded-2xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
+                <div className={`p-12 text-center rounded-2xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)]'}`}>
                   <RefreshCw className="w-8 h-8 text-blue-500 animate-spin mx-auto mb-2" />
                   <p className="text-xs text-slate-400 font-semibold">Loading student performance data...</p>
                 </div>
@@ -540,7 +537,7 @@ export const MentorModeView: React.FC = () => {
                 <>
                   {/* Student Header Card */}
                   <div className={`rounded-2xl border p-5 flex flex-wrap items-center justify-between gap-4 ${
-                    isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
+                    isLight ? 'bg-white border-zinc-200' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)]'
                   }`}>
                     <div className="flex items-center gap-4">
                       <img
@@ -589,7 +586,7 @@ export const MentorModeView: React.FC = () => {
                         value={selectedSharedAccountId}
                         onChange={(e) => setSelectedSharedAccountId(e.target.value)}
                         className={`px-3 py-1.5 rounded-xl border text-xs font-semibold focus:outline-none ${
-                          isLight ? 'bg-white border-zinc-200 text-zinc-800' : 'bg-[#12161D] border-[#1C232E] text-slate-200'
+                          isLight ? 'bg-white border-zinc-200 text-zinc-800' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)] text-slate-200'
                         }`}
                       >
                         <option value="ALL">All Shared Accounts ({studentDetails.sharedAccounts.length})</option>
@@ -603,28 +600,28 @@ export const MentorModeView: React.FC = () => {
                   {/* Account Overview Stats (If Permitted) */}
                   {studentDetails.overview ? (
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                      <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
+                      <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'}`}>
                         <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Total Equity</span>
                         <div className={`text-lg font-black font-mono mt-0.5 ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}>
                           {formatCurrency(studentDetails.overview.currentEquity)}
                         </div>
                       </div>
 
-                      <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
+                      <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'}`}>
                         <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Net P&L</span>
                         <div className={`text-lg font-black font-mono mt-0.5 ${studentDetails.overview.netPnl >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {formatCurrency(studentDetails.overview.netPnl)}
                         </div>
                       </div>
 
-                      <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
+                      <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'}`}>
                         <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Return %</span>
                         <div className={`text-lg font-black font-mono mt-0.5 ${Number(studentDetails.overview.overallPnlPercent) >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                           {studentDetails.overview.overallPnlPercent}%
                         </div>
                       </div>
 
-                      <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
+                      <div className={`p-4 rounded-xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'}`}>
                         <span className="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Starting Balance</span>
                         <div className="text-lg font-black font-mono text-slate-400 mt-0.5">
                           {formatCurrency(studentDetails.overview.initialBalance)}
@@ -632,7 +629,7 @@ export const MentorModeView: React.FC = () => {
                       </div>
                     </div>
                   ) : (
-                    <div className={`p-4 rounded-xl border text-center text-xs text-slate-500 ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
+                    <div className={`p-4 rounded-xl border text-center text-xs text-slate-500 ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'}`}>
                       <Lock className="w-4 h-4 inline mr-1.5 opacity-60" />
                       Account Overview hidden by student privacy settings.
                     </div>
@@ -641,34 +638,34 @@ export const MentorModeView: React.FC = () => {
                   {/* Performance Metrics Grid (If Permitted) */}
                   {studentDetails.performance ? (
                     <div className={`p-5 rounded-2xl border space-y-3 ${
-                      isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
+                      isLight ? 'bg-white border-zinc-200' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)]'
                     }`}>
                       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                         <Activity className="w-4 h-4 text-blue-400" />
                         Trading Analytics & Performance
                       </h3>
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 font-mono text-xs">
-                        <div className={`p-3 rounded-xl border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
+                        <div className={`p-3 rounded-xl border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'}`}>
                           <span className="text-[10px] text-slate-500 block">Win Rate</span>
                           <strong className="text-sm text-emerald-400">{studentDetails.performance.winRate}%</strong>
                         </div>
-                        <div className={`p-3 rounded-xl border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
+                        <div className={`p-3 rounded-xl border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'}`}>
                           <span className="text-[10px] text-slate-500 block">Total Executions</span>
                           <strong className="text-sm">{studentDetails.performance.totalTrades}</strong>
                         </div>
-                        <div className={`p-3 rounded-xl border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
+                        <div className={`p-3 rounded-xl border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'}`}>
                           <span className="text-[10px] text-slate-500 block">Profit Factor</span>
                           <strong className="text-sm text-blue-400">{studentDetails.performance.profitFactor}</strong>
                         </div>
-                        <div className={`p-3 rounded-xl border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
+                        <div className={`p-3 rounded-xl border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'}`}>
                           <span className="text-[10px] text-slate-500 block">Average Win</span>
                           <strong className="text-sm text-emerald-400">{formatCurrency(studentDetails.performance.avgWin)}</strong>
                         </div>
-                        <div className={`p-3 rounded-xl border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
+                        <div className={`p-3 rounded-xl border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'}`}>
                           <span className="text-[10px] text-slate-500 block">Average Loss</span>
                           <strong className="text-sm text-rose-400">{formatCurrency(studentDetails.performance.avgLoss)}</strong>
                         </div>
-                        <div className={`p-3 rounded-xl border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
+                        <div className={`p-3 rounded-xl border ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'}`}>
                           <span className="text-[10px] text-slate-500 block">Avg R-Multiple</span>
                           <strong className="text-sm text-amber-400">{studentDetails.performance.avgR}R</strong>
                         </div>
@@ -679,7 +676,7 @@ export const MentorModeView: React.FC = () => {
                   {/* Trade History Table (If Permitted) */}
                   {studentDetails.permissions.canViewTrades ? (
                     <div className={`p-5 rounded-2xl border space-y-3 ${
-                      isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
+                      isLight ? 'bg-white border-zinc-200' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)]'
                     }`}>
                       <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                         <FileText className="w-4 h-4 text-blue-400" />
@@ -691,7 +688,7 @@ export const MentorModeView: React.FC = () => {
                         <div className="overflow-x-auto">
                           <table className="w-full text-left border-collapse text-xs">
                             <thead>
-                              <tr className={`border-b ${isLight ? 'border-zinc-200 text-zinc-500' : 'border-[#1C232E] text-slate-400'}`}>
+                              <tr className={`border-b ${isLight ? 'border-zinc-200 text-zinc-500' : 'border-[rgba(255,255,255,0.07)] text-slate-400'}`}>
                                 <th className="pb-2 font-bold">Symbol</th>
                                 <th className="pb-2 font-bold">Type</th>
                                 <th className="pb-2 font-bold">Size</th>
@@ -727,7 +724,7 @@ export const MentorModeView: React.FC = () => {
                       )}
                     </div>
                   ) : (
-                    <div className={`p-4 rounded-xl border text-center text-xs text-slate-500 ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'}`}>
+                    <div className={`p-4 rounded-xl border text-center text-xs text-slate-500 ${isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'}`}>
                       <Lock className="w-4 h-4 inline mr-1.5 opacity-60" />
                       Trade History hidden by student privacy settings.
                     </div>
@@ -735,7 +732,7 @@ export const MentorModeView: React.FC = () => {
 
                   {/* Coach Directive Dispatcher */}
                   <div className={`p-5 rounded-2xl border space-y-3 ${
-                    isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
+                    isLight ? 'bg-white border-zinc-200' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)]'
                   }`}>
                     <h3 className="text-xs font-bold text-blue-400 uppercase tracking-wider flex items-center gap-1.5">
                       <MessageSquare className="w-4 h-4" />
@@ -749,7 +746,7 @@ export const MentorModeView: React.FC = () => {
                       className={`w-full rounded-xl border p-3 text-xs font-mono focus:outline-none focus:border-blue-500 ${
                         isLight
                           ? 'bg-zinc-50 border-zinc-200 text-zinc-900'
-                          : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
+                          : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-slate-100'
                       }`}
                     />
                     <div className="flex justify-end">
@@ -771,7 +768,7 @@ export const MentorModeView: React.FC = () => {
                   </div>
                 </>
               ) : (
-                <div className={`p-12 text-center rounded-2xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
+                <div className={`p-12 text-center rounded-2xl border ${isLight ? 'bg-white border-zinc-200' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)]'}`}>
                   <Users2 className="w-8 h-8 text-slate-500 mx-auto mb-2 opacity-60" />
                   <p className="text-sm font-semibold">No student selected</p>
                   <p className="text-xs text-slate-500 mt-1">Select a connected student from the left panel to review their performance.</p>
@@ -807,7 +804,7 @@ export const MentorModeView: React.FC = () => {
 
             <div className="flex items-center gap-3 pt-1">
               <div className={`flex-1 border rounded-xl px-4 py-3 font-mono text-lg font-black tracking-widest text-blue-500 flex items-center justify-between ${
-                isLight ? 'bg-white border-zinc-300' : 'bg-[#0A0D14] border-[#1C232E]'
+                isLight ? 'bg-white border-zinc-300' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'
               }`}>
                 <span>{userProfile.accountCode || 'TF-MTR-7K4P9Q'}</span>
                 <button
@@ -831,9 +828,9 @@ export const MentorModeView: React.FC = () => {
 
           {/* Section 2: MY MENTORS */}
           <div className={`p-6 rounded-2xl border space-y-4 ${
-            isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-zinc-200' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)]'
           }`}>
-            <div className="flex items-center justify-between pb-3 border-b border-[#1C232E]">
+            <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.07)]">
               <div className="flex items-center gap-2">
                 <Award className="w-4 h-4 text-blue-500" />
                 <h3 className={`text-sm font-bold ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}>
@@ -869,14 +866,14 @@ export const MentorModeView: React.FC = () => {
                   <div
                     key={m.relationshipId}
                     className={`p-4 rounded-xl border flex flex-wrap items-center justify-between gap-3 ${
-                      isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                      isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <img
                         src={m.avatarUrl}
                         alt={m.displayName}
-                        className="w-10 h-10 rounded-full object-cover border border-[#273141]"
+                        className="w-10 h-10 rounded-full object-cover border border-[rgba(255,255,255,0.10)]"
                       />
                       <div>
                         <div className={`text-xs font-bold flex items-center gap-2 ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}>
@@ -894,7 +891,7 @@ export const MentorModeView: React.FC = () => {
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => handleOpenPermsModal(m)}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-[#273141] transition"
+                        className="flex items-center gap-1.5 px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold rounded-xl border border-[rgba(255,255,255,0.10)] transition"
                       >
                         <Sliders className="w-3.5 h-3.5 text-blue-400" />
                         <span>Sharing Permissions</span>
@@ -916,9 +913,9 @@ export const MentorModeView: React.FC = () => {
 
           {/* Received Directives Section */}
           <div className={`p-6 rounded-2xl border space-y-4 ${
-            isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-zinc-200' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)]'
           }`}>
-            <h3 className={`text-xs font-bold pb-2 border-b ${isLight ? 'border-zinc-200' : 'border-[#1C232E]'} flex items-center gap-2 text-blue-400 uppercase tracking-wider`}>
+            <h3 className={`text-xs font-bold pb-2 border-b ${isLight ? 'border-zinc-200' : 'border-[rgba(255,255,255,0.07)]'} flex items-center gap-2 text-blue-400 uppercase tracking-wider`}>
               <MessageSquare className="w-4 h-4" />
               <span>Received Coach Directives ({mentorDirectivesReceived.length})</span>
             </h3>
@@ -931,7 +928,7 @@ export const MentorModeView: React.FC = () => {
                   <div
                     key={directive.id}
                     className={`p-4 rounded-xl border flex flex-col sm:flex-row sm:items-center justify-between gap-3 ${
-                      isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                      isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'
                     }`}
                   >
                     <div className="space-y-1 flex-1">
@@ -972,9 +969,9 @@ export const MentorModeView: React.FC = () => {
       {isAddMentorModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
           <div className={`w-full max-w-md p-6 rounded-2xl border shadow-2xl space-y-4 ${
-            isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-zinc-200' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)]'
           }`}>
-            <div className="flex items-center justify-between pb-3 border-b border-[#1C232E]">
+            <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.07)]">
               <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}>
                 <Plus className="w-4 h-4 text-blue-500" />
                 Add Mentor / Connect Coach
@@ -1002,7 +999,7 @@ export const MentorModeView: React.FC = () => {
                     className={`flex-1 px-3.5 py-2 rounded-xl border text-xs font-mono font-bold tracking-wider focus:outline-none focus:border-blue-500 ${
                       isLight
                         ? 'bg-zinc-50 border-zinc-300 text-zinc-900'
-                        : 'bg-[#0A0D14] border-[#1C232E] text-blue-400'
+                        : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-blue-400'
                     }`}
                   />
                   <button
@@ -1024,7 +1021,7 @@ export const MentorModeView: React.FC = () => {
 
             {/* Search Results list */}
             {searchResults.length > 0 && (
-              <div className="space-y-2 pt-2 border-t border-[#1C232E]">
+              <div className="space-y-2 pt-2 border-t border-[rgba(255,255,255,0.07)]">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
                   Search Results ({searchResults.length})
                 </span>
@@ -1032,14 +1029,14 @@ export const MentorModeView: React.FC = () => {
                   <div
                     key={res.id}
                     className={`p-3 rounded-xl border flex items-center justify-between gap-3 ${
-                      isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                      isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'
                     }`}
                   >
                     <div className="flex items-center gap-3">
                       <img
                         src={res.avatarUrl}
                         alt={res.displayName}
-                        className="w-10 h-10 rounded-full object-cover border border-[#273141]"
+                        className="w-10 h-10 rounded-full object-cover border border-[rgba(255,255,255,0.10)]"
                       />
                       <div>
                         <div className={`text-xs font-bold ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}>
@@ -1072,9 +1069,9 @@ export const MentorModeView: React.FC = () => {
       {isAddStudentModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
           <div className={`w-full max-w-md p-6 rounded-2xl border shadow-2xl space-y-4 ${
-            isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-zinc-200' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)]'
           }`}>
-            <div className="flex items-center justify-between pb-3 border-b border-[#1C232E]">
+            <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.07)]">
               <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}>
                 <Plus className="w-4 h-4 text-blue-500" />
                 Connect a Student
@@ -1106,7 +1103,7 @@ export const MentorModeView: React.FC = () => {
                     className={`flex-1 px-3.5 py-2 rounded-xl border text-xs font-mono font-bold tracking-wider uppercase focus:outline-none focus:border-blue-500 ${
                       isLight
                         ? 'bg-zinc-50 border-zinc-300 text-zinc-900'
-                        : 'bg-[#0A0D14] border-[#1C232E] text-blue-400'
+                        : 'bg-[#070707] border-[rgba(255,255,255,0.07)] text-blue-400'
                     }`}
                   />
                   <button
@@ -1131,18 +1128,18 @@ export const MentorModeView: React.FC = () => {
 
             {/* Student Preview Card */}
             {foundStudent && (
-              <div className="space-y-3 pt-3 border-t border-[#1C232E]">
+              <div className="space-y-3 pt-3 border-t border-[rgba(255,255,255,0.07)]">
                 <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
                   Student Preview
                 </span>
                 <div className={`p-4 rounded-xl border flex items-center justify-between gap-3 ${
-                  isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                  isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'
                 }`}>
                   <div className="flex items-center gap-3">
                     <img
                       src={foundStudent.avatarUrl}
                       alt={foundStudent.displayName}
-                      className="w-11 h-11 rounded-full object-cover border border-[#273141]"
+                      className="w-11 h-11 rounded-full object-cover border border-[rgba(255,255,255,0.10)]"
                     />
                     <div>
                       <div className={`text-xs font-bold ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}>
@@ -1178,9 +1175,9 @@ export const MentorModeView: React.FC = () => {
       {isPermsModalOpen && editingMentor && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
           <div className={`w-full max-w-lg p-6 rounded-2xl border shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto ${
-            isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-zinc-200' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)]'
           }`}>
-            <div className="flex items-center justify-between pb-3 border-b border-[#1C232E]">
+            <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.07)]">
               <div>
                 <h3 className={`text-sm font-bold flex items-center gap-2 ${isLight ? 'text-zinc-900' : 'text-slate-100'}`}>
                   <Sliders className="w-4 h-4 text-blue-500" />
@@ -1201,7 +1198,7 @@ export const MentorModeView: React.FC = () => {
             <div className="space-y-3 text-xs">
               {/* Account Selector */}
               {accounts.length > 0 && (
-                <div className="p-3 rounded-xl border border-[#1C232E] bg-[#0A0D14] space-y-1.5">
+                <div className="p-3 rounded-xl border border-[rgba(255,255,255,0.07)] bg-[#070707] space-y-1.5">
                   <span className="font-bold text-slate-300 block">Shared Trading Accounts:</span>
                   <div className="space-y-1">
                     {accounts.map((acc) => {
@@ -1224,7 +1221,7 @@ export const MentorModeView: React.FC = () => {
                                 }));
                               }
                             }}
-                            className="rounded border-[#273141] bg-[#12161D] text-blue-500"
+                            className="rounded border-[rgba(255,255,255,0.10)] bg-[#0D0D0D] text-blue-500"
                           />
                           <span>{acc.name} ({formatCurrency(acc.currentBalance ?? (acc as any).balance ?? 0)})</span>
                         </label>
@@ -1249,7 +1246,7 @@ export const MentorModeView: React.FC = () => {
                   <div
                     key={item.key}
                     className={`p-3 rounded-xl border flex items-center justify-between gap-3 ${
-                      isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#0A0D14] border-[#1C232E]'
+                      isLight ? 'bg-zinc-50 border-zinc-200' : 'bg-[#070707] border-[rgba(255,255,255,0.07)]'
                     }`}
                   >
                     <div>
@@ -1277,7 +1274,7 @@ export const MentorModeView: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-2 pt-3 border-t border-[#1C232E]">
+            <div className="flex justify-end gap-2 pt-3 border-t border-[rgba(255,255,255,0.07)]">
               <button
                 type="button"
                 onClick={() => setIsPermsModalOpen(false)}
@@ -1303,7 +1300,7 @@ export const MentorModeView: React.FC = () => {
       {isDisconnectConfirmOpen && disconnectTarget && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-xs animate-in fade-in">
           <div className={`w-full max-w-sm p-6 rounded-2xl border shadow-2xl space-y-4 ${
-            isLight ? 'bg-white border-zinc-200' : 'bg-[#12161D] border-[#1C232E]'
+            isLight ? 'bg-white border-zinc-200' : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)]'
           }`}>
             <div className="flex items-center gap-3 text-rose-500">
               <AlertTriangle className="w-6 h-6 animate-pulse" />

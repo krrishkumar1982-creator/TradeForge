@@ -274,7 +274,7 @@ export const GoalsRiskView: React.FC = () => {
   return (
     <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
       {/* Header & Account Identity */}
-      <div className={`pb-4 border-b flex flex-wrap items-center justify-between gap-4 ${isLight ? 'border-slate-200' : 'border-[#1C232E]'}`}>
+      <div className={`pb-4 border-b flex flex-wrap items-center justify-between gap-4 ${isLight ? 'border-slate-200' : 'border-[rgba(255,255,255,0.07)]'}`}>
         <div>
           <div className="flex items-center gap-2.5">
             <div className="p-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-400">
@@ -283,7 +283,7 @@ export const GoalsRiskView: React.FC = () => {
             <div>
               <div className="flex items-center gap-2">
                 <h1 className={`text-xl sm:text-2xl font-bold tracking-tight ${isLight ? 'text-slate-900' : 'text-white'}`}>
-                  Risk & Performance Control Center
+                  Risk Overview
                 </h1>
                 <span className={`text-[11px] font-mono px-2.5 py-0.5 rounded-full font-bold border ${
                   isLight ? 'bg-indigo-50 border-indigo-200 text-indigo-700' : 'bg-indigo-950/60 border-indigo-800 text-indigo-300'
@@ -291,8 +291,8 @@ export const GoalsRiskView: React.FC = () => {
                   {selectedAccountName}
                 </span>
               </div>
-              <p className={`text-xs mt-0.5 ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>
-                Institutional risk engine, stateful circuit breakers, real-time limit headroom, and pre-trade guardrails
+              <p className={`text-xs mt-0.5 ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>
+                Track your limits. Stay within plan.
               </p>
             </div>
           </div>
@@ -314,7 +314,7 @@ export const GoalsRiskView: React.FC = () => {
                 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40 hover:bg-emerald-500/30'
                 : isLight
                 ? 'bg-white border-slate-300 hover:bg-slate-50 text-slate-700'
-                : 'bg-[#12161D] border-[#273141] hover:border-slate-600 text-slate-300'
+                : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.10)] hover:border-slate-600 text-[#D4D4D8]'
             }`}
           >
             {cb.state === 'LOCKED' || cb.state === 'TRIGGERED' ? (
@@ -326,16 +326,16 @@ export const GoalsRiskView: React.FC = () => {
             )}
             <span className="font-mono">
               {cb.state === 'LOCKED'
-                ? 'CIRCUIT BREAKER: HARD LOCKED 🚨'
+                ? 'Circuit Breaker: Locked'
                 : cb.state === 'TRIGGERED'
-                ? 'CIRCUIT BREAKER: TRIGGERED 🛑'
+                ? 'Circuit Breaker: Triggered'
                 : cb.state === 'CRITICAL'
-                ? 'CIRCUIT BREAKER: CRITICAL (90%+) ⚠️'
+                ? 'Circuit Breaker: Critical (90%+)'
                 : cb.state === 'CAUTION'
-                ? 'CIRCUIT BREAKER: CAUTION (75%+) ⚡'
+                ? 'Circuit Breaker: Caution (75%+)'
                 : cb.state === 'ARMED'
-                ? 'CIRCUIT BREAKER: ARMED 🛡️'
-                : 'CIRCUIT BREAKER: DISARMED'}
+                ? 'Circuit Breaker: Active'
+                : 'Circuit Breaker: Off'}
             </span>
           </button>
 
@@ -353,7 +353,7 @@ export const GoalsRiskView: React.FC = () => {
       </div>
 
       {/* Navigation Sub-Tabs */}
-      <div className={`flex items-center gap-2 border-b pb-2 ${isLight ? 'border-slate-200' : 'border-[#1C232E]'}`}>
+      <div className={`flex items-center gap-2 border-b pb-2 ${isLight ? 'border-slate-200' : 'border-[rgba(255,255,255,0.07)]'}`}>
         <button
           onClick={() => setActiveTab('MONITOR')}
           className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold transition ${
@@ -361,11 +361,11 @@ export const GoalsRiskView: React.FC = () => {
               ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
               : isLight
               ? 'text-slate-600 hover:bg-slate-100'
-              : 'text-slate-400 hover:bg-[#12161D]'
+              : 'text-[#A1A1AA] hover:bg-[#0B0B0B]'
           }`}
         >
           <Activity className="w-4 h-4" />
-          <span>Live Risk Guardrails & Headroom</span>
+          <span>Risk Overview</span>
         </button>
 
         <button
@@ -375,11 +375,11 @@ export const GoalsRiskView: React.FC = () => {
               ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
               : isLight
               ? 'text-slate-600 hover:bg-slate-100'
-              : 'text-slate-400 hover:bg-[#12161D]'
+              : 'text-[#A1A1AA] hover:bg-[#0B0B0B]'
           }`}
         >
           <Lock className="w-4 h-4" />
-          <span>Circuit Breaker State</span>
+          <span>Circuit Breaker</span>
           {cb.isLocked && (
             <span className="w-2 h-2 rounded-full bg-rose-500 animate-ping" />
           )}
@@ -392,11 +392,11 @@ export const GoalsRiskView: React.FC = () => {
               ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
               : isLight
               ? 'text-slate-600 hover:bg-slate-100'
-              : 'text-slate-400 hover:bg-[#12161D]'
+              : 'text-[#A1A1AA] hover:bg-[#0B0B0B]'
           }`}
         >
           <Sliders className="w-4 h-4" />
-          <span>Risk Parameters Configuration</span>
+          <span>Account Limits</span>
         </button>
 
         <button
@@ -406,14 +406,14 @@ export const GoalsRiskView: React.FC = () => {
               ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20'
               : isLight
               ? 'text-slate-600 hover:bg-slate-100'
-              : 'text-slate-400 hover:bg-[#12161D]'
+              : 'text-[#A1A1AA] hover:bg-[#0B0B0B]'
           }`}
         >
           <History className="w-4 h-4" />
-          <span>Audit Log & Events</span>
+          <span>Audit Log</span>
           {riskEvents.length > 0 && (
             <span className={`text-[10px] px-1.5 py-0.2 rounded-full font-mono font-bold ${
-              isLight ? 'bg-slate-200 text-slate-800' : 'bg-[#1C232E] text-slate-300'
+              isLight ? 'bg-slate-200 text-slate-800' : 'bg-[rgba(255,255,255,0.07)] text-[#D4D4D8]'
             }`}>
               {riskEvents.length}
             </span>
@@ -458,16 +458,16 @@ export const GoalsRiskView: React.FC = () => {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Card 1: Daily Max Loss */}
             <div className={`rounded-2xl border p-5 shadow-lg space-y-3.5 transition-all ${
-              isLight ? 'bg-white border-slate-200' : 'bg-[#12161D] border-[#1C232E]'
+              isLight ? 'bg-white border-slate-200' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
             }`}>
               <div className="flex items-center justify-between">
-                <span className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-700' : 'text-slate-200'}`}>
+                <span className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-700' : 'text-[#F5F5F5]'}`}>
                   <ShieldAlert className="w-4 h-4 text-rose-500" />
                   Daily Max Loss
                 </span>
                 <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
                   metrics.dailyLoss.limit === 0
-                    ? isLight ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-slate-800 text-slate-400 border-[#273141]'
+                    ? isLight ? 'bg-slate-100 text-[#71717A] border-slate-200' : 'bg-[#101010] text-[#A1A1AA] border-[rgba(255,255,255,0.10)]'
                     : metrics.dailyLoss.status === 'BREACHED'
                     ? 'bg-rose-500/20 text-rose-400 border-rose-500/40 animate-pulse'
                     : metrics.dailyLoss.status === 'CRITICAL'
@@ -487,7 +487,7 @@ export const GoalsRiskView: React.FC = () => {
                       ? 'text-rose-400'
                       : evaluatedRisk.todayRealizedPnl > 0
                       ? 'text-emerald-400'
-                      : isLight ? 'text-slate-800' : 'text-slate-200'
+                      : isLight ? 'text-slate-800' : 'text-[#F5F5F5]'
                   }`}>
                     {evaluatedRisk.todayLossAbs > 0
                       ? `-${formatCurrency(evaluatedRisk.todayLossAbs)}`
@@ -495,12 +495,12 @@ export const GoalsRiskView: React.FC = () => {
                       ? `+${formatCurrency(evaluatedRisk.todayRealizedPnl)}`
                       : '$0.00'}
                   </span>
-                  <span className="text-xs font-mono font-bold text-slate-400">
+                  <span className="text-xs font-mono font-bold text-[#A1A1AA]">
                     {metrics.dailyLoss.limit > 0 ? `${metrics.dailyLoss.percentUsed}% Used` : '—'}
                   </span>
                 </div>
 
-                <div className={`h-2.5 w-full rounded-full overflow-hidden ${isLight ? 'bg-slate-100' : 'bg-slate-800'}`}>
+                <div className={`h-2.5 w-full rounded-full overflow-hidden ${isLight ? 'bg-slate-100' : 'bg-[#101010]'}`}>
                   <div
                     style={{ width: `${Math.min(100, metrics.dailyLoss.percentUsed)}%` }}
                     className={`h-full transition-all duration-500 ${
@@ -516,21 +516,21 @@ export const GoalsRiskView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1 border-t border-[#1C232E]/40">
+              <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1 border-t border-[rgba(255,255,255,0.07)]/40">
                 <div>
-                  <span className="text-slate-500 block">Daily Limit</span>
-                  <span className={`font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+                  <span className="text-[#71717A] block">Daily Limit</span>
+                  <span className={`font-semibold ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>
                     {metrics.dailyLoss.limit > 0 ? formatCurrency(metrics.dailyLoss.limit) : 'Not Set'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Remaining Buffer</span>
+                  <span className="text-[#71717A] block">Remaining Buffer</span>
                   <span className={`font-semibold ${
                     metrics.dailyLoss.limit > 0
                       ? (metrics.dailyLoss.limit - metrics.dailyLoss.current) <= 0
                         ? 'text-rose-400'
                         : 'text-emerald-400'
-                      : 'text-slate-500'
+                      : 'text-[#71717A]'
                   }`}>
                     {metrics.dailyLoss.limit > 0 ? formatCurrency(Math.max(0, metrics.dailyLoss.limit - metrics.dailyLoss.current)) : '—'}
                   </span>
@@ -540,16 +540,16 @@ export const GoalsRiskView: React.FC = () => {
 
             {/* Card 2: Trailing Drawdown Guardrail */}
             <div className={`rounded-2xl border p-5 shadow-lg space-y-3.5 transition-all ${
-              isLight ? 'bg-white border-slate-200' : 'bg-[#12161D] border-[#1C232E]'
+              isLight ? 'bg-white border-slate-200' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
             }`}>
               <div className="flex items-center justify-between">
-                <span className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-700' : 'text-slate-200'}`}>
+                <span className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-700' : 'text-[#F5F5F5]'}`}>
                   <TrendingDown className="w-4 h-4 text-rose-400" />
                   Trailing Drawdown
                 </span>
                 <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
                   metrics.trailingDrawdown.limit === 0
-                    ? isLight ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-slate-800 text-slate-400 border-[#273141]'
+                    ? isLight ? 'bg-slate-100 text-[#71717A] border-slate-200' : 'bg-[#101010] text-[#A1A1AA] border-[rgba(255,255,255,0.10)]'
                     : metrics.trailingDrawdown.status === 'BREACHED'
                     ? 'bg-rose-500/20 text-rose-400 border-rose-500/40 animate-pulse'
                     : metrics.trailingDrawdown.status === 'CRITICAL'
@@ -565,16 +565,16 @@ export const GoalsRiskView: React.FC = () => {
               <div className="space-y-1">
                 <div className="flex items-baseline justify-between">
                   <span className={`text-2xl font-mono font-extrabold ${
-                    evaluatedRisk.trailingDrawdown > 0 ? 'text-rose-400' : isLight ? 'text-slate-800' : 'text-slate-200'
+                    evaluatedRisk.trailingDrawdown > 0 ? 'text-rose-400' : isLight ? 'text-slate-800' : 'text-[#F5F5F5]'
                   }`}>
                     {formatCurrency(evaluatedRisk.trailingDrawdown)}
                   </span>
-                  <span className="text-xs font-mono font-bold text-slate-400">
+                  <span className="text-xs font-mono font-bold text-[#A1A1AA]">
                     {metrics.trailingDrawdown.limit > 0 ? `${metrics.trailingDrawdown.percentUsed}% Used` : '—'}
                   </span>
                 </div>
 
-                <div className={`h-2.5 w-full rounded-full overflow-hidden ${isLight ? 'bg-slate-100' : 'bg-slate-800'}`}>
+                <div className={`h-2.5 w-full rounded-full overflow-hidden ${isLight ? 'bg-slate-100' : 'bg-[#101010]'}`}>
                   <div
                     style={{ width: `${Math.min(100, metrics.trailingDrawdown.percentUsed)}%` }}
                     className={`h-full transition-all duration-500 ${
@@ -590,21 +590,21 @@ export const GoalsRiskView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1 border-t border-[#1C232E]/40">
+              <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1 border-t border-[rgba(255,255,255,0.07)]/40">
                 <div>
-                  <span className="text-slate-500 block">Peak Equity</span>
-                  <span className={`font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+                  <span className="text-[#71717A] block">Peak Equity</span>
+                  <span className={`font-semibold ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>
                     {formatCurrency(evaluatedRisk.peakEquity)}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Drawdown Cushion</span>
+                  <span className="text-[#71717A] block">Drawdown Cushion</span>
                   <span className={`font-semibold ${
                     metrics.trailingDrawdown.limit > 0
                       ? (metrics.trailingDrawdown.limit - metrics.trailingDrawdown.current) <= 0
                         ? 'text-rose-400'
-                        : 'text-slate-200'
-                      : 'text-slate-500'
+                        : 'text-[#F5F5F5]'
+                      : 'text-[#71717A]'
                   }`}>
                     {metrics.trailingDrawdown.limit > 0 ? formatCurrency(Math.max(0, metrics.trailingDrawdown.limit - metrics.trailingDrawdown.current)) : '—'}
                   </span>
@@ -614,21 +614,21 @@ export const GoalsRiskView: React.FC = () => {
 
             {/* Card 3: Weekly Profit Target & Progress */}
             <div className={`rounded-2xl border p-5 shadow-lg space-y-3.5 transition-all ${
-              isLight ? 'bg-white border-slate-200' : 'bg-[#12161D] border-[#1C232E]'
+              isLight ? 'bg-white border-slate-200' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
             }`}>
               <div className="flex items-center justify-between">
-                <span className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-700' : 'text-slate-200'}`}>
+                <span className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-700' : 'text-[#F5F5F5]'}`}>
                   <Flame className="w-4 h-4 text-amber-500" />
                   Weekly Target & Net
                 </span>
                 <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
                   metrics.weeklyProfitTarget.limit === 0
-                    ? isLight ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-slate-800 text-slate-400 border-[#273141]'
+                    ? isLight ? 'bg-slate-100 text-[#71717A] border-slate-200' : 'bg-[#101010] text-[#A1A1AA] border-[rgba(255,255,255,0.10)]'
                     : metrics.weeklyProfitTarget.percentUsed >= 100
                     ? 'bg-purple-500/20 text-purple-300 border-purple-500/40'
                     : evaluatedRisk.weekRealizedPnl > 0
                     ? 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40'
-                    : 'bg-slate-800 text-slate-400 border-[#273141]'
+                    : 'bg-[#101010] text-[#A1A1AA] border-[rgba(255,255,255,0.10)]'
                 }`}>
                   {metrics.weeklyProfitTarget.limit === 0
                     ? 'NOT SET'
@@ -654,7 +654,7 @@ export const GoalsRiskView: React.FC = () => {
                   </span>
                 </div>
 
-                <div className={`h-2.5 w-full rounded-full overflow-hidden ${isLight ? 'bg-slate-100' : 'bg-slate-800'}`}>
+                <div className={`h-2.5 w-full rounded-full overflow-hidden ${isLight ? 'bg-slate-100' : 'bg-[#101010]'}`}>
                   <div
                     style={{ width: `${Math.min(100, metrics.weeklyProfitTarget.percentUsed)}%` }}
                     className="h-full bg-gradient-to-r from-violet-600 to-indigo-500 transition-all duration-500"
@@ -662,16 +662,16 @@ export const GoalsRiskView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1 border-t border-[#1C232E]/40">
+              <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1 border-t border-[rgba(255,255,255,0.07)]/40">
                 <div>
-                  <span className="text-slate-500 block">Weekly Target</span>
-                  <span className={`font-semibold ${isLight ? 'text-slate-700' : 'text-slate-300'}`}>
+                  <span className="text-[#71717A] block">Weekly Target</span>
+                  <span className={`font-semibold ${isLight ? 'text-slate-700' : 'text-[#D4D4D8]'}`}>
                     {metrics.weeklyProfitTarget.limit > 0 ? formatCurrency(metrics.weeklyProfitTarget.limit) : 'Not Set'}
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">To Target</span>
-                  <span className="font-semibold text-slate-300">
+                  <span className="text-[#71717A] block">To Target</span>
+                  <span className="font-semibold text-[#D4D4D8]">
                     {metrics.weeklyProfitTarget.limit > 0 ? formatCurrency(Math.max(0, metrics.weeklyProfitTarget.limit - evaluatedRisk.weekRealizedPnl)) : '—'}
                   </span>
                 </div>
@@ -680,16 +680,16 @@ export const GoalsRiskView: React.FC = () => {
 
             {/* Card 4: Daily Execution Quota & Streak */}
             <div className={`rounded-2xl border p-5 shadow-lg space-y-3.5 transition-all ${
-              isLight ? 'bg-white border-slate-200' : 'bg-[#12161D] border-[#1C232E]'
+              isLight ? 'bg-white border-slate-200' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
             }`}>
               <div className="flex items-center justify-between">
-                <span className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-700' : 'text-slate-200'}`}>
+                <span className={`text-xs font-bold flex items-center gap-1.5 ${isLight ? 'text-slate-700' : 'text-[#F5F5F5]'}`}>
                   <Zap className="w-4 h-4 text-indigo-400" />
                   Daily Trades Quota
                 </span>
                 <span className={`text-[10px] font-mono font-bold px-2 py-0.5 rounded-full border ${
                   metrics.dailyTrades.limit === 0
-                    ? isLight ? 'bg-slate-100 text-slate-500 border-slate-200' : 'bg-slate-800 text-slate-400 border-[#273141]'
+                    ? isLight ? 'bg-slate-100 text-[#71717A] border-slate-200' : 'bg-[#101010] text-[#A1A1AA] border-[rgba(255,255,255,0.10)]'
                     : metrics.dailyTrades.status === 'BREACHED'
                     ? 'bg-rose-500/20 text-rose-400 border-rose-500/40'
                     : metrics.dailyTrades.status === 'CAUTION'
@@ -702,9 +702,9 @@ export const GoalsRiskView: React.FC = () => {
 
               <div className="space-y-1">
                 <div className="flex items-baseline justify-between">
-                  <span className={`text-2xl font-mono font-extrabold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                  <span className={`text-2xl font-mono font-extrabold ${isLight ? 'text-slate-800' : 'text-[#F5F5F5]'}`}>
                     {evaluatedRisk.todayTradeCount}{' '}
-                    <span className="text-xs font-normal text-slate-400">
+                    <span className="text-xs font-normal text-[#A1A1AA]">
                       {metrics.dailyTrades.limit > 0 ? `/ ${metrics.dailyTrades.limit} max` : 'trades today'}
                     </span>
                   </span>
@@ -713,7 +713,7 @@ export const GoalsRiskView: React.FC = () => {
                   </span>
                 </div>
 
-                <div className={`h-2.5 w-full rounded-full overflow-hidden ${isLight ? 'bg-slate-100' : 'bg-slate-800'}`}>
+                <div className={`h-2.5 w-full rounded-full overflow-hidden ${isLight ? 'bg-slate-100' : 'bg-[#101010]'}`}>
                   <div
                     style={{ width: `${Math.min(100, metrics.dailyTrades.percentUsed)}%` }}
                     className={`h-full transition-all duration-500 ${
@@ -727,18 +727,18 @@ export const GoalsRiskView: React.FC = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1 border-t border-[#1C232E]/40">
+              <div className="grid grid-cols-2 gap-2 text-[11px] font-mono pt-1 border-t border-[rgba(255,255,255,0.07)]/40">
                 <div>
-                  <span className="text-slate-500 block">Consecutive Losses</span>
+                  <span className="text-[#71717A] block">Consecutive Losses</span>
                   <span className={`font-semibold ${
-                    evaluatedRisk.consecutiveLossesStreak >= 3 ? 'text-rose-400' : 'text-slate-300'
+                    evaluatedRisk.consecutiveLossesStreak >= 3 ? 'text-rose-400' : 'text-[#D4D4D8]'
                   }`}>
                     {evaluatedRisk.consecutiveLossesStreak} in a row
                   </span>
                 </div>
                 <div>
-                  <span className="text-slate-500 block">Quota Remaining</span>
-                  <span className="font-semibold text-slate-300">
+                  <span className="text-[#71717A] block">Quota Remaining</span>
+                  <span className="font-semibold text-[#D4D4D8]">
                     {metrics.dailyTrades.limit > 0 ? `${Math.max(0, metrics.dailyTrades.limit - metrics.dailyTrades.current)} left` : 'Unlimited'}
                   </span>
                 </div>
@@ -748,12 +748,12 @@ export const GoalsRiskView: React.FC = () => {
 
           {/* Secondary Matrix: Advanced Position & Capital Guardrails */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Box 1: Portfolio Heat */}
-            <div className={`p-5 rounded-2xl border ${isLight ? 'bg-white border-slate-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
-              <div className="flex items-center justify-between pb-2 border-b border-[#1C232E]/40">
-                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+            {/* Box 1: Open Risk */}
+            <div className={`p-5 rounded-2xl border ${isLight ? 'bg-white border-slate-200' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'}`}>
+              <div className="flex items-center justify-between pb-2 border-b border-[rgba(255,255,255,0.07)]/40">
+                <span className="text-xs font-bold text-[#D4D4D8] flex items-center gap-1.5">
                   <Activity className="w-4 h-4 text-orange-400" />
-                  Portfolio Heat (Open Risk)
+                  Open Risk
                 </span>
                 <span className="text-xs font-mono font-bold text-orange-400">
                   {evaluatedRisk.portfolioHeatPercent.toFixed(2)}%
@@ -761,26 +761,26 @@ export const GoalsRiskView: React.FC = () => {
               </div>
               <div className="mt-3 space-y-2">
                 <div className="flex justify-between items-baseline text-xs font-mono">
-                  <span className="text-slate-400">Open Risk Capital:</span>
-                  <span className="font-bold text-slate-200">{formatCurrency(evaluatedRisk.portfolioHeatDollar)}</span>
+                  <span className="text-[#A1A1AA]">Open Risk:</span>
+                  <span className="font-bold text-[#F5F5F5]">{formatCurrency(evaluatedRisk.portfolioHeatDollar)}</span>
                 </div>
                 <div className="flex justify-between items-baseline text-xs font-mono">
-                  <span className="text-slate-400">Active Open Positions:</span>
-                  <span className="font-bold text-slate-200">{evaluatedRisk.openPositionsCount}</span>
+                  <span className="text-[#A1A1AA]">Active Open Positions:</span>
+                  <span className="font-bold text-[#F5F5F5]">{evaluatedRisk.openPositionsCount}</span>
                 </div>
                 <div className="flex justify-between items-baseline text-xs font-mono">
-                  <span className="text-slate-400">Max Allowed Positions:</span>
-                  <span className="text-slate-300">{effectiveRiskGoals.maxOpenPositions || 'Unlimited'}</span>
+                  <span className="text-[#A1A1AA]">Max Allowed Positions:</span>
+                  <span className="text-[#D4D4D8]">{effectiveRiskGoals.maxOpenPositions || 'Unlimited'}</span>
                 </div>
               </div>
             </div>
 
-            {/* Box 2: Per-Trade Risk Rule & Sizing */}
-            <div className={`p-5 rounded-2xl border ${isLight ? 'bg-white border-slate-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
-              <div className="flex items-center justify-between pb-2 border-b border-[#1C232E]/40">
-                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+            {/* Box 2: Per-Trade Risk */}
+            <div className={`p-5 rounded-2xl border ${isLight ? 'bg-white border-slate-200' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'}`}>
+              <div className="flex items-center justify-between pb-2 border-b border-[rgba(255,255,255,0.07)]/40">
+                <span className="text-xs font-bold text-[#D4D4D8] flex items-center gap-1.5">
                   <ShieldCheck className="w-4 h-4 text-indigo-400" />
-                  Per-Trade Risk Mode
+                  Risk Per Trade
                 </span>
                 <span className="text-[11px] font-mono font-bold text-indigo-400 uppercase">
                   {effectiveRiskGoals.riskMode || 'LOWER_OF_BOTH'}
@@ -788,28 +788,28 @@ export const GoalsRiskView: React.FC = () => {
               </div>
               <div className="mt-3 space-y-2">
                 <div className="flex justify-between items-baseline text-xs font-mono">
-                  <span className="text-slate-400">Max Dollar Per Trade:</span>
-                  <span className="font-bold text-slate-200">
+                  <span className="text-[#A1A1AA]">Max Dollar Per Trade:</span>
+                  <span className="font-bold text-[#F5F5F5]">
                     {effectiveRiskGoals.maxRiskPerTradeAmount ? formatCurrency(effectiveRiskGoals.maxRiskPerTradeAmount) : 'Not Set'}
                   </span>
                 </div>
                 <div className="flex justify-between items-baseline text-xs font-mono">
-                  <span className="text-slate-400">Max Capital % Per Trade:</span>
-                  <span className="font-bold text-slate-200">
+                  <span className="text-[#A1A1AA]">Max Capital % Per Trade:</span>
+                  <span className="font-bold text-[#F5F5F5]">
                     {effectiveRiskGoals.maxRiskPerTradePercent ? `${effectiveRiskGoals.maxRiskPerTradePercent}%` : 'Not Set'}
                   </span>
                 </div>
                 <div className="flex justify-between items-baseline text-xs font-mono">
-                  <span className="text-slate-400">Max Contracts / Lots:</span>
-                  <span className="text-slate-300">{effectiveRiskGoals.maxContractsPerTrade || 'Unlimited'}</span>
+                  <span className="text-[#A1A1AA]">Max Contracts / Lots:</span>
+                  <span className="text-[#D4D4D8]">{effectiveRiskGoals.maxContractsPerTrade || 'Unlimited'}</span>
                 </div>
               </div>
             </div>
 
             {/* Box 3: Discipline & Execution Constraints */}
-            <div className={`p-5 rounded-2xl border ${isLight ? 'bg-white border-slate-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
-              <div className="flex items-center justify-between pb-2 border-b border-[#1C232E]/40">
-                <span className="text-xs font-bold text-slate-300 flex items-center gap-1.5">
+            <div className={`p-5 rounded-2xl border ${isLight ? 'bg-white border-slate-200' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'}`}>
+              <div className="flex items-center justify-between pb-2 border-b border-[rgba(255,255,255,0.07)]/40">
+                <span className="text-xs font-bold text-[#D4D4D8] flex items-center gap-1.5">
                   <Target className="w-4 h-4 text-emerald-400" />
                   Execution Quality Rules
                 </span>
@@ -819,15 +819,15 @@ export const GoalsRiskView: React.FC = () => {
               </div>
               <div className="mt-3 space-y-2">
                 <div className="flex justify-between items-baseline text-xs font-mono">
-                  <span className="text-slate-400">Min Target R-Multiple:</span>
-                  <span className="font-bold text-slate-200">{effectiveRiskGoals.minRMultiple || 'None'}</span>
+                  <span className="text-[#A1A1AA]">Min Target R-Multiple:</span>
+                  <span className="font-bold text-[#F5F5F5]">{effectiveRiskGoals.minRMultiple || 'None'}</span>
                 </div>
                 <div className="flex justify-between items-baseline text-xs font-mono">
-                  <span className="text-slate-400">Max Consec. Losses Stop:</span>
-                  <span className="font-bold text-slate-200">{effectiveRiskGoals.maxConsecutiveLosses || 'None'}</span>
+                  <span className="text-[#A1A1AA]">Max Consec. Losses Stop:</span>
+                  <span className="font-bold text-[#F5F5F5]">{effectiveRiskGoals.maxConsecutiveLosses || 'None'}</span>
                 </div>
                 <div className="flex justify-between items-baseline text-xs font-mono">
-                  <span className="text-slate-400">Commissions & Fees Calc:</span>
+                  <span className="text-[#A1A1AA]">Commissions & Fees Calc:</span>
                   <span className="text-emerald-400 font-semibold">Included in Net P&L</span>
                 </div>
               </div>
@@ -839,14 +839,14 @@ export const GoalsRiskView: React.FC = () => {
       {/* TAB 2: CIRCUIT BREAKER STATE & LOCKOUT CONTROL */}
       {activeTab === 'CIRCUIT_BREAKER' && (
         <div className="space-y-6">
-          <div className={`p-6 rounded-2xl border ${isLight ? 'bg-white border-slate-200' : 'bg-[#12161D] border-[#1C232E]'}`}>
-            <div className="flex items-center justify-between pb-4 border-b border-[#1C232E]">
+          <div className={`p-6 rounded-2xl border ${isLight ? 'bg-white border-slate-200' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'}`}>
+            <div className="flex items-center justify-between pb-4 border-b border-[rgba(255,255,255,0.07)]">
               <div>
                 <h3 className="text-base font-bold text-white flex items-center gap-2">
                   <Lock className="w-5 h-5 text-indigo-400" />
                   Circuit Breaker Health & Trip State
                 </h3>
-                <p className="text-xs text-slate-400 mt-1">
+                <p className="text-xs text-[#A1A1AA] mt-1">
                   Active stateful monitoring preventing catastrophic blowouts. Automatically escalates based on daily loss headroom.
                 </p>
               </div>
@@ -861,7 +861,7 @@ export const GoalsRiskView: React.FC = () => {
                     ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                     : cb.state === 'ARMED'
                     ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                    : 'bg-slate-800 text-slate-400 border-slate-700'
+                    : 'bg-[#101010] text-[#A1A1AA] border-white/[0.10]'
                 }`}>
                   STATUS: {cb.state}
                 </span>
@@ -893,30 +893,30 @@ export const GoalsRiskView: React.FC = () => {
                           : step.state === 'ARMED'
                           ? 'bg-emerald-950/40 border-emerald-500'
                           : 'bg-indigo-950/40 border-indigo-500'
-                        : 'bg-[#0A0D14] border-[#1C232E] opacity-70'
+                        : 'bg-[#080808] border-[rgba(255,255,255,0.07)] opacity-70'
                     }`}
                   >
                     <div className="flex items-center gap-2 mb-2">
                       <IconComponent className={`w-4 h-4 ${
                         isActive
                           ? step.state === 'LOCKED' ? 'text-rose-400' : step.state === 'CRITICAL' ? 'text-orange-400' : 'text-emerald-400'
-                          : 'text-slate-500'
+                          : 'text-[#71717A]'
                       }`} />
                       <span className={`text-xs font-bold uppercase tracking-wider ${
-                        isActive ? 'text-white' : 'text-slate-400'
+                        isActive ? 'text-white' : 'text-[#A1A1AA]'
                       }`}>
                         {step.state}
                       </span>
                     </div>
-                    <p className="text-[11px] text-slate-400 leading-relaxed">{step.desc}</p>
+                    <p className="text-[11px] text-[#A1A1AA] leading-relaxed">{step.desc}</p>
                   </div>
                 );
               })}
             </div>
 
             {/* Actions & Emergency Controls */}
-            <div className="mt-6 pt-5 border-t border-[#1C232E] flex flex-wrap items-center justify-between gap-4">
-              <div className="text-xs text-slate-400">
+            <div className="mt-6 pt-5 border-t border-[rgba(255,255,255,0.07)] flex flex-wrap items-center justify-between gap-4">
+              <div className="text-xs text-[#A1A1AA]">
                 Current Daily Buffer Utilization: <span className="font-mono font-bold text-white">{metrics.dailyLoss.percentUsed}%</span>
               </div>
 
@@ -924,7 +924,7 @@ export const GoalsRiskView: React.FC = () => {
                 <button
                   type="button"
                   onClick={toggleArming}
-                  className="px-4 py-2 rounded-xl bg-[#1C232E] hover:bg-[#273141] text-slate-200 text-xs font-semibold transition"
+                  className="px-4 py-2 rounded-xl bg-[rgba(255,255,255,0.07)] hover:bg-[rgba(255,255,255,0.10)] text-[#F5F5F5] text-xs font-semibold transition"
                 >
                   {cb.state === 'ARMED' || cb.state === 'CAUTION' || cb.state === 'CRITICAL'
                     ? 'Disarm Circuit Breaker'
@@ -950,17 +950,17 @@ export const GoalsRiskView: React.FC = () => {
       {/* TAB 3: CONFIGURATION FORM */}
       {activeTab === 'CONFIG' && (
         <form onSubmit={handleSaveConfig} className={`rounded-2xl border p-6 shadow-xl space-y-6 ${
-          isLight ? 'bg-white border-slate-200' : 'bg-[#12161D] border-[#1C232E]'
+          isLight ? 'bg-white border-slate-200' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
         }`}>
-          <div className="flex items-center justify-between pb-3 border-b border-[#1C232E]">
+          <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.07)]">
             <div>
               <h3 className={`text-sm font-bold uppercase tracking-wider flex items-center gap-2 ${
-                isLight ? 'text-slate-900' : 'text-slate-100'
+                isLight ? 'text-slate-900' : 'text-[#F5F5F5]'
               }`}>
                 <Sliders className="w-4 h-4 text-indigo-400" />
                 Configure Risk Parameters & Guardrails
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-[#A1A1AA] mt-0.5">
                 Parameters apply specifically to {selectedAccountName}. Evaluated in real time by the TradeForge Risk Engine.
               </p>
             </div>
@@ -981,7 +981,7 @@ export const GoalsRiskView: React.FC = () => {
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Daily Max Loss Limit ($)</label>
+                <label className="text-xs text-[#A1A1AA] mb-1 block">Daily Max Loss Limit ($)</label>
                 <input
                   type="number"
                   min="0"
@@ -990,14 +990,14 @@ export const GoalsRiskView: React.FC = () => {
                   placeholder="e.g. 1000"
                   onChange={(e) => setDailyMaxLoss(Number(e.target.value))}
                   className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 ${
-                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#F5F5F5]'
                   }`}
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">Hard stop cap per calendar trading day</span>
+                <span className="text-[10px] text-[#71717A] mt-1 block">Hard stop cap per calendar trading day</span>
               </div>
 
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Weekly Loss Limit ($)</label>
+                <label className="text-xs text-[#A1A1AA] mb-1 block">Weekly Loss Limit ($)</label>
                 <input
                   type="number"
                   min="0"
@@ -1006,14 +1006,14 @@ export const GoalsRiskView: React.FC = () => {
                   placeholder="e.g. 3000"
                   onChange={(e) => setWeeklyLossLimit(Number(e.target.value))}
                   className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 ${
-                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#F5F5F5]'
                   }`}
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">Maximum cumulative loss for the week</span>
+                <span className="text-[10px] text-[#71717A] mt-1 block">Maximum cumulative loss for the week</span>
               </div>
 
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Max Trailing Drawdown ($)</label>
+                <label className="text-xs text-[#A1A1AA] mb-1 block">Max Trailing Drawdown ($)</label>
                 <input
                   type="number"
                   min="0"
@@ -1022,14 +1022,14 @@ export const GoalsRiskView: React.FC = () => {
                   placeholder="e.g. 2500"
                   onChange={(e) => setMaxDrawdown(Number(e.target.value))}
                   className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 ${
-                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#F5F5F5]'
                   }`}
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">Max allowed drop from peak equity</span>
+                <span className="text-[10px] text-[#71717A] mt-1 block">Max allowed drop from peak equity</span>
               </div>
 
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Weekly Profit Target ($)</label>
+                <label className="text-xs text-[#A1A1AA] mb-1 block">Weekly Profit Target ($)</label>
                 <input
                   type="number"
                   min="0"
@@ -1038,27 +1038,27 @@ export const GoalsRiskView: React.FC = () => {
                   placeholder="e.g. 2500"
                   onChange={(e) => setWeeklyProfitTarget(Number(e.target.value))}
                   className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 ${
-                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#F5F5F5]'
                   }`}
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">Target net profit milestone for week</span>
+                <span className="text-[10px] text-[#71717A] mt-1 block">Target net profit milestone for week</span>
               </div>
             </div>
           </div>
 
           {/* Section 2: Trade Sizing & Risk Modes */}
-          <div className="space-y-3 pt-4 border-t border-[#1C232E]">
+          <div className="space-y-3 pt-4 border-t border-[rgba(255,255,255,0.07)]">
             <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
               <Zap className="w-4 h-4" /> 2. Per-Trade Risk Sizing & Execution Quotas
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Risk Sizing Mode</label>
+                <label className="text-xs text-[#A1A1AA] mb-1 block">Risk Sizing Mode</label>
                 <select
                   value={riskMode}
                   onChange={(e) => setRiskMode(e.target.value as any)}
                   className={`w-full rounded-xl border px-3.5 py-2 text-xs font-medium focus:outline-none focus:border-indigo-500 ${
-                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#F5F5F5]'
                   }`}
                 >
                   <option value="LOWER_OF_BOTH">Lower of Both ($ and %)</option>
@@ -1066,11 +1066,11 @@ export const GoalsRiskView: React.FC = () => {
                   <option value="PERCENTAGE">Account Balance % Only</option>
                   <option value="GREATER_OF_BOTH">Greater of Both</option>
                 </select>
-                <span className="text-[10px] text-slate-500 mt-1 block">Methodology for position sizing</span>
+                <span className="text-[10px] text-[#71717A] mt-1 block">Methodology for position sizing</span>
               </div>
 
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Max Risk Per Trade ($)</label>
+                <label className="text-xs text-[#A1A1AA] mb-1 block">Max Risk Per Trade ($)</label>
                 <input
                   type="number"
                   min="0"
@@ -1079,14 +1079,14 @@ export const GoalsRiskView: React.FC = () => {
                   placeholder="e.g. 250"
                   onChange={(e) => setMaxRiskPerTradeAmount(Number(e.target.value))}
                   className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 ${
-                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#F5F5F5]'
                   }`}
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">Maximum dollar risk at stop loss</span>
+                <span className="text-[10px] text-[#71717A] mt-1 block">Maximum dollar risk at stop loss</span>
               </div>
 
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Max Risk Per Trade (%)</label>
+                <label className="text-xs text-[#A1A1AA] mb-1 block">Max Risk Per Trade (%)</label>
                 <input
                   type="number"
                   min="0"
@@ -1096,14 +1096,14 @@ export const GoalsRiskView: React.FC = () => {
                   placeholder="e.g. 2"
                   onChange={(e) => setMaxRiskPerTradePercent(Number(e.target.value))}
                   className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 ${
-                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#F5F5F5]'
                   }`}
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">% of account balance risk cap</span>
+                <span className="text-[10px] text-[#71717A] mt-1 block">% of account balance risk cap</span>
               </div>
 
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Max Contracts / Lots Per Trade</label>
+                <label className="text-xs text-[#A1A1AA] mb-1 block">Max Contracts / Lots Per Trade</label>
                 <input
                   type="number"
                   min="0"
@@ -1112,22 +1112,22 @@ export const GoalsRiskView: React.FC = () => {
                   placeholder="e.g. 5"
                   onChange={(e) => setMaxContractsPerTrade(Number(e.target.value))}
                   className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 ${
-                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#F5F5F5]'
                   }`}
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">Hard position contract cap</span>
+                <span className="text-[10px] text-[#71717A] mt-1 block">Hard position contract cap</span>
               </div>
             </div>
           </div>
 
           {/* Section 3: Quotas & Discipline Rules */}
-          <div className="space-y-3 pt-4 border-t border-[#1C232E]">
+          <div className="space-y-3 pt-4 border-t border-[rgba(255,255,255,0.07)]">
             <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
               <Target className="w-4 h-4" /> 3. Discipline Quotas & Trade Quality Rules
             </h4>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Max Daily Trades Quota</label>
+                <label className="text-xs text-[#A1A1AA] mb-1 block">Max Daily Trades Quota</label>
                 <input
                   type="number"
                   min="0"
@@ -1136,14 +1136,14 @@ export const GoalsRiskView: React.FC = () => {
                   placeholder="e.g. 5"
                   onChange={(e) => setMaxTradesPerDay(Number(e.target.value))}
                   className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 ${
-                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#F5F5F5]'
                   }`}
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">Prevents overtrading</span>
+                <span className="text-[10px] text-[#71717A] mt-1 block">Prevents overtrading</span>
               </div>
 
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Max Consecutive Losses</label>
+                <label className="text-xs text-[#A1A1AA] mb-1 block">Max Consecutive Losses</label>
                 <input
                   type="number"
                   min="0"
@@ -1152,14 +1152,14 @@ export const GoalsRiskView: React.FC = () => {
                   placeholder="e.g. 3"
                   onChange={(e) => setMaxConsecutiveLosses(Number(e.target.value))}
                   className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 ${
-                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#F5F5F5]'
                   }`}
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">Blocks revenge trading streak</span>
+                <span className="text-[10px] text-[#71717A] mt-1 block">Blocks revenge trading streak</span>
               </div>
 
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Minimum Target R-Multiple</label>
+                <label className="text-xs text-[#A1A1AA] mb-1 block">Minimum Target R-Multiple</label>
                 <input
                   type="number"
                   min="0"
@@ -1168,14 +1168,14 @@ export const GoalsRiskView: React.FC = () => {
                   placeholder="e.g. 1.5"
                   onChange={(e) => setMinRMultiple(Number(e.target.value))}
                   className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 ${
-                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#F5F5F5]'
                   }`}
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">Reward-to-risk ratio minimum</span>
+                <span className="text-[10px] text-[#71717A] mt-1 block">Reward-to-risk ratio minimum</span>
               </div>
 
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Max Open Positions</label>
+                <label className="text-xs text-[#A1A1AA] mb-1 block">Max Open Positions</label>
                 <input
                   type="number"
                   min="0"
@@ -1184,23 +1184,23 @@ export const GoalsRiskView: React.FC = () => {
                   placeholder="e.g. 2"
                   onChange={(e) => setMaxOpenPositions(Number(e.target.value))}
                   className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 ${
-                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#F5F5F5]'
                   }`}
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">Concurrent open trades limit</span>
+                <span className="text-[10px] text-[#71717A] mt-1 block">Concurrent open trades limit</span>
               </div>
             </div>
           </div>
 
           {/* Section 4: Automated Circuit Breaker & Safety Toggles */}
-          <div className="space-y-4 pt-4 border-t border-[#1C232E]">
+          <div className="space-y-4 pt-4 border-t border-[rgba(255,255,255,0.07)]">
             <h4 className="text-xs font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
               <Lock className="w-4 h-4" /> 4. Circuit Breaker Automation & Audit Safeguards
             </h4>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Caution Warning Threshold (%)</label>
+                <label className="text-xs text-[#A1A1AA] mb-1 block">Caution Warning Threshold (%)</label>
                 <input
                   type="number"
                   min="50"
@@ -1208,14 +1208,14 @@ export const GoalsRiskView: React.FC = () => {
                   value={warningThresholdPercent}
                   onChange={(e) => setWarningThresholdPercent(Number(e.target.value))}
                   className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 ${
-                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#F5F5F5]'
                   }`}
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">Default: 75% of daily loss limit</span>
+                <span className="text-[10px] text-[#71717A] mt-1 block">Default: 75% of daily loss limit</span>
               </div>
 
               <div>
-                <label className="text-xs text-slate-400 mb-1 block">Critical Warning Threshold (%)</label>
+                <label className="text-xs text-[#A1A1AA] mb-1 block">Critical Warning Threshold (%)</label>
                 <input
                   type="number"
                   min="60"
@@ -1223,10 +1223,10 @@ export const GoalsRiskView: React.FC = () => {
                   value={criticalThresholdPercent}
                   onChange={(e) => setCriticalThresholdPercent(Number(e.target.value))}
                   className={`w-full rounded-xl border px-3.5 py-2 text-xs font-mono focus:outline-none focus:border-indigo-500 ${
-                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#0A0D14] border-[#1C232E] text-slate-100'
+                    isLight ? 'bg-slate-50 border-slate-300 text-slate-900' : 'bg-[#080808] border-[rgba(255,255,255,0.07)] text-[#F5F5F5]'
                   }`}
                 />
-                <span className="text-[10px] text-slate-500 mt-1 block">Default: 90% of daily loss limit</span>
+                <span className="text-[10px] text-[#71717A] mt-1 block">Default: 90% of daily loss limit</span>
               </div>
             </div>
 
@@ -1236,9 +1236,9 @@ export const GoalsRiskView: React.FC = () => {
                   type="checkbox"
                   checked={enforceCircuitBreaker}
                   onChange={(e) => setEnforceCircuitBreaker(e.target.checked)}
-                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-[#0A0D14] border-[#1C232E]"
+                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-[#080808] border-[rgba(255,255,255,0.07)]"
                 />
-                <span className={`text-xs font-semibold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                <span className={`text-xs font-semibold ${isLight ? 'text-slate-800' : 'text-[#F5F5F5]'}`}>
                   Enforce Hard Circuit Breaker Lockout on Daily Loss Breach
                 </span>
               </label>
@@ -1248,9 +1248,9 @@ export const GoalsRiskView: React.FC = () => {
                   type="checkbox"
                   checked={hardLockEnabled}
                   onChange={(e) => setHardLockEnabled(e.target.checked)}
-                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-[#0A0D14] border-[#1C232E]"
+                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-[#080808] border-[rgba(255,255,255,0.07)]"
                 />
-                <span className={`text-xs font-semibold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                <span className={`text-xs font-semibold ${isLight ? 'text-slate-800' : 'text-[#F5F5F5]'}`}>
                   Require Written Reflection & Supervisor Rationale to Unlock
                 </span>
               </label>
@@ -1263,9 +1263,9 @@ export const GoalsRiskView: React.FC = () => {
                     setIncludeCommissions(e.target.checked);
                     setIncludeFees(e.target.checked);
                   }}
-                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-[#0A0D14] border-[#1C232E]"
+                  className="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 bg-[#080808] border-[rgba(255,255,255,0.07)]"
                 />
-                <span className={`text-xs font-semibold ${isLight ? 'text-slate-800' : 'text-slate-200'}`}>
+                <span className={`text-xs font-semibold ${isLight ? 'text-slate-800' : 'text-[#F5F5F5]'}`}>
                   Include Commissions & Regulatory Fees in Realized Loss Buffer
                 </span>
               </label>
@@ -1273,8 +1273,8 @@ export const GoalsRiskView: React.FC = () => {
           </div>
 
           {/* Footer Save */}
-          <div className="pt-4 border-t border-[#1C232E] flex items-center justify-between">
-            <div className="text-xs text-slate-400">
+          <div className="pt-4 border-t border-[rgba(255,255,255,0.07)] flex items-center justify-between">
+            <div className="text-xs text-[#A1A1AA]">
               Settings synced with server & localStorage. Authoritative risk calculations active.
             </div>
             <button
@@ -1292,15 +1292,15 @@ export const GoalsRiskView: React.FC = () => {
       {/* TAB 4: RISK AUDIT LOG & EVENTS */}
       {activeTab === 'AUDIT_LOG' && (
         <div className={`rounded-2xl border p-6 shadow-xl space-y-4 ${
-          isLight ? 'bg-white border-slate-200' : 'bg-[#12161D] border-[#1C232E]'
+          isLight ? 'bg-white border-slate-200' : 'bg-[#0B0B0B] border-[rgba(255,255,255,0.07)]'
         }`}>
-          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[#1C232E]">
+          <div className="flex flex-wrap items-center justify-between gap-3 pb-3 border-b border-[rgba(255,255,255,0.07)]">
             <div>
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
                 <History className="w-4 h-4 text-indigo-400" />
                 Risk Events & Guardrail Audit Trail
               </h3>
-              <p className="text-xs text-slate-400 mt-0.5">
+              <p className="text-xs text-[#A1A1AA] mt-0.5">
                 Complete chronological log of blocked trade orders, circuit breaker triggers, and unlock rationale.
               </p>
             </div>
@@ -1309,7 +1309,7 @@ export const GoalsRiskView: React.FC = () => {
               <select
                 value={eventFilter}
                 onChange={(e) => setEventFilter(e.target.value as any)}
-                className="rounded-xl bg-[#0A0D14] border border-[#1C232E] px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500 font-medium"
+                className="rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.07)] px-3 py-1.5 text-xs text-[#F5F5F5] focus:outline-none focus:border-indigo-500 font-medium"
               >
                 <option value="ALL">All Event Types</option>
                 <option value="ORDER_BLOCKED">Orders Blocked Only</option>
@@ -1325,7 +1325,7 @@ export const GoalsRiskView: React.FC = () => {
                   refreshRiskEvents();
                   addToast('Audit Log Cleared', 'Cleared local risk events for this session.', 'info');
                 }}
-                className="p-2 rounded-xl bg-[#1C232E] hover:bg-[#273141] text-slate-400 hover:text-rose-400 transition text-xs"
+                className="p-2 rounded-xl bg-[rgba(255,255,255,0.07)] hover:bg-[rgba(255,255,255,0.10)] text-[#A1A1AA] hover:text-rose-400 transition text-xs"
                 title="Clear local audit log"
               >
                 <Trash2 className="w-4 h-4" />
@@ -1334,7 +1334,7 @@ export const GoalsRiskView: React.FC = () => {
           </div>
 
           {filteredEvents.length === 0 ? (
-            <div className="py-12 text-center text-slate-500 text-xs">
+            <div className="py-12 text-center text-[#71717A] text-xs">
               <ShieldCheck className="w-10 h-10 text-emerald-500/30 mx-auto mb-2" />
               <span>No risk events recorded for {selectedAccountName}. Trading operates within standard parameters.</span>
             </div>
@@ -1342,7 +1342,7 @@ export const GoalsRiskView: React.FC = () => {
             <div className="overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead>
-                  <tr className="border-b border-[#1C232E] text-slate-400 font-mono text-[11px]">
+                  <tr className="border-b border-[rgba(255,255,255,0.07)] text-[#A1A1AA] font-mono text-[11px]">
                     <th className="py-2.5 px-3">Timestamp</th>
                     <th className="py-2.5 px-3">Type</th>
                     <th className="py-2.5 px-3">Rule Breached</th>
@@ -1352,10 +1352,10 @@ export const GoalsRiskView: React.FC = () => {
                     <th className="py-2.5 px-3">Notes & Reflection</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-[#1C232E]/40 font-mono">
+                <tbody className="divide-y divide-[rgba(255,255,255,0.07)]/40 font-mono">
                   {filteredEvents.map((ev) => (
                     <tr key={ev.id} className="hover:bg-[#161C26]/50 transition">
-                      <td className="py-3 px-3 text-slate-400 text-[11px] whitespace-nowrap">
+                      <td className="py-3 px-3 text-[#A1A1AA] text-[11px] whitespace-nowrap">
                         {safeFormatDateTime(ev.timestamp)}
                       </td>
                       <td className="py-3 px-3">
@@ -1371,11 +1371,11 @@ export const GoalsRiskView: React.FC = () => {
                           {ev.eventType}
                         </span>
                       </td>
-                      <td className="py-3 px-3 font-semibold text-slate-200">
+                      <td className="py-3 px-3 font-semibold text-[#F5F5F5]">
                         {ev.rule}
                       </td>
-                      <td className="py-3 px-3 text-slate-300">
-                        {ev.currentValue} / <span className="text-slate-400">{ev.limitValue}</span>
+                      <td className="py-3 px-3 text-[#D4D4D8]">
+                        {ev.currentValue} / <span className="text-[#A1A1AA]">{ev.limitValue}</span>
                       </td>
                       <td className="py-3 px-3">
                         <span className={`px-2 py-0.5 rounded font-bold text-[10px] ${
@@ -1388,10 +1388,10 @@ export const GoalsRiskView: React.FC = () => {
                           {ev.severity}
                         </span>
                       </td>
-                      <td className="py-3 px-3 text-slate-300 text-[11px]">
+                      <td className="py-3 px-3 text-[#D4D4D8] text-[11px]">
                         {ev.actionTaken}
                       </td>
-                      <td className="py-3 px-3 text-slate-400 text-[11px] max-w-xs truncate font-sans" title={ev.notes}>
+                      <td className="py-3 px-3 text-[#A1A1AA] text-[11px] max-w-xs truncate font-sans" title={ev.notes}>
                         {ev.notes || '—'}
                       </td>
                     </tr>
@@ -1407,7 +1407,7 @@ export const GoalsRiskView: React.FC = () => {
       {isUnlockModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm animate-fade-in">
           <div className="w-full max-w-lg rounded-2xl bg-[#0F131A] border border-rose-500/40 p-6 shadow-2xl space-y-4">
-            <div className="flex items-center gap-3 border-b border-[#1C232E] pb-3">
+            <div className="flex items-center gap-3 border-b border-[rgba(255,255,255,0.07)] pb-3">
               <div className="p-2 rounded-xl bg-rose-500/20 border border-rose-500/40 text-rose-400">
                 <Lock className="w-6 h-6" />
               </div>
@@ -1415,7 +1415,7 @@ export const GoalsRiskView: React.FC = () => {
                 <h3 className="text-base font-bold text-white">
                   Circuit Breaker Override & Account Unlock
                 </h3>
-                <p className="text-xs text-slate-400">
+                <p className="text-xs text-[#A1A1AA]">
                   {selectedAccountName} — Mandatory Trader Reflection Protocol
                 </p>
               </div>
@@ -1428,7 +1428,7 @@ export const GoalsRiskView: React.FC = () => {
 
             <form onSubmit={handlePerformUnlock} className="space-y-3.5">
               <div>
-                <label className="text-xs text-slate-300 mb-1 block font-semibold">
+                <label className="text-xs text-[#D4D4D8] mb-1 block font-semibold">
                   Trader Reflection & Rationale <span className="text-rose-400">*</span>
                 </label>
                 <textarea
@@ -1437,12 +1437,12 @@ export const GoalsRiskView: React.FC = () => {
                   value={unlockReason}
                   onChange={(e) => setUnlockReason(e.target.value)}
                   placeholder="Explain the root cause of the limit breach, emotional state, and the adjustment you will make before resuming trading..."
-                  className="w-full rounded-xl bg-[#0A0D14] border border-[#1C232E] p-3 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                  className="w-full rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.07)] p-3 text-xs text-[#F5F5F5] placeholder-slate-600 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
               <div>
-                <label className="text-xs text-slate-300 mb-1 block font-semibold">
+                <label className="text-xs text-[#D4D4D8] mb-1 block font-semibold">
                   Authorized By / Supervisor Name
                 </label>
                 <input
@@ -1450,7 +1450,7 @@ export const GoalsRiskView: React.FC = () => {
                   value={supervisorName}
                   onChange={(e) => setSupervisorName(e.target.value)}
                   placeholder="e.g. Lead Risk Supervisor / Self-Authorized"
-                  className="w-full rounded-xl bg-[#0A0D14] border border-[#1C232E] px-3 py-2 text-xs text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                  className="w-full rounded-xl bg-[#080808] border border-[rgba(255,255,255,0.07)] px-3 py-2 text-xs text-[#F5F5F5] placeholder-slate-600 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
@@ -1461,19 +1461,19 @@ export const GoalsRiskView: React.FC = () => {
                     required
                     checked={unlockAcknowledged}
                     onChange={(e) => setUnlockAcknowledged(e.target.checked)}
-                    className="w-4 h-4 rounded mt-0.5 text-indigo-600 focus:ring-indigo-500 bg-[#0A0D14] border-[#1C232E]"
+                    className="w-4 h-4 rounded mt-0.5 text-indigo-600 focus:ring-indigo-500 bg-[#080808] border-[rgba(255,255,255,0.07)]"
                   />
-                  <span className="text-xs text-slate-300 leading-snug">
+                  <span className="text-xs text-[#D4D4D8] leading-snug">
                     I acknowledge this override will be permanently logged in the audit ledger. I commit to strict discipline and adhering to my playbook.
                   </span>
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#1C232E]">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[rgba(255,255,255,0.07)]">
                 <button
                   type="button"
                   onClick={() => setIsUnlockModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-[#1C232E] hover:bg-[#273141] text-slate-300 text-xs font-semibold transition"
+                  className="px-4 py-2 rounded-xl bg-[rgba(255,255,255,0.07)] hover:bg-[rgba(255,255,255,0.10)] text-[#D4D4D8] text-xs font-semibold transition"
                 >
                   Cancel
                 </button>

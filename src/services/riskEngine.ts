@@ -9,86 +9,20 @@ import {
   RiskMetricState,
 } from '../types';
 
-export interface InstrumentSpec {
-  symbol: string;
-  name: string;
-  market: 'Futures' | 'Forex' | 'Crypto' | 'Stocks' | 'Indices' | 'Commodities' | 'CFDs';
-  pointValue: number; // Dollar value of a full 1.0 point move per 1 unit
-  tickSize: number;
-  tickValue: number;
-  unitLabel: 'contracts' | 'lots' | 'shares' | 'units';
-  defaultCommission: number;
-}
+import {
+  INSTRUMENT_SPECS,
+  getInstrumentSpec,
+  getInstrumentPointMultiplier,
+  getInstrumentUnitLabel,
+} from '../lib/calcEngine';
 
-export const INSTRUMENT_SPECS: Record<string, InstrumentSpec> = {
-  // Futures - Equity Indices
-  ES: { symbol: 'ES', name: 'E-mini S&P 500', market: 'Futures', pointValue: 50, tickSize: 0.25, tickValue: 12.5, unitLabel: 'contracts', defaultCommission: 2.5 },
-  MES: { symbol: 'MES', name: 'Micro E-mini S&P 500', market: 'Futures', pointValue: 5, tickSize: 0.25, tickValue: 1.25, unitLabel: 'contracts', defaultCommission: 0.62 },
-  NQ: { symbol: 'NQ', name: 'E-mini Nasdaq 100', market: 'Futures', pointValue: 20, tickSize: 0.25, tickValue: 5.0, unitLabel: 'contracts', defaultCommission: 2.5 },
-  MNQ: { symbol: 'MNQ', name: 'Micro E-mini Nasdaq 100', market: 'Futures', pointValue: 2, tickSize: 0.25, tickValue: 0.5, unitLabel: 'contracts', defaultCommission: 0.62 },
-  YM: { symbol: 'YM', name: 'E-mini Dow Jones', market: 'Futures', pointValue: 5, tickSize: 1.0, tickValue: 5.0, unitLabel: 'contracts', defaultCommission: 2.5 },
-  MYM: { symbol: 'MYM', name: 'Micro E-mini Dow Jones', market: 'Futures', pointValue: 0.5, tickSize: 1.0, tickValue: 0.5, unitLabel: 'contracts', defaultCommission: 0.62 },
-  RTY: { symbol: 'RTY', name: 'E-mini Russell 2000', market: 'Futures', pointValue: 50, tickSize: 0.1, tickValue: 5.0, unitLabel: 'contracts', defaultCommission: 2.5 },
-  M2K: { symbol: 'M2K', name: 'Micro E-mini Russell 2000', market: 'Futures', pointValue: 5, tickSize: 0.1, tickValue: 0.5, unitLabel: 'contracts', defaultCommission: 0.62 },
-
-  // Futures - Commodities & Energy
-  CL: { symbol: 'CL', name: 'Crude Oil', market: 'Futures', pointValue: 1000, tickSize: 0.01, tickValue: 10.0, unitLabel: 'contracts', defaultCommission: 2.5 },
-  MCL: { symbol: 'MCL', name: 'Micro Crude Oil', market: 'Futures', pointValue: 100, tickSize: 0.01, tickValue: 1.0, unitLabel: 'contracts', defaultCommission: 0.62 },
-  GC: { symbol: 'GC', name: 'Gold Futures', market: 'Futures', pointValue: 100, tickSize: 0.1, tickValue: 10.0, unitLabel: 'contracts', defaultCommission: 2.5 },
-  MGC: { symbol: 'MGC', name: 'Micro Gold Futures', market: 'Futures', pointValue: 10, tickSize: 0.1, tickValue: 1.0, unitLabel: 'contracts', defaultCommission: 0.62 },
-  SI: { symbol: 'SI', name: 'Silver Futures', market: 'Futures', pointValue: 5000, tickSize: 0.005, tickValue: 25.0, unitLabel: 'contracts', defaultCommission: 2.5 },
-  HG: { symbol: 'HG', name: 'Copper Futures', market: 'Futures', pointValue: 25000, tickSize: 0.0005, tickValue: 12.5, unitLabel: 'contracts', defaultCommission: 2.5 },
-
-  // Forex Spot / CFD (Standard lot = 100,000 units)
-  EURUSD: { symbol: 'EURUSD', name: 'Euro / US Dollar', market: 'Forex', pointValue: 100000, tickSize: 0.00001, tickValue: 1.0, unitLabel: 'lots', defaultCommission: 3.5 },
-  GBPUSD: { symbol: 'GBPUSD', name: 'British Pound / US Dollar', market: 'Forex', pointValue: 100000, tickSize: 0.00001, tickValue: 1.0, unitLabel: 'lots', defaultCommission: 3.5 },
-  USDJPY: { symbol: 'USDJPY', name: 'US Dollar / Japanese Yen', market: 'Forex', pointValue: 666.67, tickSize: 0.001, tickValue: 0.67, unitLabel: 'lots', defaultCommission: 3.5 },
-  AUDUSD: { symbol: 'AUDUSD', name: 'Australian Dollar / US Dollar', market: 'Forex', pointValue: 100000, tickSize: 0.00001, tickValue: 1.0, unitLabel: 'lots', defaultCommission: 3.5 },
-  USDCAD: { symbol: 'USDCAD', name: 'US Dollar / Canadian Dollar', market: 'Forex', pointValue: 73000, tickSize: 0.00001, tickValue: 0.73, unitLabel: 'lots', defaultCommission: 3.5 },
-  XAUUSD: { symbol: 'XAUUSD', name: 'Gold / US Dollar Spot', market: 'Commodities', pointValue: 100, tickSize: 0.01, tickValue: 1.0, unitLabel: 'lots', defaultCommission: 3.5 },
-
-  // Crypto
-  BTCUSD: { symbol: 'BTCUSD', name: 'Bitcoin / US Dollar', market: 'Crypto', pointValue: 1, tickSize: 0.1, tickValue: 0.1, unitLabel: 'units', defaultCommission: 5.0 },
-  ETHUSD: { symbol: 'ETHUSD', name: 'Ethereum / US Dollar', market: 'Crypto', pointValue: 1, tickSize: 0.01, tickValue: 0.01, unitLabel: 'units', defaultCommission: 1.5 },
-  SOLUSD: { symbol: 'SOLUSD', name: 'Solana / US Dollar', market: 'Crypto', pointValue: 1, tickSize: 0.01, tickValue: 0.01, unitLabel: 'units', defaultCommission: 0.5 },
-
-  // Equities & Indices CFDs
-  SPY: { symbol: 'SPY', name: 'SPDR S&P 500 ETF', market: 'Stocks', pointValue: 1, tickSize: 0.01, tickValue: 0.01, unitLabel: 'shares', defaultCommission: 0 },
-  QQQ: { symbol: 'QQQ', name: 'Invesco QQQ ETF', market: 'Stocks', pointValue: 1, tickSize: 0.01, tickValue: 0.01, unitLabel: 'shares', defaultCommission: 0 },
-  NVDA: { symbol: 'NVDA', name: 'Nvidia Corp', market: 'Stocks', pointValue: 1, tickSize: 0.01, tickValue: 0.01, unitLabel: 'shares', defaultCommission: 0 },
-  AAPL: { symbol: 'AAPL', name: 'Apple Inc', market: 'Stocks', pointValue: 1, tickSize: 0.01, tickValue: 0.01, unitLabel: 'shares', defaultCommission: 0 },
-  TSLA: { symbol: 'TSLA', name: 'Tesla Inc', market: 'Stocks', pointValue: 1, tickSize: 0.01, tickValue: 0.01, unitLabel: 'shares', defaultCommission: 0 },
+export {
+  INSTRUMENT_SPECS,
+  getInstrumentSpec,
+  getInstrumentPointMultiplier,
+  getInstrumentUnitLabel,
 };
-
-/**
- * Returns the point multiplier for an instrument symbol or market type
- */
-export function getInstrumentPointMultiplier(symbol: string = '', market: string = 'Futures'): number {
-  const cleanSymbol = symbol.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-  if (INSTRUMENT_SPECS[cleanSymbol]) {
-    return INSTRUMENT_SPECS[cleanSymbol].pointValue;
-  }
-  // Check market type fallback
-  if (market === 'Forex') {
-    return 100000;
-  }
-  if (market === 'Futures') {
-    if (cleanSymbol.startsWith('M')) return 2; // Default micro
-    return 20; // Default mini
-  }
-  return 1;
-}
-
-export function getInstrumentUnitLabel(symbol: string = '', market: string = 'Futures'): 'contracts' | 'lots' | 'shares' | 'units' {
-  const cleanSymbol = symbol.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
-  if (INSTRUMENT_SPECS[cleanSymbol]) {
-    return INSTRUMENT_SPECS[cleanSymbol].unitLabel;
-  }
-  if (market === 'Forex') return 'lots';
-  if (market === 'Stocks') return 'shares';
-  if (market === 'Futures') return 'contracts';
-  return 'units';
-}
+export type { InstrumentSpec } from '../lib/calcEngine';
 
 /**
  * Helper to get local YYYY-MM-DD string

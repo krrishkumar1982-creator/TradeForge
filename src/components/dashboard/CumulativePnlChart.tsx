@@ -94,9 +94,9 @@ export const CumulativePnlChart: React.FC<CumulativePnlChartProps> = ({ trades, 
 
   if (dataPoints.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-[210px] text-slate-500 text-xs">
-        <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center mb-2">
-          <span className="text-slate-400 font-mono">📈</span>
+      <div className="flex flex-col items-center justify-center h-[210px] text-[#71717A] text-xs">
+        <div className="w-8 h-8 rounded-full bg-[#101010] flex items-center justify-center mb-2">
+          <span className="text-[#A1A1AA] font-mono">📈</span>
         </div>
         <span>No closed trades to plot performance curve</span>
       </div>
@@ -309,18 +309,18 @@ export const CumulativePnlChart: React.FC<CumulativePnlChartProps> = ({ trades, 
           }}
         >
           <div className={`text-[10px] font-semibold border-b pb-1 flex items-center justify-between gap-4 ${
-            isLight ? 'text-slate-500 border-slate-200' : 'text-slate-400 border-white/10'
+            isLight ? 'text-[#71717A] border-slate-200' : 'text-[#A1A1AA] border-white/10'
           }`}>
             <span className="font-sans tracking-tight">{activePoint.dateStr}</span>
             <span className={`px-1.5 py-0.2 rounded font-mono text-[9px] font-semibold border ${
-              isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-white/[0.06] text-slate-300 border-white/10'
+              isLight ? 'bg-slate-100 text-slate-700 border-slate-200' : 'bg-white/[0.06] text-[#D4D4D8] border-white/10'
             }`}>
               {activePoint.tradeCount} trades
             </span>
           </div>
           <div className="mt-1.5 space-y-1 text-[11px] font-mono tabular-nums">
             <div className="flex items-center justify-between gap-4">
-              <span className={`text-[10px] font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Cumulative:</span>
+              <span className={`text-[10px] font-sans ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Cumulative:</span>
               <span
                 className={`font-bold text-xs ${
                   activePoint.cumulativePnl >= 0
@@ -333,7 +333,7 @@ export const CumulativePnlChart: React.FC<CumulativePnlChartProps> = ({ trades, 
             </div>
             {activePoint.dailyPnl !== 0 && (
               <div className="flex items-center justify-between gap-4 text-[10px]">
-                <span className={`font-sans ${isLight ? 'text-slate-500' : 'text-slate-400'}`}>Daily P&L:</span>
+                <span className={`font-sans ${isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'}`}>Daily P&L:</span>
                 <span className={`font-semibold ${activePoint.dailyPnl >= 0 ? (isLight ? 'text-emerald-600' : 'text-emerald-400') : (isLight ? 'text-rose-600' : 'text-rose-400')}`}>
                   {activePoint.dailyPnl >= 0 ? '+' : ''}
                   {formatCurrency(activePoint.dailyPnl)}
@@ -341,7 +341,7 @@ export const CumulativePnlChart: React.FC<CumulativePnlChartProps> = ({ trades, 
               </div>
             )}
             <div className={`text-[9px] pt-1 border-t flex items-center justify-between ${
-              isLight ? 'border-slate-100 text-slate-400' : 'border-white/5 text-slate-500'
+              isLight ? 'border-slate-100 text-[#A1A1AA]' : 'border-white/5 text-[#71717A]'
             }`}>
               <span className="font-sans">Session W/L</span>
               <span className="space-x-1">
@@ -356,7 +356,7 @@ export const CumulativePnlChart: React.FC<CumulativePnlChartProps> = ({ trades, 
 
       {/* X Axis Date Labels */}
       <div className={`flex justify-between px-10 text-[9px] font-mono uppercase tracking-wider ${
-        isLight ? 'text-slate-500' : 'text-slate-400'
+        isLight ? 'text-[#71717A]' : 'text-[#A1A1AA]'
       }`}>
         <span>{dataPoints[0]?.dateStr || ''}</span>
         {dataPoints.length > 2 && <span>{dataPoints[Math.floor(dataPoints.length / 2)]?.dateStr || ''}</span>}

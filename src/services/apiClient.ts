@@ -25,9 +25,11 @@ import {
   deleteAccountFromSupabase,
   fetchTradesFromSupabase,
   insertTradeToSupabase,
+  bulkInsertTradesToSupabase,
   updateTradeInSupabase,
   deleteTradeFromSupabase,
   bulkDeleteTradesFromSupabase,
+  clearAllTradesInSupabase,
   bulkEditTradesInSupabase,
   fetchPropFirmAccountsFromSupabase,
   upsertPropFirmAccountToSupabase,
@@ -293,12 +295,14 @@ export async function fetchPropFirmAccountsApi(): Promise<PropFirmAccount[]> {
 }
 
 export async function savePropFirmAccountApi(account: PropFirmAccount): Promise<boolean> {
+  let supabaseSuccess = false;
   try {
     const userId = await getCurrentUserId();
-    await upsertPropFirmAccountToSupabase(account, userId);
+    supabaseSuccess = await upsertPropFirmAccountToSupabase(account, userId);
   } catch (err) {
     console.warn('savePropFirmAccountApi Supabase notice:', err);
   }
+  let apiSuccess = false;
   try {
     const res = await authenticatedFetch('/api/prop-firm-accounts', {
       method: 'POST',
@@ -307,81 +311,142 @@ export async function savePropFirmAccountApi(account: PropFirmAccount): Promise<
     });
     if (res.ok) {
       const data = await res.json();
-      return !!data.success;
+      apiSuccess = !!data.success;
     }
-  } catch {}
-  return true;
+  } catch (err) {
+    console.warn('savePropFirmAccountApi server error:', err);
+  }
+  return supabaseSuccess || apiSuccess;
 }
 
 export async function deletePropFirmAccountApi(id: string): Promise<boolean> {
+  let supabaseSuccess = false;
   try {
     const userId = await getCurrentUserId();
-    await deletePropFirmAccountFromSupabase(id, userId);
+    supabaseSuccess = await deletePropFirmAccountFromSupabase(id, userId);
   } catch (err) {
     console.warn('deletePropFirmAccountApi Supabase notice:', err);
   }
+  let apiSuccess = false;
   try {
     const res = await authenticatedFetch(`/api/prop-firm-accounts/${id}`, {
       method: 'DELETE',
     });
     if (res.ok) {
       const data = await res.json();
-      return !!data.success;
+      apiSuccess = !!data.success;
     }
-  } catch {}
-  return true;
+  } catch (err) {
+    console.warn('deletePropFirmAccountApi server error:', err);
+  }
+  return supabaseSuccess || apiSuccess;
 }
 
-export async function saveTradeApi(trade: Trade) {
+export async function saveTradeApi(trade: Trade): Promise<boolean> {
+  let supabaseSuccess = false;
   try {
     const userId = await getCurrentUserId();
-    await insertTradeToSupabase(trade, userId);
+    supabaseSuccess = await insertTradeToSupabase(trade, userId);
   } catch (err) {
     console.warn('saveTradeApi Supabase notice:', err);
   }
+  let apiSuccess = false;
   try {
-    await authenticatedFetch('/api/trades', {
+    const res = await authenticatedFetch('/api/trades', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(trade),
     });
+    if (res.ok) apiSuccess = true;
   } catch (error) {
     // server optional
   }
+  return supabaseSuccess || apiSuccess;
 }
 
-export async function deleteTradeApi(id: string) {
+export async function bulkInsertTradesApi(trades: Trade[]): Promise<boolean> {
+  let supabaseSuccess = false;
   try {
     const userId = await getCurrentUserId();
-    await deleteTradeFromSupabase(id, userId);
+    supabaseSuccess = await bulkInsertTradesToSupabase(trades, userId);
+  } catch (err) {
+    console.warn('bulkInsertTradesApi Supabase notice:', err);
+  }
+  let apiSuccess = false;
+  try {
+    const res = await authenticatedFetch('/api/trades/bulk-insert', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trades }),
+    });
+    if (res.ok) apiSuccess = true;
+  } catch (error) {
+    // server optional
+  }
+  return supabaseSuccess || apiSuccess;
+}
+
+export async function deleteTradeApi(id: string): Promise<boolean> {
+  let supabaseSuccess = false;
+  try {
+    const userId = await getCurrentUserId();
+    supabaseSuccess = await deleteTradeFromSupabase(id, userId);
   } catch (err) {
     console.warn('deleteTradeApi Supabase notice:', err);
   }
+  let apiSuccess = false;
   try {
-    await authenticatedFetch(`/api/trades/${id}`, {
+    const res = await authenticatedFetch(`/api/trades/${id}`, {
       method: 'DELETE',
     });
+    if (res.ok) apiSuccess = true;
   } catch (error) {
     // server optional
   }
+  return supabaseSuccess || apiSuccess;
 }
 
-export async function bulkDeleteTradesApi(ids: string[]) {
+export async function bulkDeleteTradesApi(ids: string[]): Promise<boolean> {
+  let supabaseSuccess = false;
   try {
     const userId = await getCurrentUserId();
-    await bulkDeleteTradesFromSupabase(ids, userId);
+    supabaseSuccess = await bulkDeleteTradesFromSupabase(ids, userId);
   } catch (err) {
     console.warn('bulkDeleteTradesApi Supabase notice:', err);
   }
+  let apiSuccess = false;
   try {
-    await authenticatedFetch('/api/trades/bulk-delete', {
+    const res = await authenticatedFetch('/api/trades/bulk-delete', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ids }),
     });
+    if (res.ok) apiSuccess = true;
   } catch (error) {
     // server optional
   }
+  return supabaseSuccess || apiSuccess;
+}
+
+export async function clearAllTradesApi(): Promise<boolean> {
+  let supabaseSuccess = false;
+  try {
+    const userId = await getCurrentUserId();
+    supabaseSuccess = await clearAllTradesInSupabase(userId);
+  } catch (err) {
+    console.warn('clearAllTradesApi Supabase notice:', err);
+  }
+  let apiSuccess = false;
+  try {
+    const res = await authenticatedFetch('/api/trades/clear-all', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+    if (res.ok) apiSuccess = true;
+  } catch (error) {
+    // server optional
+  }
+  return supabaseSuccess || apiSuccess;
 }
 
 export async function bulkEditTradesApi(ids: string[], updates: Partial<Trade>) {

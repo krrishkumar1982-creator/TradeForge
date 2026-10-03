@@ -13,8 +13,10 @@ import {
   deleteTradingAccount,
   getTrades,
   saveTrade,
+  bulkSaveTrades,
   deleteTrade,
   bulkDeleteTrades,
+  clearAllTrades,
   getPlaybooks,
   savePlaybook,
   deletePlaybook,
@@ -588,6 +590,59 @@ app.delete('/api/tags/:id', requireAuth, async (req: AuthRequest, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// PROP FIRM ACCOUNTS REST ENDPOINTS
+// ---------------------------------------------------------------------------
+app.get('/api/prop-firm-accounts', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const accounts = await getPropFirmAccounts(userId);
+    res.json({ success: true, accounts });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to fetch prop firm accounts' });
+  }
+});
+
+app.post('/api/prop-firm-accounts', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const account = req.body;
+    if (!account || !account.name) {
+      return res.status(400).json({ success: false, error: 'Account name is required' });
+    }
+    const saved = await savePropFirmAccount(userId, account);
+    await recordActivityLog(userId, {
+      action: 'Save Prop Firm Account',
+      category: 'ACCOUNT',
+      object: `Prop Account: ${saved.name}`,
+      status: 'SUCCESS',
+      source: 'Web Client',
+      details: { firmName: saved.firmName, startingBalance: saved.startingBalance },
+    });
+    res.json({ success: true, account: saved });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to save prop firm account' });
+  }
+});
+
+app.delete('/api/prop-firm-accounts/:id', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const { id } = req.params;
+    await deletePropFirmAccount(userId, id);
+    await recordActivityLog(userId, {
+      action: 'Delete Prop Firm Account',
+      category: 'ACCOUNT',
+      object: `Prop Account (${id})`,
+      status: 'WARNING',
+      source: 'Web Client',
+    });
+    res.json({ success: true });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to delete prop firm account' });
+  }
+});
+
+// ---------------------------------------------------------------------------
 // IMPORT & AUDIT LOG REST ENDPOINTS
 // ---------------------------------------------------------------------------
 app.get('/api/import-history', requireAuth, async (req: AuthRequest, res) => {
@@ -921,6 +976,29 @@ app.post('/api/trades', requireAuth, async (req: AuthRequest, res) => {
   }
 });
 
+app.post('/api/trades/bulk-insert', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    const { trades: tradeList } = req.body;
+    if (Array.isArray(tradeList) && tradeList.length > 0) {
+      await bulkSaveTrades(userId, tradeList);
+    }
+    res.json({ success: true });
+  } catch (error: any) {
+    handleApiError(res, error);
+  }
+});
+
+app.post('/api/trades/clear-all', requireAuth, async (req: AuthRequest, res) => {
+  try {
+    const userId = req.devUserId || 'default_user_1';
+    await clearAllTrades(userId);
+    res.json({ success: true });
+  } catch (error: any) {
+    handleApiError(res, error);
+  }
+});
+
 app.delete('/api/trades/:id', requireAuth, async (req: AuthRequest, res) => {
   try {
     const userId = req.devUserId || 'default_user_1';
@@ -1218,6 +1296,10 @@ app.post(['/api/ai/coach', '/api/ai/chat'], requireAuth, async (req: AuthRequest
       activePropFirmAccountId,
       trades: clientTrades,
       playbooks: clientPlaybooks,
+      coachRole,
+      model,
+      focusTrade,
+      focusTradeId,
     } = req.body;
 
     const query = (message || question || '').trim();
@@ -1248,6 +1330,11 @@ app.post(['/api/ai/coach', '/api/ai/chat'], requireAuth, async (req: AuthRequest
     const tradesToAnalyze = Array.isArray(clientTrades) && clientTrades.length > 0 ? clientTrades : dbTrades;
     const playbooksToUse = Array.isArray(clientPlaybooks) && clientPlaybooks.length > 0 ? clientPlaybooks : dbPlaybooks;
 
+    let targetFocusTrade = focusTrade;
+    if (!targetFocusTrade && focusTradeId) {
+      targetFocusTrade = tradesToAnalyze.find((t: any) => t.id === focusTradeId);
+    }
+
     const result = await executeAiCoachQuery({
       userId,
       query,
@@ -1261,6 +1348,9 @@ app.post(['/api/ai/coach', '/api/ai/chat'], requireAuth, async (req: AuthRequest
       riskGoals: dbRiskGoals,
       activeAccountId,
       activePropFirmAccountId,
+      coachRole,
+      model,
+      focusTrade: targetFocusTrade,
     });
 
     res.json({

@@ -111,13 +111,13 @@ export const LogHistoryTab: React.FC = () => {
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#1C232E]">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[rgba(255,255,255,0.06)]">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <Activity className="w-4 h-4 text-indigo-400" />
+          <h2 className="text-base font-semibold text-[#F4F5F7] flex items-center gap-2">
+            <Activity className="w-4 h-4 text-[#818CF8]" />
             Security & System Audit Trail
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#8A919D] mt-0.5">
             Immutable timeline of terminal logins, compliance updates, broker sync cycles, and risk threshold events.
           </p>
         </div>
@@ -126,7 +126,7 @@ export const LogHistoryTab: React.FC = () => {
           <button
             type="button"
             onClick={handleExportAudit}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-[#1A1F27] hover:bg-[#232B36] text-slate-300 border border-[#1C232E] transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-[#11151A] hover:bg-[#151A20] text-[#C2C7D0] hover:text-[#F4F5F7] border border-[rgba(255,255,255,0.08)] transition cursor-pointer"
           >
             <Download className="w-3.5 h-3.5" />
             <span>Export Log</span>
@@ -134,7 +134,7 @@ export const LogHistoryTab: React.FC = () => {
           <button
             type="button"
             onClick={handleClearLogs}
-            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition cursor-pointer"
+            className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-medium bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 transition cursor-pointer"
           >
             <Trash2 className="w-3.5 h-3.5" />
             <span>Clear Logs</span>
@@ -143,17 +143,17 @@ export const LogHistoryTab: React.FC = () => {
       </div>
 
       {/* Filter and Search Bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-[#12161D] border border-[#1C232E]">
+      <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-2xl bg-[#0D1014] border border-[rgba(255,255,255,0.055)]">
         <div className="flex flex-wrap items-center gap-1.5 text-xs">
           {['ALL', 'INFO', 'WARNING', 'ERROR', 'SUCCESS'].map(st => (
             <button
               key={st}
               type="button"
               onClick={() => setStatusFilter(st)}
-              className={`px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer border ${
+              className={`px-3 py-1.5 rounded-xl font-medium transition cursor-pointer border ${
                 statusFilter === st
-                  ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white border-indigo-400/40 shadow-md shadow-indigo-600/20'
-                  : 'bg-[#0A0D14] text-slate-400 border-[#1C232E] hover:text-white hover:border-[#273141]'
+                  ? 'bg-[#11151A] text-[#F4F5F7] border-[rgba(99,102,241,0.35)] shadow-xs'
+                  : 'bg-[#080A0D] text-[#8A919D] border-[rgba(255,255,255,0.06)] hover:text-[#F4F5F7] hover:bg-[#151A20]'
               }`}
             >
               {st === 'ALL' ? 'All Statuses' : st}
@@ -162,21 +162,21 @@ export const LogHistoryTab: React.FC = () => {
         </div>
 
         <div className="relative min-w-[200px]">
-          <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+          <Search className="w-3.5 h-3.5 text-[#5E6570] absolute left-3 top-2.5" />
           <input
             type="text"
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             placeholder="Search activity events..."
-            className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:border-indigo-500"
+            className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl pl-8 pr-3 py-1.5 text-xs text-[#F4F5F7] placeholder-[#5E6570] focus:outline-none focus:border-[#6366F1]"
           />
         </div>
       </div>
 
       {/* Timeline Stream */}
-      <div className="rounded-2xl border border-[#1C232E] bg-[#12161D] p-5 space-y-4">
+      <div className="rounded-2xl border border-[rgba(255,255,255,0.055)] bg-[#0D1014] p-5 space-y-4">
         {filteredLogs.length === 0 ? (
-          <div className="text-center py-12 text-slate-500 font-mono text-xs">
+          <div className="text-center py-12 text-[#5E6570] font-mono text-xs">
             No activity log events match current criteria.
           </div>
         ) : (
@@ -190,7 +190,7 @@ export const LogHistoryTab: React.FC = () => {
               return (
                 <div
                   key={log.id}
-                  className="p-3.5 rounded-xl bg-[#0A0D14] border border-[#1C232E] hover:border-slate-600 transition flex items-start justify-between gap-4 text-xs"
+                  className="p-3.5 rounded-xl bg-[#080A0D] border border-[rgba(255,255,255,0.06)] hover:border-[rgba(255,255,255,0.12)] transition flex items-start justify-between gap-4 text-xs"
                 >
                   <div className="flex items-start gap-3">
                     <div className={`p-2 rounded-lg shrink-0 border ${
@@ -200,7 +200,7 @@ export const LogHistoryTab: React.FC = () => {
                         ? 'bg-rose-500/15 border-rose-500/30 text-rose-400'
                         : isSuccess
                         ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-400'
-                        : 'bg-blue-500/15 border-blue-500/30 text-blue-400'
+                        : 'bg-blue-500/15 border-blue-500/30 text-[#818CF8]'
                     }`}>
                       {isWarning ? (
                         <AlertTriangle className="w-4 h-4" />
@@ -213,8 +213,8 @@ export const LogHistoryTab: React.FC = () => {
 
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="font-bold text-slate-100">{log.object}</span>
-                        <span className="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded bg-[#1A1F27] text-slate-400 font-mono border border-[#1C232E]">
+                        <span className="font-semibold text-[#F4F5F7]">{log.object}</span>
+                        <span className="text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.2 rounded bg-[#11151A] text-[#8A919D] font-mono border border-[rgba(255,255,255,0.06)]">
                           {log.category}
                         </span>
                         <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.2 rounded font-mono ${

@@ -609,6 +609,28 @@ export async function bulkDeleteTrades(userId: string, ids: string[]) {
   }
 }
 
+export async function clearAllTrades(userId: string): Promise<boolean> {
+  try {
+    await db.delete(trades).where(eq(trades.userId, userId));
+    return true;
+  } catch (error) {
+    console.error('clearAllTrades error:', error);
+    return false;
+  }
+}
+
+export async function bulkSaveTrades(userId: string, tradeList: Trade[]): Promise<boolean> {
+  try {
+    for (const trade of tradeList) {
+      await saveTrade(userId, trade);
+    }
+    return true;
+  } catch (error) {
+    console.error('bulkSaveTrades error:', error);
+    return false;
+  }
+}
+
 // Playbooks
 export async function getPlaybooks(userId: string): Promise<Playbook[]> {
   try {

@@ -85,7 +85,7 @@ export const AccountsSettingsTab: React.FC = () => {
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#1C232E]">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[rgba(255,255,255,0.07)]">
         <div>
           <h2 className="text-base font-bold text-white flex items-center gap-2">
             <Building2 className="w-4 h-4 text-indigo-400" />
@@ -116,7 +116,7 @@ export const AccountsSettingsTab: React.FC = () => {
               className={`p-5 rounded-2xl border transition space-y-4 ${
                 isSelected
                   ? 'bg-indigo-500/10 border-indigo-500/40 shadow-sm'
-                  : 'bg-[#12161D] border-[#1C232E] hover:border-slate-600'
+                  : 'bg-[#0D0D0D] border-[rgba(255,255,255,0.07)] hover:border-slate-600'
               }`}
             >
               <div className="flex items-start justify-between">
@@ -139,7 +139,7 @@ export const AccountsSettingsTab: React.FC = () => {
                 </span>
               </div>
 
-              <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-[#0A0D14] border border-[#1C232E] text-xs">
+              <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-[#070707] border border-[rgba(255,255,255,0.07)] text-xs">
                 <div>
                   <div className="text-[10px] text-slate-500 uppercase font-mono">Current Balance</div>
                   <div className="text-sm font-mono font-bold text-white mt-0.5">
@@ -164,7 +164,7 @@ export const AccountsSettingsTab: React.FC = () => {
                   className={`px-3 py-1.5 rounded-xl font-semibold transition cursor-pointer border ${
                     isSelected
                       ? 'bg-indigo-600 text-white border-indigo-500 shadow-xs'
-                      : 'bg-[#0A0D14] text-slate-300 border-[#1C232E] hover:text-white hover:border-slate-500'
+                      : 'bg-[#070707] text-slate-300 border-[rgba(255,255,255,0.07)] hover:text-white hover:border-slate-500'
                   }`}
                 >
                   {isSelected ? 'Active Selection' : 'Select for Dashboard'}
@@ -174,7 +174,7 @@ export const AccountsSettingsTab: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => handleDelete(acc.id, acc.name)}
-                    className="p-1.5 rounded-lg bg-[#0A0D14] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-[#1C232E] transition cursor-pointer"
+                    className="p-1.5 rounded-lg bg-[#070707] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-[rgba(255,255,255,0.07)] transition cursor-pointer"
                     title="Delete Account"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
@@ -191,9 +191,9 @@ export const AccountsSettingsTab: React.FC = () => {
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
           <form
             onSubmit={handleCreate}
-            className="w-full max-w-md rounded-2xl bg-[#12161D] border border-indigo-500/30 p-6 space-y-4 shadow-2xl"
+            className="w-full max-w-md rounded-2xl bg-[#0D0D0D] border border-indigo-500/30 p-6 space-y-4 shadow-2xl"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-[#1C232E]">
+            <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.07)]">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
                 <Building2 className="w-4 h-4 text-indigo-400" />
                 Register New Account
@@ -216,7 +216,7 @@ export const AccountsSettingsTab: React.FC = () => {
                   value={name}
                   onChange={e => setName(e.target.value)}
                   placeholder="e.g. APEX 50K Funded #1, Ninja Live CME"
-                  className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-[#070707] border border-[rgba(255,255,255,0.07)] rounded-xl px-3 py-2 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500"
                 />
               </div>
 
@@ -228,7 +228,7 @@ export const AccountsSettingsTab: React.FC = () => {
                     value={broker}
                     onChange={e => setBroker(e.target.value)}
                     placeholder="e.g. Tradovate, Topstep, IBKR"
-                    className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-[#070707] border border-[rgba(255,255,255,0.07)] rounded-xl px-3 py-2 text-slate-100 focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
@@ -237,7 +237,7 @@ export const AccountsSettingsTab: React.FC = () => {
                   <select
                     value={accountType}
                     onChange={e => setAccountType(e.target.value as any)}
-                    className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                    className="w-full bg-[#070707] border border-[rgba(255,255,255,0.07)] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
                   >
                     <option value="LIVE">Live Real Money</option>
                     <option value="PROP_FIRM">Prop Firm (Funded / Evaluation)</option>
@@ -254,7 +254,7 @@ export const AccountsSettingsTab: React.FC = () => {
                     step="any"
                     value={balance}
                     onChange={e => setBalance(e.target.value)}
-                    className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-100 font-mono focus:outline-none focus:border-indigo-500"
+                    className="w-full bg-[#070707] border border-[rgba(255,255,255,0.07)] rounded-xl px-3 py-2 text-slate-100 font-mono focus:outline-none focus:border-indigo-500"
                   />
                 </div>
 
@@ -263,7 +263,7 @@ export const AccountsSettingsTab: React.FC = () => {
                   <select
                     value={currency}
                     onChange={e => setCurrency(e.target.value)}
-                    className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                    className="w-full bg-[#070707] border border-[rgba(255,255,255,0.07)] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
                   >
                     <option value="USD">USD ($)</option>
                     <option value="EUR">EUR (€)</option>
@@ -275,11 +275,11 @@ export const AccountsSettingsTab: React.FC = () => {
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#1C232E]">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[rgba(255,255,255,0.07)]">
               <button
                 type="button"
                 onClick={() => setIsAddOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#1A1F27] hover:bg-[#232B36] text-slate-300 border border-[#1C232E]"
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#141414] hover:bg-[#232B36] text-slate-300 border border-[rgba(255,255,255,0.07)]"
               >
                 Cancel
               </button>

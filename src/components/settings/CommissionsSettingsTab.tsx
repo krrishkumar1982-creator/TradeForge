@@ -187,13 +187,13 @@ export const CommissionsSettingsTab: React.FC = () => {
   return (
     <div className="space-y-6 max-w-4xl">
       {/* Header */}
-      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[#1C232E]">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-[rgba(255,255,255,0.06)]">
         <div>
-          <h2 className="text-base font-bold text-white flex items-center gap-2">
-            <DollarSign className="w-4 h-4 text-indigo-400" />
+          <h2 className="text-base font-semibold text-[#F4F5F7] flex items-center gap-2">
+            <DollarSign className="w-4 h-4 text-[#818CF8]" />
             Default Commission, Regulatory & Exchange Fees
           </h2>
-          <p className="text-xs text-slate-400 mt-0.5">
+          <p className="text-xs text-[#8A919D] mt-0.5">
             Auto-applied to uploaded executions when broker statements do not report explicit round-trip fee schedules.
           </p>
         </div>
@@ -201,7 +201,7 @@ export const CommissionsSettingsTab: React.FC = () => {
         <button
           type="button"
           onClick={handleOpenCreate}
-          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white shadow-md shadow-indigo-600/25 border border-indigo-400/30 transition cursor-pointer active:scale-95"
+          className="flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-xs transition cursor-pointer"
         >
           <Plus className="w-3.5 h-3.5" />
           <span>Add Fee Rule</span>
@@ -209,10 +209,10 @@ export const CommissionsSettingsTab: React.FC = () => {
       </div>
 
       {/* Rules Table */}
-      <div className="rounded-2xl border border-[#1C232E] bg-[#12161D] overflow-hidden">
+      <div className="rounded-2xl border border-[rgba(255,255,255,0.055)] bg-[#0D1014] overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
-            <thead className="bg-[#0A0D14] text-slate-400 uppercase tracking-wider font-mono text-[10px] border-b border-[#1C232E]">
+            <thead className="bg-[#090C10] text-[#8A919D] uppercase tracking-wider font-mono text-[10px] border-b border-[rgba(255,255,255,0.055)]">
               <tr>
                 <th className="py-3 px-4">Account</th>
                 <th className="py-3 px-4">Instrument</th>
@@ -225,30 +225,30 @@ export const CommissionsSettingsTab: React.FC = () => {
                 <th className="py-3 px-4 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#1C232E]">
+            <tbody className="divide-y divide-[rgba(255,255,255,0.04)]">
               {rules.map(rule => {
                 const totalFee = (rule.commission || 0) + (rule.exchangeFee || 0) + (rule.clearingFee || 0) + (rule.platformFee || 0);
                 return (
-                  <tr key={rule.id} className="hover:bg-[#161B24] transition">
-                    <td className="py-3 px-4 font-semibold text-slate-300">
+                  <tr key={rule.id} className="hover:bg-[#151A20] transition">
+                    <td className="py-3 px-4 font-semibold text-[#F4F5F7]">
                       {rule.account === 'ALL' ? 'All Accounts' : rule.account}
                     </td>
-                    <td className="py-3 px-4 text-slate-300 font-medium">
+                    <td className="py-3 px-4 text-[#C2C7D0] font-medium">
                       {rule.instrument}
                     </td>
-                    <td className="py-3 px-4 font-mono font-bold text-indigo-400">
+                    <td className="py-3 px-4 font-mono font-bold text-[#818CF8]">
                       {rule.symbol}
                     </td>
-                    <td className="py-3 px-4 text-slate-400 font-mono text-[11px]">
+                    <td className="py-3 px-4 text-[#8A919D] font-mono text-[11px]">
                       {rule.mode} ({rule.apply})
                     </td>
-                    <td className="py-3 px-4 text-right font-mono text-slate-200">
+                    <td className="py-3 px-4 text-right font-mono text-[#F4F5F7]">
                       ${rule.commission.toFixed(2)}
                     </td>
-                    <td className="py-3 px-4 text-right font-mono text-slate-400">
+                    <td className="py-3 px-4 text-right font-mono text-[#8A919D]">
                       ${rule.exchangeFee.toFixed(2)}
                     </td>
-                    <td className="py-3 px-4 text-right font-mono text-slate-400">
+                    <td className="py-3 px-4 text-right font-mono text-[#8A919D]">
                       ${((rule.clearingFee || 0) + (rule.platformFee || 0)).toFixed(2)}
                     </td>
                     <td className="py-3 px-4 text-right font-mono font-bold text-emerald-400">
@@ -259,14 +259,14 @@ export const CommissionsSettingsTab: React.FC = () => {
                         <button
                           type="button"
                           onClick={() => handleOpenEdit(rule)}
-                          className="p-1.5 rounded-lg bg-[#0A0D14] hover:bg-[#1A1F27] text-slate-300 border border-[#1C232E] transition cursor-pointer"
+                          className="p-1.5 rounded-lg bg-[#080A0D] hover:bg-[#151A20] text-[#C2C7D0] border border-[rgba(255,255,255,0.06)] transition cursor-pointer"
                         >
                           <Edit2 className="w-3.5 h-3.5" />
                         </button>
                         <button
                           type="button"
                           onClick={() => handleDeleteRule(rule.id)}
-                          className="p-1.5 rounded-lg bg-[#0A0D14] hover:bg-rose-500/20 text-slate-400 hover:text-rose-400 border border-[#1C232E] transition cursor-pointer"
+                          className="p-1.5 rounded-lg bg-[#080A0D] hover:bg-rose-500/20 text-[#8A919D] hover:text-rose-400 border border-[rgba(255,255,255,0.06)] transition cursor-pointer"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -282,20 +282,20 @@ export const CommissionsSettingsTab: React.FC = () => {
 
       {/* Modal for Add / Edit Rule */}
       {isAddOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-xs flex items-center justify-center p-4">
           <form
             onSubmit={handleSaveRule}
-            className="w-full max-w-lg rounded-2xl bg-[#12161D] border border-indigo-500/30 p-6 space-y-4 shadow-2xl"
+            className="w-full max-w-lg rounded-2xl bg-[#0B0E12] border border-[rgba(255,255,255,0.08)] p-6 space-y-4 shadow-2xl"
           >
-            <div className="flex items-center justify-between pb-3 border-b border-[#1C232E]">
-              <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <DollarSign className="w-4 h-4 text-indigo-400" />
+            <div className="flex items-center justify-between pb-3 border-b border-[rgba(255,255,255,0.06)]">
+              <h3 className="text-sm font-semibold text-[#F4F5F7] flex items-center gap-2">
+                <DollarSign className="w-4 h-4 text-[#818CF8]" />
                 {editingRule ? 'Edit Commission Schedule' : 'Create Commission Rule'}
               </h3>
               <button
                 type="button"
                 onClick={() => setIsAddOpen(false)}
-                className="text-slate-400 hover:text-slate-200"
+                className="text-[#8A919D] hover:text-[#F4F5F7] cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -303,120 +303,120 @@ export const CommissionsSettingsTab: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Target Account</label>
+                <label className="block text-[#A7ADB7] font-medium mb-1">Target Account</label>
                 <select
                   value={account}
                   onChange={e => setAccount(e.target.value)}
-                  className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 text-[#F4F5F7] focus:outline-none focus:border-[#6366F1] cursor-pointer"
                 >
-                  <option value="ALL">All Accounts (Global)</option>
+                  <option value="ALL" className="bg-[#0D1014] text-[#F4F5F7]">All Accounts (Global)</option>
                   {accounts.map(a => (
-                    <option key={a.id} value={a.name}>{a.name}</option>
+                    <option key={a.id} value={a.name} className="bg-[#0D1014] text-[#F4F5F7]">{a.name}</option>
                   ))}
                 </select>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Asset Class</label>
+                <label className="block text-[#A7ADB7] font-medium mb-1">Asset Class</label>
                 <select
                   value={instrument}
                   onChange={e => setInstrument(e.target.value as any)}
-                  className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 text-[#F4F5F7] focus:outline-none focus:border-[#6366F1] cursor-pointer"
                 >
-                  <option value="Futures">Futures (CME / NYMEX / CBOT)</option>
-                  <option value="Forex">Forex</option>
-                  <option value="Stocks">Stocks / Equities</option>
-                  <option value="Crypto">Crypto</option>
-                  <option value="CFD">CFD</option>
+                  <option value="Futures" className="bg-[#0D1014] text-[#F4F5F7]">Futures (CME / NYMEX / CBOT)</option>
+                  <option value="Forex" className="bg-[#0D1014] text-[#F4F5F7]">Forex</option>
+                  <option value="Stocks" className="bg-[#0D1014] text-[#F4F5F7]">Stocks / Equities</option>
+                  <option value="Crypto" className="bg-[#0D1014] text-[#F4F5F7]">Crypto</option>
+                  <option value="CFD" className="bg-[#0D1014] text-[#F4F5F7]">CFD</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Symbol Filter</label>
+                <label className="block text-[#A7ADB7] font-medium mb-1">Symbol Filter</label>
                 <input
                   type="text"
                   value={symbol}
                   onChange={e => setSymbol(e.target.value)}
                   placeholder="e.g. ES, NQ, EURUSD, or ALL"
-                  className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-100 placeholder-slate-600 focus:outline-none focus:border-indigo-500 font-mono uppercase"
+                  className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 text-[#F4F5F7] placeholder-[#5E6570] focus:outline-none focus:border-[#6366F1] font-mono uppercase"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Fee Mode</label>
+                <label className="block text-[#A7ADB7] font-medium mb-1">Fee Mode</label>
                 <select
                   value={mode}
                   onChange={e => setMode(e.target.value as any)}
-                  className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-indigo-500 cursor-pointer"
+                  className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 text-[#F4F5F7] focus:outline-none focus:border-[#6366F1] cursor-pointer"
                 >
-                  <option value="Per Contract">Per Contract</option>
-                  <option value="Per Lot">Per Lot (100k units)</option>
-                  <option value="Per Share">Per Share</option>
-                  <option value="Percentage">Percentage of Notional</option>
-                  <option value="Flat">Flat Fee per Trade</option>
+                  <option value="Per Contract" className="bg-[#0D1014] text-[#F4F5F7]">Per Contract</option>
+                  <option value="Per Lot" className="bg-[#0D1014] text-[#F4F5F7]">Per Lot (100k units)</option>
+                  <option value="Per Share" className="bg-[#0D1014] text-[#F4F5F7]">Per Share</option>
+                  <option value="Percentage" className="bg-[#0D1014] text-[#F4F5F7]">Percentage of Notional</option>
+                  <option value="Flat" className="bg-[#0D1014] text-[#F4F5F7]">Flat Fee per Trade</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Broker Execution Fee ($)</label>
+                <label className="block text-[#A7ADB7] font-medium mb-1">Broker Execution Fee ($)</label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
                   value={commission}
                   onChange={e => setCommission(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-100 font-mono focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 text-[#F4F5F7] font-mono focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Exchange Regulatory Fee ($)</label>
+                <label className="block text-[#A7ADB7] font-medium mb-1">Exchange Regulatory Fee ($)</label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
                   value={exchangeFee}
                   onChange={e => setExchangeFee(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-100 font-mono focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 text-[#F4F5F7] font-mono focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Clearing Fee ($)</label>
+                <label className="block text-[#A7ADB7] font-medium mb-1">Clearing Fee ($)</label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
                   value={clearingFee}
                   onChange={e => setClearingFee(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-100 font-mono focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 text-[#F4F5F7] font-mono focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">Platform Order Routing Fee ($)</label>
+                <label className="block text-[#A7ADB7] font-medium mb-1">Platform Order Routing Fee ($)</label>
                 <input
                   type="number"
                   step="0.01"
                   min="0"
                   value={platformFee}
                   onChange={e => setPlatformFee(parseFloat(e.target.value) || 0)}
-                  className="w-full bg-[#0A0D14] border border-[#1C232E] rounded-xl px-3 py-2 text-slate-100 font-mono focus:outline-none focus:border-indigo-500"
+                  className="w-full bg-[#080A0D] border border-[rgba(255,255,255,0.08)] rounded-xl px-3 py-2 text-[#F4F5F7] font-mono focus:outline-none focus:border-[#6366F1]"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#1C232E]">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[rgba(255,255,255,0.06)]">
               <button
                 type="button"
                 onClick={() => setIsAddOpen(false)}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#1A1F27] hover:bg-[#232B36] text-slate-300 border border-[#1C232E]"
+                className="px-4 py-2 rounded-xl text-xs font-medium bg-[#11151A] hover:bg-[#151A20] text-[#C2C7D0] hover:text-[#F4F5F7] border border-[rgba(255,255,255,0.08)] cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-md shadow-indigo-600/25 border border-indigo-400/30"
+                className="px-4 py-2 rounded-xl text-xs font-semibold bg-[#6366F1] hover:bg-[#4F46E5] text-white shadow-xs cursor-pointer"
               >
                 {editingRule ? 'Save Changes' : 'Create Rule'}
               </button>
